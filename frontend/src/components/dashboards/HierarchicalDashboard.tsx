@@ -95,7 +95,7 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
     if (role === 'DISTDIR') {
       return { level: 'DISTRICT' as DrillLevel, district: defaultDistrict, segment: defaultSegment };
     }
-    if (role === 'BRMGR') {
+    if (role === 'BRMGR' || ['RM', 'SRM', 'BRM', 'RO', 'CRO', 'BRO'].includes(role)) {
       return { level: 'BRANCH' as DrillLevel, branch: defaultBranch, segment: 'ALL' };
     }
     return { level: 'BANK' as DrillLevel, segment: 'ALL' };
@@ -410,8 +410,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                     item.severity === 'CRITICAL'
                       ? 'bg-red-100 text-red-800 border-red-200'
                       : item.severity === 'HIGH'
-                      ? 'bg-amber-100 text-amber-800 border-amber-200'
-                      : 'bg-blue-100 text-blue-800 border-blue-200';
+                        ? 'bg-amber-100 text-amber-800 border-amber-200'
+                        : 'bg-blue-100 text-blue-800 border-blue-200';
 
                   return (
                     <tr key={item.id || idx} className="hover:bg-slate-50 transition-colors">
@@ -510,8 +510,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                     cov >= 100
                       ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                       : cov > 0
-                      ? 'bg-amber-100 text-amber-800 border-amber-300'
-                      : 'bg-red-100 text-red-800 border-red-300';
+                        ? 'bg-amber-100 text-amber-800 border-amber-300'
+                        : 'bg-red-100 text-red-800 border-red-300';
 
                   return (
                     <tr key={sc.collateralId} className="hover:bg-slate-50 transition-colors">
@@ -608,14 +608,14 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
           currentLevel === 'BANK'
             ? 'Bank-Wide Overview'
             : currentLevel === 'SEGMENT'
-            ? `${selectedSegment} Segment`
-            : currentLevel === 'DISTRICT'
-            ? `${selectedDistrict} District`
-            : currentLevel === 'BRANCH'
-            ? `${selectedBranch} Branch`
-            : currentLevel === 'CUSTOMER'
-            ? `Customer CIF ${selectedCif}`
-            : `${currentLevel} View`
+              ? `${selectedSegment} Segment`
+              : currentLevel === 'DISTRICT'
+                ? `${selectedDistrict} District`
+                : currentLevel === 'BRANCH'
+                  ? `${selectedBranch} Branch`
+                  : currentLevel === 'CUSTOMER'
+                    ? `Customer CIF ${selectedCif}`
+                    : `${currentLevel} View`
         }
         authorizedRole={currentUser.role}
         asOfDate={data?.asOfDate || data?.scopeBanner?.asOfDate || data?.summary?.scopeBanner?.asOfDate || data?.summary?.systemDate || new Date().toISOString().split('T')[0]}
@@ -643,11 +643,10 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                 <button
                   onClick={() => !isLast && handleCrumbClick(crumb.level)}
                   disabled={isLast}
-                  className={`font-semibold transition-colors px-1.5 py-0.5 rounded ${
-                    isLast
+                  className={`font-semibold transition-colors px-1.5 py-0.5 rounded ${isLast
                       ? 'text-[#1F4E7A] bg-[#EFF5FB] cursor-default font-bold'
                       : 'text-[#5B6472] hover:text-[#2C6295] hover:bg-slate-100 cursor-pointer'
-                  }`}
+                    }`}
                 >
                   {crumb.label}
                 </button>
@@ -765,8 +764,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                       comp >= 100
                         ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                         : comp > 0
-                        ? 'bg-amber-100 text-amber-800 border-amber-300'
-                        : 'bg-red-100 text-red-800 border-red-300';
+                          ? 'bg-amber-100 text-amber-800 border-amber-300'
+                          : 'bg-red-100 text-red-800 border-red-300';
 
                     return (
                       <div
@@ -1201,8 +1200,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                           comp >= 100
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                             : comp > 0
-                            ? 'bg-amber-100 text-amber-800 border-amber-300'
-                            : 'bg-red-100 text-red-800 border-red-300';
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-red-100 text-red-800 border-red-300';
 
                         return (
                           <tr key={seg.segmentName} className="hover:bg-slate-50 transition-colors">
@@ -1270,8 +1269,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             cov >= 100
                               ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                               : cov > 0
-                              ? 'bg-amber-100 text-amber-800 border-amber-300'
-                              : 'bg-red-100 text-red-800 border-red-300';
+                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                : 'bg-red-100 text-red-800 border-red-300';
                           return (
                             <tr key={idx} className="hover:bg-slate-50 transition-colors">
                               <td className="p-2.5 font-bold text-[#101828]">{rm.rmName || rm.officer}</td>
@@ -2222,13 +2221,12 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             <td className="p-3 font-bold text-[#1F4E7A]">ETB {((c.exposure ?? 0) / 1e6).toFixed(2)}M</td>
                             <td className="p-3 font-bold text-slate-800">ETB {((c.collateralValue ?? 0) / 1e6).toFixed(2)}M</td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                c.complianceStatus === 'Adequate' || c.complianceStatus === 'Compliant'
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${c.complianceStatus === 'Adequate' || c.complianceStatus === 'Compliant'
                                   ? 'bg-emerald-100 text-emerald-800'
                                   : c.complianceStatus === 'Underinsured'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
                                 {c.complianceStatus}
                               </span>
                             </td>
@@ -2288,11 +2286,10 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                       <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#DCE9F5] text-[#173F63]">
                         {data.customer?.customerType}
                       </span>
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                        data.summary?.insuranceStatus === 'Adequate' || data.summary?.insuranceStatus === 'Compliant'
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${data.summary?.insuranceStatus === 'Adequate' || data.summary?.insuranceStatus === 'Compliant'
                           ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                           : 'bg-red-50 text-red-800 border-red-300'
-                      }`}>
+                        }`}>
                         {data.summary?.insuranceStatus || 'Under Evaluation'}
                       </span>
                     </div>
@@ -2528,13 +2525,12 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                               {c.coveragePct !== undefined ? `${c.coveragePct}%` : '—'}
                             </td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                c.adequacyStatus === 'Adequate' || c.adequacyStatus === 'Compliant'
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${c.adequacyStatus === 'Adequate' || c.adequacyStatus === 'Compliant'
                                   ? 'bg-emerald-100 text-emerald-800'
                                   : c.adequacyStatus === 'Underinsured'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
                                 {c.adequacyStatus || c.status || 'Active'}
                               </span>
                             </td>
@@ -2593,9 +2589,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             <td className="p-3">{p.effectiveDate}</td>
                             <td className="p-3 font-semibold">{p.expiryDate}</td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                p.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                                }`}>
                                 {p.status}
                               </span>
                             </td>
@@ -2644,11 +2639,10 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
-                    data.financialKpis?.insuranceCoverageRatio >= 100
+                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${data.financialKpis?.insuranceCoverageRatio >= 100
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                       : 'bg-red-50 text-red-800 border-red-300'
-                  }`}>
+                    }`}>
                     {data.financialKpis?.insuranceCoverageRatio >= 100 ? 'Fully Insured' : 'Insurance Deficit'}
                   </span>
                 </div>
@@ -2769,13 +2763,12 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             ETB {Number(col.activeInsurance ?? 0).toLocaleString()}
                           </td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              col.status === 'Adequate' || col.status === 'Compliant'
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${col.status === 'Adequate' || col.status === 'Compliant'
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : col.status === 'Underinsured'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
                               {col.status || col.insuranceStatus || 'Active'}
                             </span>
                           </td>
@@ -2830,11 +2823,10 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EFF5FB] text-[#1F4E7A] border border-[#B9D3EB]">
                       {data.collateral?.category}
                     </span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                      data.insuranceProtection?.adequacyStatus === 'Adequate' || data.insuranceProtection?.adequacyStatus === 'Compliant'
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${data.insuranceProtection?.adequacyStatus === 'Adequate' || data.insuranceProtection?.adequacyStatus === 'Compliant'
                         ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                         : 'bg-red-50 text-red-800 border-red-300'
-                    }`}>
+                      }`}>
                       {data.insuranceProtection?.adequacyStatus || 'Under Evaluation'}
                     </span>
                   </div>
@@ -2876,11 +2868,10 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                       <Shield className="w-4 h-4 text-[#2C6295]" />
                       <h4 className="font-bold text-sm text-[#101828]">Valuation & Net Security Panel</h4>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      data.valuationPanel?.valuationDocumentStatus === 'Current'
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${data.valuationPanel?.valuationDocumentStatus === 'Current'
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-amber-100 text-amber-800'
-                    }`}>
+                      }`}>
                       Doc: {data.valuationPanel?.valuationDocumentStatus || 'Current'}
                     </span>
                   </div>
@@ -3064,9 +3055,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             </td>
                             <td className="p-3 font-semibold">{p.expiryDate}</td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                p.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                                }`}>
                                 {p.status}
                               </span>
                             </td>
@@ -3101,15 +3091,14 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                     return (
                       <div
                         key={item.ruleId || item.documentType}
-                        className={`p-3 rounded-lg border flex items-center justify-between text-xs ${
-                          isPresent && !isExpired
+                        className={`p-3 rounded-lg border flex items-center justify-between text-xs ${isPresent && !isExpired
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                             : isExpired
-                            ? 'bg-red-50 border-red-200 text-red-900'
-                            : isExpSoon
-                            ? 'bg-amber-50 border-amber-200 text-amber-900'
-                            : 'bg-red-50 border-red-200 text-red-900'
-                        }`}
+                              ? 'bg-red-50 border-red-200 text-red-900'
+                              : isExpSoon
+                                ? 'bg-amber-50 border-amber-200 text-amber-900'
+                                : 'bg-red-50 border-red-200 text-red-900'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5">
                           {isPresent && !isExpired ? (
@@ -3130,13 +3119,12 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             )}
                           </div>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          isPresent && !isExpired
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isPresent && !isExpired
                             ? 'bg-emerald-200 text-emerald-800'
                             : isExpSoon
-                            ? 'bg-amber-200 text-amber-800'
-                            : 'bg-red-200 text-red-800'
-                        }`}>
+                              ? 'bg-amber-200 text-amber-800'
+                              : 'bg-red-200 text-red-800'
+                          }`}>
                           {item.status || (isPresent ? 'Present' : 'Missing')}
                         </span>
                       </div>
@@ -3174,11 +3162,10 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EFF5FB] text-[#1F4E7A] border border-[#B9D3EB]">
                       {data.policy?.coverageType}
                     </span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                      data.policy?.status === 'Active'
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${data.policy?.status === 'Active'
                         ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                         : 'bg-red-50 text-red-800 border-red-300'
-                    }`}>
+                      }`}>
                       {data.policy?.status}
                     </span>
                   </div>
@@ -3295,13 +3282,12 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                         <div className="font-bold text-xs text-[#101828]">{t.event}</div>
                         <span className="font-mono text-[11px] text-[#5B6472]">{t.date}</span>
                       </div>
-                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold ${
-                        t.status === 'Completed' || t.status === 'Active' || t.status === 'A'
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'Completed' || t.status === 'Active' || t.status === 'A'
                           ? 'bg-emerald-100 text-emerald-800'
                           : t.status === 'Expired'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-slate-100 text-slate-800'
-                      }`}>
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-slate-100 text-slate-800'
+                        }`}>
                         {t.status === 'A' ? 'Authorized' : t.status}
                       </span>
                     </div>
@@ -3338,9 +3324,8 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                             <td className="p-3">{e.endorsementType}</td>
                             <td className="p-3">{e.effectiveDate || 'N/A'}</td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                e.authStat === 'A' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${e.authStat === 'A' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
                                 {e.authStat === 'A' ? 'Authorized' : e.authStat}
                               </span>
                             </td>

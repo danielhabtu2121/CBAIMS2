@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Eye, Plus, ShieldCheck, CreditCard, Building2, FileCheck, FolderOpen, History, AlertTriangle, CheckCircle, RefreshCw, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Users, Eye, Plus, ShieldCheck, CreditCard, Building2, FileCheck, FolderOpen, History, AlertTriangle, CheckCircle, RefreshCw, ArrowUpRight, Shield, ExternalLink } from 'lucide-react';
 import { Customer, LoanAccount, Collateral, InsurancePolicy, OwnershipDocument, UserSession, BusinessSegment, Branch, Customer360, WorkflowTask, CimsException, AuditLog, LoanCollateralLink } from '../../types';
 import { DataGrid, ColumnDef } from '../layout/DataGrid';
 import { StatusChip } from '../layout/StatusChip';
@@ -44,6 +44,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
   const [maintainError, setMaintainError] = useState<string | null>(null);
   const [maintainSubmitting, setMaintainSubmitting] = useState(false);
   const [active360Tab, setActive360Tab] = useState<'overview' | 'facilities' | 'collateral' | 'policies' | 'documents' | 'approvals' | 'exceptions' | 'audit'>('overview');
+  const [selected360Policy, setSelected360Policy] = useState<InsurancePolicy | null>(null);
 
   useEffect(() => {
     if (initialCustomerId && customers.length > 0) {
@@ -57,7 +58,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
   }, [initialCustomerId, customers]);
 
   const [newCust, setNewCust] = useState<Partial<Customer>>({
-    cif: `CIF-${Math.floor(100000 + Math.random() * 900000)}`,
+    cif: '',
     customerType: 'Individual',
     segment: segments?.find(s => s.active !== false)?.name || 'Corporate Banking',
     branch: currentUser.branch || 'Bole Special Branch',
@@ -122,12 +123,14 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
     } catch (err) {
       console.error('Failed to load customer 360 data:', err);
       // Fallback to local state
+      const custCols = collaterals.filter(c => c.customerId === customer.id || c.customerId === customer.cif);
+      const custColIds = new Set(custCols.flatMap(c => [c.id, c.code].filter(Boolean) as string[]));
       setCustomer360({
         customer,
         facilities: facilities.filter(f => f.customerId === customer.id || f.customerId === customer.cif),
-        collaterals: collaterals.filter(c => c.customerId === customer.id || c.customerId === customer.cif),
+        collaterals: custCols,
         collateralFacilityLinks: [],
-        insurancePolicies: policies.filter(p => p.customerId === customer.id || p.customerId === customer.cif),
+        insurancePolicies: policies.filter(p => (customer.id && p.customerId === customer.id) || (customer.cif && p.customerId === customer.cif) || (p.collateralId && custColIds.has(p.collateralId))),
         documents: documents.filter(d => d.entityId === customer.id),
         pendingApprovals: [],
         exceptions: [],
@@ -204,7 +207,39 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
 
   const currentFacilities = customer360?.facilities || facilities.filter(f => selectedCustomer && (f.customerId === selectedCustomer.id || f.customerId === selectedCustomer.cif));
   const currentCollaterals = customer360?.collaterals || collaterals.filter(c => selectedCustomer && (c.customerId === selectedCustomer.id || c.customerId === selectedCustomer.cif));
-  const currentPolicies = customer360?.insurancePolicies || policies.filter(p => selectedCustomer && (p.customerId === selectedCustomer.id || p.customerId === selectedCustomer.cif));
+
+  const customerCollateralIds = useMemo(() => {
+    const ids = new Set<string>();
+    currentCollaterals.forEach(c => {
+      if (c.id) ids.add(c.id.trim().toLowerCase());
+      if (c.code) ids.add(c.code.trim().toLowerCase());
+    });
+    return ids;
+  }, [currentCollaterals]);
+
+  const currentPolicies = useMemo(() => {
+    if (customer360?.insurancePolicies && customer360.insurancePolicies.length > 0) {
+      return customer360.insurancePolicies;
+    }
+    const map = new Map<string, InsurancePolicy>();
+    policies.forEach(p => {
+      let matched = false;
+      if (selectedCustomer) {
+        const scId = (selectedCustomer.id || '').trim().toLowerCase();
+        const scCif = (selectedCustomer.cif || '').trim().toLowerCase();
+        const pCust = (p.customerId || '').trim().toLowerCase();
+        if (pCust && (pCust === scId || pCust === scCif)) matched = true;
+      }
+      if (p.collateralId && customerCollateralIds.has(p.collateralId.trim().toLowerCase())) {
+        matched = true;
+      }
+      if (matched && p.id) {
+        map.set(p.id, p);
+      }
+    });
+    return Array.from(map.values());
+  }, [customer360?.insurancePolicies, policies, selectedCustomer, customerCollateralIds]);
+
   const currentDocuments = customer360?.documents || documents.filter(d => selectedCustomer && d.entityId === selectedCustomer.id);
   const currentLinks = customer360?.collateralFacilityLinks || [];
   const currentApprovals = customer360?.pendingApprovals || [];
@@ -230,7 +265,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             <button
               onClick={() => {
                 setNewCust({
-                  cif: `CIF-${Math.floor(100000 + Math.random() * 900000)}`,
+                  cif: '',
                   customerType: 'Individual',
                   segment: 'Corporate Banking',
                   branch: currentUser.branch || 'Bole Special Branch',
@@ -250,9 +285,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
       {/* Customer 360 Modal */}
       {show360Modal && selectedCustomer && (
         <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-5xl w-full h-[90vh] max-h-[92vh] flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start">
+            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold">{selectedCustomer.name}</h2>
@@ -291,27 +326,27 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             </div>
 
             {/* Quick KPI Bar */}
-            <div className="grid grid-cols-4 bg-[#EFF5FB] border-b border-[#E2E8F0] p-3 text-center text-xs">
-              <div>
-                <div className="text-[#5B6472] text-[11px] font-semibold">Total Approved Limits</div>
-                <div className="text-[#102E4A] font-bold text-sm tabular-nums">ETB {totalFacilityLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 bg-[#EFF5FB] border-b border-[#E2E8F0] p-3 text-center text-xs shrink-0 gap-2">
+              <div className="min-w-0">
+                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Total Approved Limits</div>
+                <div className="text-[#102E4A] font-bold text-sm tabular-nums truncate">ETB {totalFacilityLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
-              <div>
-                <div className="text-[#5B6472] text-[11px] font-semibold">Total Outstanding Exposure</div>
-                <div className="text-[#102E4A] font-bold text-sm tabular-nums">ETB {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div className="min-w-0">
+                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Total Outstanding Exposure</div>
+                <div className="text-[#102E4A] font-bold text-sm tabular-nums truncate">ETB {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
-              <div>
-                <div className="text-[#5B6472] text-[11px] font-semibold">Collateral Valuation</div>
-                <div className="text-emerald-700 font-bold text-sm tabular-nums">ETB {totalCollateralVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div className="min-w-0">
+                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Collateral Valuation</div>
+                <div className="text-emerald-700 font-bold text-sm tabular-nums truncate">ETB {totalCollateralVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
-              <div>
-                <div className="text-[#5B6472] text-[11px] font-semibold">Insured Coverage</div>
-                <div className="text-blue-700 font-bold text-sm tabular-nums">ETB {totalInsuredAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div className="min-w-0">
+                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Insured Coverage</div>
+                <div className="text-blue-700 font-bold text-sm tabular-nums truncate">ETB {totalInsuredAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
             </div>
 
             {/* 360 Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-slate-50 px-6 gap-2 pt-2 overflow-x-auto">
+            <div className="flex border-b border-[#E2E8F0] bg-slate-50 px-6 gap-2 pt-2 overflow-x-auto shrink-0 z-10 scrollbar-thin">
               {[
                 { id: 'overview', label: 'Overview' },
                 { id: 'facilities', label: `Facilities (${currentFacilities.length})` },
@@ -325,7 +360,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActive360Tab(tab.id as any)}
-                  className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
+                  className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition shrink-0 ${
                     active360Tab === tab.id ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
                   }`}
                 >
@@ -335,9 +370,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             </div>
 
             {/* Tab Contents */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
+            <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs min-w-0 max-w-full">
               {active360Tab === 'overview' && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="cims-card p-4 space-y-2">
                     <h4 className="font-bold text-[#101828] text-xs border-b border-[#E2E8F0] pb-1">Customer Profile & KYC</h4>
                     <div><span className="text-[#5B6472]">Customer Type:</span> <strong>{selectedCustomer.customerType}</strong></div>
@@ -360,8 +395,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               )}
 
               {active360Tab === 'facilities' && (
-                <div className="cims-card overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="cims-card overflow-x-auto w-full max-w-full">
+                  <table className="w-full text-left text-xs min-w-[750px]">
                     <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                       <tr>
                         <th className="p-2.5">Line Code / Ref</th>
@@ -430,8 +465,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
 
               {active360Tab === 'collateral' && (
                 <div className="space-y-4">
-                  <div className="cims-card overflow-hidden">
-                    <table className="w-full text-left text-xs">
+                  <div className="cims-card overflow-x-auto w-full max-w-full">
+                    <table className="w-full text-left text-xs min-w-[850px]">
                       <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                         <tr>
                           <th className="p-2.5">Code</th>
@@ -452,7 +487,13 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                         ) : (
                           currentCollaterals.map((c) => {
                             const net = c.valuationAmount * (1.0 - ((c.haircut || 0) / 100.0));
-                            const colPolicy = policies.find((p) => p.collateralId === c.id || p.collateralId === c.code);
+                            const colPolicy = currentPolicies.find((p) => 
+                              (p.collateralId && c.id && p.collateralId.trim().toLowerCase() === c.id.trim().toLowerCase()) ||
+                              (p.collateralId && c.code && p.collateralId.trim().toLowerCase() === c.code.trim().toLowerCase())
+                            ) || policies.find((p) => 
+                              (p.collateralId && c.id && p.collateralId.trim().toLowerCase() === c.id.trim().toLowerCase()) ||
+                              (p.collateralId && c.code && p.collateralId.trim().toLowerCase() === c.code.trim().toLowerCase())
+                            );
                             return (
                               <tr key={c.id} className="hover:bg-[#EFF5FB] group">
                                 <td className="p-2.5 font-semibold">
@@ -485,17 +526,12 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                 <td className="p-2.5">
                                   {colPolicy ? (
                                     <button
-                                      onClick={() => {
-                                        if (onNavigate) {
-                                          setShow360Modal(false);
-                                          onNavigate('insurance', { policyId: colPolicy.id, id: colPolicy.id });
-                                        }
-                                      }}
-                                      className="flex items-center gap-1 group/pol cursor-pointer text-left"
-                                      title={`Click to view policy: ${colPolicy.policyNumber}`}
+                                      onClick={() => setSelected360Policy(colPolicy)}
+                                      className="flex items-center gap-1 group/pol cursor-pointer text-left hover:opacity-85 transition"
+                                      title={`Click to inspect policy: ${colPolicy.policyNumber}`}
                                     >
-                                      <StatusChip label={c.insuranceStatus || 'Insured'} />
-                                      <ArrowUpRight className="w-3 h-3 text-blue-600 opacity-60 group-hover/pol:opacity-100" />
+                                      <StatusChip label={c.insuranceStatus || colPolicy.status || 'Insured'} />
+                                      <Eye className="w-3.5 h-3.5 text-blue-600 opacity-70 group-hover/pol:opacity-100" />
                                     </button>
                                   ) : (
                                     <StatusChip label={c.insuranceStatus || 'Uninsured'} />
@@ -526,7 +562,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                   {currentLinks.length > 0 && (
                     <div className="cims-card p-4 space-y-2 bg-slate-50 border border-[#E2E8F0]">
                       <h4 className="font-bold text-[#101828] text-xs">Facility-Collateral Allocations</h4>
-                      <table className="w-full text-left text-xs">
+                      <div className="overflow-x-auto w-full max-w-full">
+                        <table className="w-full text-left text-xs min-w-[700px]">
                         <thead className="text-[#5B6472] font-semibold border-b border-[#E2E8F0] pb-1">
                           <tr>
                             <th className="p-1.5">Facility Ref / Line</th>
@@ -590,74 +627,111 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                           ))}
                         </tbody>
                       </table>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
               {active360Tab === 'policies' && (
-                <div className="cims-card overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="cims-card overflow-x-auto w-full max-w-full">
+                  <table className="w-full text-left text-xs min-w-[780px]">
                     <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                       <tr>
                         <th className="p-2.5">Policy Number</th>
+                        <th className="p-2.5">Linked Collateral</th>
                         <th className="p-2.5">Insurer</th>
                         <th className="p-2.5">Coverage Type</th>
                         <th className="p-2.5 text-right">Insured Amount</th>
                         <th className="p-2.5 text-right">Annual Premium</th>
                         <th className="p-2.5">Expiry Date</th>
-                        <th className="p-2.5">Version</th>
+                        <th className="p-2.5 text-center">Adequacy</th>
                         <th className="p-2.5">Status</th>
-                        <th className="p-2.5 text-right">Action</th>
+                        <th className="p-2.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E2E8F0]">
                       {currentPolicies.length === 0 ? (
-                        <tr><td colSpan={9} className="p-4 text-center text-[#5B6472]">No insurance policies found.</td></tr>
+                        <tr><td colSpan={10} className="p-6 text-center text-[#5B6472]">No insurance policies found for this customer or pledged assets.</td></tr>
                       ) : (
-                        currentPolicies.map((p) => (
-                          <tr key={p.id} className="hover:bg-[#EFF5FB] group">
-                            <td className="p-2.5 font-semibold">
-                              <button
-                                onClick={() => {
-                                  if (onNavigate) {
-                                    setShow360Modal(false);
-                                    onNavigate('insurance', { policyId: p.id, id: p.id });
-                                  }
-                                }}
-                                className="font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-1 cursor-pointer text-left"
-                                title="Click to view policy details"
-                              >
-                                <span>{p.policyNumber}</span>
-                                <ArrowUpRight className="w-3 h-3 opacity-60 group-hover:opacity-100" />
-                              </button>
-                            </td>
-                            <td className="p-2.5">{p.insurerName}</td>
-                            <td className="p-2.5">{p.coverageType}</td>
-                            <td className="p-2.5 text-right tabular-nums font-semibold text-emerald-700">
-                              ETB {p.insuredAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="p-2.5 text-right tabular-nums">
-                              ETB {p.premium?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="p-2.5">{p.expiryDate}</td>
-                            <td className="p-2.5 font-semibold">v{p.version || 1}</td>
-                            <td className="p-2.5"><StatusChip label={p.status} /></td>
-                            <td className="p-2.5 text-right">
-                              <button
-                                onClick={() => {
-                                  if (onNavigate) {
-                                    setShow360Modal(false);
-                                    onNavigate('insurance', { policyId: p.id, id: p.id });
-                                  }
-                                }}
-                                className="btn-ghost py-0.5 px-2 text-[11px] text-blue-700 hover:text-blue-900 border border-blue-200 hover:border-blue-300 rounded inline-flex items-center gap-1"
-                              >
-                                View Policy <ArrowUpRight className="w-3 h-3" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        currentPolicies.map((p) => {
+                          const matchedCol = currentCollaterals.find(c => 
+                            (c.id && p.collateralId && c.id.trim().toLowerCase() === p.collateralId.trim().toLowerCase()) ||
+                            (c.code && p.collateralId && c.code.trim().toLowerCase() === p.collateralId.trim().toLowerCase())
+                          ) || collaterals.find(c => 
+                            (c.id && p.collateralId && c.id.trim().toLowerCase() === p.collateralId.trim().toLowerCase()) ||
+                            (c.code && p.collateralId && c.code.trim().toLowerCase() === p.collateralId.trim().toLowerCase())
+                          );
+                          const isAdequate = matchedCol && matchedCol.valuationAmount > 0 
+                            ? (p.insuredAmount || 0) >= matchedCol.valuationAmount 
+                            : null;
+
+                          return (
+                            <tr key={p.id} className="hover:bg-[#EFF5FB] group">
+                              <td className="p-2.5 font-semibold">
+                                <button
+                                  onClick={() => setSelected360Policy(p)}
+                                  className="font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-1 cursor-pointer text-left"
+                                  title="Click to inspect policy preview"
+                                >
+                                  <span>{p.policyNumber}</span>
+                                  <Eye className="w-3 h-3 opacity-60 group-hover:opacity-100 text-blue-600" />
+                                </button>
+                              </td>
+                              <td className="p-2.5">
+                                {matchedCol ? (
+                                  <span className="font-mono text-xs font-semibold text-[#102E4A]" title={matchedCol.description}>
+                                    {matchedCol.code}
+                                  </span>
+                                ) : (
+                                  <span className="text-[#5B6472] font-mono text-[11px]">{p.collateralId || '—'}</span>
+                                )}
+                              </td>
+                              <td className="p-2.5">{p.insurerName}</td>
+                              <td className="p-2.5">{p.coverageType}</td>
+                              <td className="p-2.5 text-right tabular-nums font-semibold text-emerald-700">
+                                ETB {p.insuredAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="p-2.5 text-right tabular-nums">
+                                ETB {p.premium?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="p-2.5">{p.expiryDate}</td>
+                              <td className="p-2.5 text-center">
+                                {isAdequate === true && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Adequate</span>
+                                )}
+                                {isAdequate === false && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Under-Insured</span>
+                                )}
+                                {isAdequate === null && (
+                                  <span className="text-[#5B6472]">—</span>
+                                )}
+                              </td>
+                              <td className="p-2.5"><StatusChip label={p.status} /></td>
+                              <td className="p-2.5 text-right whitespace-nowrap space-x-1.5">
+                                <button
+                                  onClick={() => setSelected360Policy(p)}
+                                  className="btn-ghost py-0.5 px-2 text-[11px] text-blue-700 hover:text-blue-900 border border-blue-200 hover:border-blue-300 rounded inline-flex items-center gap-1"
+                                  title="Inspect policy details inside 360 view"
+                                >
+                                  <Eye className="w-3 h-3" /> Quick View
+                                </button>
+                                {onNavigate && (
+                                  <button
+                                    onClick={() => {
+                                      setShow360Modal(false);
+                                      onNavigate('insurance', { policyId: p.id, id: p.id });
+                                    }}
+                                    className="btn-ghost py-0.5 px-2 text-[11px] text-slate-700 hover:text-[#102E4A] border border-slate-200 hover:border-slate-300 rounded inline-flex items-center gap-1"
+                                    title="Open policy in full Insurance Manager"
+                                  >
+                                    <ExternalLink className="w-3 h-3 text-slate-500" /> Full Manage
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -665,8 +739,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               )}
 
               {active360Tab === 'documents' && (
-                <div className="cims-card overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="cims-card overflow-x-auto w-full max-w-full">
+                  <table className="w-full text-left text-xs min-w-[650px]">
                     <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                       <tr>
                         <th className="p-2.5">Document Title</th>
@@ -698,8 +772,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               )}
 
               {active360Tab === 'approvals' && (
-                <div className="cims-card overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="cims-card overflow-x-auto w-full max-w-full">
+                  <table className="w-full text-left text-xs min-w-[650px]">
                     <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                       <tr>
                         <th className="p-2.5">Action Type</th>
@@ -731,8 +805,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               )}
 
               {active360Tab === 'exceptions' && (
-                <div className="cims-card overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="cims-card overflow-x-auto w-full max-w-full">
+                  <table className="w-full text-left text-xs min-w-[650px]">
                     <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                       <tr>
                         <th className="p-2.5">Type</th>
@@ -762,8 +836,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               )}
 
               {active360Tab === 'audit' && (
-                <div className="cims-card overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="cims-card overflow-x-auto w-full max-w-full">
+                  <table className="w-full text-left text-xs min-w-[750px]">
                     <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                       <tr>
                         <th className="p-2.5">Timestamp</th>
@@ -800,6 +874,124 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
         </div>
       )}
 
+      {/* Inline Policy Details Modal within Customer 360 */}
+      {selected360Policy && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden text-xs">
+            <div className="bg-[#102E4A] text-white p-4 flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-300" />
+                  <h3 className="font-bold text-base">{selected360Policy.policyNumber}</h3>
+                  <StatusChip label={selected360Policy.status} />
+                </div>
+                <p className="text-blue-200 text-xs mt-0.5">{selected360Policy.insurerName} • {selected360Policy.coverageType}</p>
+              </div>
+              <button
+                onClick={() => setSelected360Policy(null)}
+                className="text-white hover:text-slate-300 text-lg font-bold p-1"
+                title="Close policy preview"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-[#5B6472]">Sum Insured:</span>
+                  <div className="font-bold text-sm text-emerald-700 tabular-nums">
+                    ETB {selected360Policy.insuredAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#5B6472]">Annual Premium:</span>
+                  <div className="font-bold text-sm text-[#102E4A] tabular-nums">
+                    ETB {selected360Policy.premium?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#5B6472]">Effective Date:</span>
+                  <div className="font-medium text-[#101828]">{selected360Policy.effectiveDate || '—'}</div>
+                </div>
+                <div>
+                  <span className="text-[#5B6472]">Expiry Date:</span>
+                  <div className="font-medium text-[#101828] flex items-center gap-1.5">
+                    <span>{selected360Policy.expiryDate || '—'}</span>
+                    {selected360Policy.expiryDate && new Date(selected360Policy.expiryDate) < new Date() && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">Expired</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Linked Collateral Info */}
+              {(() => {
+                const matchedCol = currentCollaterals.find(c => 
+                  (c.id && selected360Policy.collateralId && c.id.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase()) ||
+                  (c.code && selected360Policy.collateralId && c.code.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase())
+                ) || collaterals.find(c => 
+                  (c.id && selected360Policy.collateralId && c.id.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase()) ||
+                  (c.code && selected360Policy.collateralId && c.code.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase())
+                );
+                if (!matchedCol) return null;
+                const covPct = matchedCol.valuationAmount > 0 
+                  ? ((selected360Policy.insuredAmount || 0) / matchedCol.valuationAmount) * 100 
+                  : 0;
+                return (
+                  <div className="cims-card p-3 border border-blue-100 bg-blue-50/40 space-y-2">
+                    <div className="font-bold text-xs text-[#102E4A] flex items-center justify-between">
+                      <span>Pledged Collateral Asset</span>
+                      <span className="font-mono text-blue-700 font-bold">{matchedCol.code}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div><span className="text-[#5B6472]">Category:</span> {matchedCol.category}</div>
+                      <div><span className="text-[#5B6472]">Market Value:</span> ETB {matchedCol.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      <div className="col-span-2"><span className="text-[#5B6472]">Asset Description:</span> {matchedCol.description}</div>
+                      <div className="col-span-2 pt-1 border-t border-blue-100 flex items-center justify-between">
+                        <span className="text-[#5B6472]">Insurance Coverage Ratio:</span>
+                        <span className={`font-bold ${covPct >= 100 ? 'text-emerald-700' : 'text-amber-700'}`}>
+                          {covPct.toFixed(1)}% {covPct >= 100 ? '(Adequate)' : '(Under-Insured)'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-50 p-2.5 rounded border border-slate-200">
+                <div><span className="text-[#5B6472]">Policy Version:</span> <strong>v{selected360Policy.version || 1}</strong></div>
+                <div><span className="text-[#5B6472]">Authorization:</span> <strong>{selected360Policy.authStat === 'A' ? 'Authorized' : 'Pending'}</strong></div>
+                <div><span className="text-[#5B6472]">Record Status:</span> <strong>{selected360Policy.recordStat === 'O' ? 'Open' : 'Closed'}</strong></div>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-3 border-t border-slate-200 flex justify-between items-center">
+              <button
+                onClick={() => setSelected360Policy(null)}
+                className="btn-ghost py-1.5 px-3 text-xs"
+              >
+                Close Preview
+              </button>
+              {onNavigate && (
+                <button
+                  onClick={() => {
+                    const polId = selected360Policy.id;
+                    setSelected360Policy(null);
+                    setShow360Modal(false);
+                    onNavigate('insurance', { policyId: polId, id: polId });
+                  }}
+                  className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-[#102E4A] hover:bg-[#1F4E7A] text-white"
+                >
+                  <span>Open in Full Insurance Manager</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Register Customer Manually Modal (Maker Action) */}
       {showManualRegModal && (
         <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
@@ -814,17 +1006,29 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-                await onRegisterManualCustomer(newCust);
+                const cleanCif = newCust.cif?.trim() ? newCust.cif.trim() : undefined;
+                if (!cleanCif && !newCust.nationalId?.trim() && !newCust.taxIdNo?.trim() && !newCust.businessRegNo?.trim()) {
+                  alert('National ID, TIN, or Business Registration Number is required when registering a non-CIF third-party owner.');
+                  return;
+                }
+                const cleanCust = {
+                  ...newCust,
+                  cif: cleanCif,
+                  identificationType: cleanCif ? 'CBS_CIF' : (newCust.nationalId?.trim() ? 'NATIONAL_ID' : (newCust.taxIdNo?.trim() ? 'TIN' : 'UNREGISTERED_THIRD_PARTY')),
+                };
+                await onRegisterManualCustomer(cleanCust);
                 setShowManualRegModal(false);
               }}
               className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs"
             >
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-[#101828] mb-1">CIF (Customer ID) (M)</label>
+                  <label className="block font-semibold text-[#101828] mb-1">
+                    CIF (Customer ID) <span className="font-normal text-slate-500 text-[10px]">(Optional for 3rd-Party Owners)</span>
+                  </label>
                   <input
                     type="text"
-                    required
+                    placeholder="e.g. CIF-102934 (Leave blank if third-party owner)"
                     value={newCust.cif || ''}
                     onChange={(e) => setNewCust({ ...newCust, cif: e.target.value })}
                     className="w-full p-2 border border-[#E2E8F0] rounded"
@@ -838,8 +1042,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                     className="w-full p-2 border border-[#E2E8F0] rounded"
                   >
                     <option value="Individual">Individual</option>
-                    <option value="Business">Business</option>
-                    <option value="Government">Government</option>
+                    <option value="Business Organization">Business Organization</option>
+                    <option value="Government Entity">Government Entity</option>
                   </select>
                 </div>
               </div>

@@ -10,8 +10,6 @@ import {
   AlertTriangle,
   Clock,
   Hourglass,
-  ShieldAlert,
-  UserX,
   ExternalLink,
   MessageSquare,
   History,
@@ -22,8 +20,6 @@ import {
   Calendar,
   Building,
   User as UserIcon,
-  PlusCircle,
-  Send,
   Upload,
   ShieldCheck,
 } from 'lucide-react';
@@ -42,7 +38,6 @@ import {
   Customer,
   MandatoryDocumentRule,
   ApprovedInsurer,
-  EntryTimeExceptionRequest,
 } from '../../types';
 import { DataGrid, ColumnDef } from '../layout/DataGrid';
 import { StatusChip } from '../layout/StatusChip';
@@ -196,22 +191,6 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
   const [scanResult, setScanResult] = useState<ScanResultDto | null>(null);
   const [showScanResultModal, setShowScanResultModal] = useState(false);
 
-  // Manual Exception Creation Modal state
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createSubmitting, setCreateSubmitting] = useState(false);
-  const [createForm, setCreateForm] = useState({
-    entityType: 'Collateral',
-    entityId: '',
-    collateralId: '',
-    exceptionType: 'Missing Mandatory Document',
-    failedRequirement: '',
-    severity: 'High',
-    reason: '',
-    comments: '',
-    evidenceDocument: '',
-    evidenceFileContent: '',
-  });
-
   // Summary Metrics
   const [summaryData, setSummaryData] = useState<ExceptionSummaryDto | null>(null);
 
@@ -305,29 +284,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
     loadExceptionHistory(exc.id);
   };
 
-  // Local KPI summary fallback if API summary is still loading
-  const localSummary = useMemo(() => {
-    if (summaryData) return summaryData;
-    let totalOpen = 0, critical = 0, high = 0, dueSoon = 0, overdue = 0, escalated = 0, resolvedToday = 0, unassigned = 0;
-    const todayStr = new Date().toISOString().substring(0, 10);
 
-    exceptions.forEach((e) => {
-      const isResolved = e.status === 'Resolved';
-      if (isResolved) {
-        if (e.resolvedAt && e.resolvedAt.startsWith(todayStr)) resolvedToday++;
-      } else {
-        totalOpen++;
-        if (e.severity === 'Critical') critical++;
-        if (e.severity === 'High') high++;
-        if (e.status === 'Escalated') escalated++;
-        if (e.slaStatus === 'Overdue') overdue++;
-        else if (e.slaStatus === 'Due Soon') dueSoon++;
-        if (!e.assignedToUserId && !e.assignedToUser) unassigned++;
-      }
-    });
-
-    return { totalOpen, critical, high, dueSoon, overdue, escalated, resolvedToday, unassigned };
-  }, [exceptions, summaryData]);
 
   // Filtered exception data for work queue
   const filteredExceptions = useMemo(() => {
@@ -496,75 +453,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
     }
   };
 
-  const handleCreateManualException = async () => {
-    if (!createForm.reason.trim()) {
-      alert('Validation Error: Reason / justification is mandatory.');
-      return;
-    }
-    if (!createForm.comments.trim()) {
-      alert('Validation Error: Operational comments are mandatory.');
-      return;
-    }
-    if (!createForm.entityId && !createForm.collateralId) {
-      alert('Validation Error: A target entity (collateral, policy, or customer) must be selected.');
-      return;
-    }
 
-    setCreateSubmitting(true);
-    try {
-      let linkedColId = createForm.collateralId;
-      let linkedCustId = '';
-
-      if (createForm.entityType === 'Collateral') {
-        linkedColId = createForm.entityId;
-        const colObj = collaterals.find(c => c.id === createForm.entityId || c.code === createForm.entityId);
-        linkedCustId = colObj?.customerId || '';
-      } else if (createForm.entityType === 'Insurance Policy') {
-        const polObj = policies.find(p => p.id === createForm.entityId || p.policyNumber === createForm.entityId);
-        linkedColId = polObj?.collateralId || linkedColId;
-        linkedCustId = polObj?.customerId || '';
-      } else if (createForm.entityType === 'Customer') {
-        linkedCustId = createForm.entityId;
-      }
-
-      const req: EntryTimeExceptionRequest = {
-        entityType: createForm.entityType,
-        entityId: createForm.entityId,
-        collateralId: linkedColId,
-        customerId: linkedCustId,
-        exceptionType: createForm.exceptionType,
-        failedRequirement: createForm.failedRequirement || `${createForm.exceptionType} Exception Override`,
-        severity: createForm.severity,
-        reason: createForm.reason.trim(),
-        comments: createForm.comments.trim(),
-        evidenceDocument: createForm.evidenceDocument || undefined,
-      };
-
-      const res = await cimsApi.submitPolicyExceptionRequest(req, currentUser.username || currentUser.userId || 'CRO_USER');
-      alert(`✓ Exception Created Successfully!\n\nException ID: ${res.exceptionId}\nStatus: Pending Exception Approval\nApprover Role: ${(res as any).approverRole || 'Management'}\n\nRouted to the configured approver via the approval hierarchy. Once approved, the transaction/condition will be marked as an authorized override.`);
-
-      setShowCreateModal(false);
-      setCreateForm({
-        entityType: 'Collateral',
-        entityId: '',
-        collateralId: '',
-        exceptionType: 'Missing Mandatory Document',
-        failedRequirement: '',
-        severity: 'High',
-        reason: '',
-        comments: '',
-        evidenceDocument: '',
-        evidenceFileContent: '',
-      });
-
-      if (onRefreshData) await onRefreshData();
-      await refreshSummary();
-    } catch (err: any) {
-      alert(`Failed to create exception: ${err.message || err}`);
-    } finally {
-      setCreateSubmitting(false);
-    }
-  };
 
   // Check if current user is read-only
   const isReadOnly = currentUser.role === 'AUDITOR' || currentUser.role === 'RDONLY';
@@ -691,123 +580,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
   return (
     <div className="p-6 space-y-6">
-      {/* 1. MANAGEMENT KPI SUMMARY CARDS (Requirement §28) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        <div
-          onClick={() => setFilterStatus(filterStatus === 'Open' ? 'ALL' : 'Open')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterStatus === 'Open' ? 'border-[#1F4E7A] ring-1 ring-[#1F4E7A] bg-blue-50/40' : 'hover:border-[#1F4E7A]'
-          }`}
-        >
-          <div className="flex items-center justify-between text-[#5B6472] mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Open</span>
-            <AlertCircle className="w-4 h-4 text-[#1F4E7A]" />
-          </div>
-          <div className="text-2xl font-bold text-[#102E4A]">{localSummary.totalOpen}</div>
-          <div className="text-[10px] text-[#5B6472] mt-0.5">Active exceptions</div>
-        </div>
-
-        <div
-          onClick={() => setFilterSeverity(filterSeverity === 'Critical' ? 'ALL' : 'Critical')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterSeverity === 'Critical' ? 'border-red-600 ring-1 ring-red-600 bg-red-50/40' : 'hover:border-red-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-red-600 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Critical</span>
-            <ShieldAlert className="w-4 h-4 text-red-600" />
-          </div>
-          <div className="text-2xl font-bold text-red-700">{localSummary.critical}</div>
-          <div className="text-[10px] text-red-600 mt-0.5">Immediate action</div>
-        </div>
-
-        <div
-          onClick={() => setFilterSeverity(filterSeverity === 'High' ? 'ALL' : 'High')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterSeverity === 'High' ? 'border-amber-600 ring-1 ring-amber-600 bg-amber-50/40' : 'hover:border-amber-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-amber-700 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">High</span>
-            <Clock className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-bold text-amber-800">{localSummary.high}</div>
-          <div className="text-[10px] text-amber-700 mt-0.5">Elevated risk</div>
-        </div>
-
-        <div
-          onClick={() => setFilterSlaStatus(filterSlaStatus === 'Due Soon' ? 'ALL' : 'Due Soon')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterSlaStatus === 'Due Soon' ? 'border-amber-500 ring-1 ring-amber-500 bg-amber-50/30' : 'hover:border-amber-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-amber-600 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Due Soon</span>
-            <Hourglass className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-bold text-amber-700">{localSummary.dueSoon}</div>
-          <div className="text-[10px] text-amber-600 mt-0.5">Within 48h SLA</div>
-        </div>
-
-        <div
-          onClick={() => setFilterSlaStatus(filterSlaStatus === 'Overdue' ? 'ALL' : 'Overdue')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterSlaStatus === 'Overdue' ? 'border-rose-600 ring-1 ring-rose-600 bg-rose-50/40' : 'hover:border-rose-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-rose-600 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Overdue</span>
-            <AlertTriangle className="w-4 h-4 text-rose-600" />
-          </div>
-          <div className="text-2xl font-bold text-rose-700">{localSummary.overdue}</div>
-          <div className="text-[10px] text-rose-600 mt-0.5">SLA breached</div>
-        </div>
-
-        <div
-          onClick={() => setFilterStatus(filterStatus === 'Escalated' ? 'ALL' : 'Escalated')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterStatus === 'Escalated' ? 'border-purple-600 ring-1 ring-purple-600 bg-purple-50/40' : 'hover:border-purple-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-purple-700 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Escalated</span>
-            <ArrowUpRight className="w-4 h-4 text-purple-600" />
-          </div>
-          <div className="text-2xl font-bold text-purple-800">{localSummary.escalated}</div>
-          <div className="text-[10px] text-purple-700 mt-0.5">In hierarchy</div>
-        </div>
-
-        <div
-          onClick={() => setFilterStatus(filterStatus === 'Resolved' ? 'ALL' : 'Resolved')}
-          className={`cims-card p-3 cursor-pointer transition-all border ${
-            filterStatus === 'Resolved' ? 'border-emerald-600 ring-1 ring-emerald-600 bg-emerald-50/40' : 'hover:border-emerald-400'
-          }`}
-        >
-          <div className="flex items-center justify-between text-emerald-700 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Resolved Today</span>
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-bold text-emerald-800">{localSummary.resolvedToday}</div>
-          <div className="text-[10px] text-emerald-700 mt-0.5">Closed today</div>
-        </div>
-
-        <div
-          onClick={() => {
-            setFilterRole('ALL');
-            setFilterStatus('Open');
-          }}
-          className="cims-card p-3 cursor-pointer transition-all border hover:border-slate-400"
-        >
-          <div className="flex items-center justify-between text-slate-600 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Unassigned</span>
-            <UserX className="w-4 h-4 text-slate-500" />
-          </div>
-          <div className="text-2xl font-bold text-slate-800">{localSummary.unassigned}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Needs owner</div>
-        </div>
-      </div>
-
-      {/* 2. OPERATIONAL WORK QUEUE FILTER BAR (Requirement §26) */}
+      {/* 1. OPERATIONAL WORK QUEUE FILTER BAR (Requirement §26) */}
       <div className="cims-card p-4 bg-white border-[#E2E8F0] space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -936,13 +709,6 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
         onRowClick={(e) => openExceptionDetail(e)}
         actions={
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1.5 font-bold bg-[#F59E0B] hover:bg-[#D97706] text-white cursor-pointer"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              Log Exception / Override Request
-            </button>
             <button
               onClick={refreshSummary}
               className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
@@ -1827,222 +1593,6 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                   {actionLoading ? 'Verifying & Resolving...' : 'Mark Exception Resolved'}
                 </button>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Log Exception / Override Request Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
-            {/* Header */}
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-amber-400" />
-                <div>
-                  <h3 className="text-sm font-bold">Log Exception / Override Request</h3>
-                  <p className="text-[11px] text-blue-200">Submit a controlled business or operational override to configured approval hierarchy</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-white hover:text-gray-300 text-base cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-[#101828] mb-1">Target Entity Type *</label>
-                  <select
-                    value={createForm.entityType}
-                    onChange={(e) => setCreateForm({ ...createForm, entityType: e.target.value, entityId: '' })}
-                    className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-white"
-                  >
-                    <option value="Collateral">Collateral Asset</option>
-                    <option value="Insurance Policy">Insurance Policy</option>
-                    <option value="Customer">Customer Profile</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#101828] mb-1">Select Target {createForm.entityType} *</label>
-                  {createForm.entityType === 'Collateral' ? (
-                    <select
-                      value={createForm.entityId}
-                      onChange={(e) => setCreateForm({ ...createForm, entityId: e.target.value, collateralId: e.target.value })}
-                      className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-white"
-                    >
-                      <option value="">-- Select Collateral --</option>
-                      {collaterals.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.code || c.id} — {c.type || c.category} ({c.branch || 'Addis Ababa'})
-                        </option>
-                      ))}
-                    </select>
-                  ) : createForm.entityType === 'Insurance Policy' ? (
-                    <select
-                      value={createForm.entityId}
-                      onChange={(e) => setCreateForm({ ...createForm, entityId: e.target.value })}
-                      className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-white"
-                    >
-                      <option value="">-- Select Policy --</option>
-                      {policies.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.policyNumber} — {p.insurerName} ({p.status})
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <select
-                      value={createForm.entityId}
-                      onChange={(e) => setCreateForm({ ...createForm, entityId: e.target.value })}
-                      className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-white"
-                    >
-                      <option value="">-- Select Customer --</option>
-                      {customers.map(c => (
-                        <option key={c.id || c.cif} value={c.id || c.cif}>
-                          {c.cif} — {c.name} ({c.segment || 'Retail'})
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-[#101828] mb-1">Exception Type *</label>
-                  <select
-                    value={createForm.exceptionType}
-                    onChange={(e) => setCreateForm({ ...createForm, exceptionType: e.target.value })}
-                    className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-white"
-                  >
-                    <option value="Missing Mandatory Document">Missing Mandatory Document</option>
-                    <option value="Underinsured Collateral">Underinsured Collateral</option>
-                    <option value="Expired Policy">Expired Policy</option>
-                    <option value="Renewal Delay">Renewal Delay</option>
-                    <option value="Unapproved Insurer">Unapproved Insurer</option>
-                    <option value="Policy Inconsistency">Policy Inconsistency</option>
-                    <option value="Document Nearing Expiry">Document Nearing Expiry</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-[#101828] mb-1">Severity *</label>
-                  <select
-                    value={createForm.severity}
-                    onChange={(e) => setCreateForm({ ...createForm, severity: e.target.value })}
-                    className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-white"
-                  >
-                    <option value="Critical">Critical (Immediate Sanction Required)</option>
-                    <option value="High">High (Elevated Risk)</option>
-                    <option value="Medium">Medium (Standard Workflow)</option>
-                    <option value="Low">Low (Informational)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#101828] mb-1">Failed Requirement / Rule Description *</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Title Deed Missing for Immovable Property or Underinsured by ETB 1.2M"
-                  value={createForm.failedRequirement}
-                  onChange={(e) => setCreateForm({ ...createForm, failedRequirement: e.target.value })}
-                  className="w-full p-2 border border-[#E2E8F0] rounded text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#101828] mb-1">
-                  Reason / Business Justification <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={createForm.reason}
-                  onChange={(e) => setCreateForm({ ...createForm, reason: e.target.value })}
-                  placeholder="Explain why the exception is requested, mitigating controls, or temporary grace period..."
-                  className="w-full p-2 border border-[#E2E8F0] rounded text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#101828] mb-1">
-                  Supporting Document / Evidence (Optional)
-                </label>
-                <div className="flex items-center gap-2">
-                  <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-[#E2E8F0] rounded cursor-pointer flex items-center gap-1.5 text-xs text-[#102E4A] font-semibold">
-                    <Paperclip className="w-3.5 h-3.5 text-[#1F4E7A]" />
-                    <span>Attach Evidence File</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setCreateForm({
-                            ...createForm,
-                            evidenceDocument: file.name,
-                          });
-                        }
-                      }}
-                    />
-                  </label>
-                  {createForm.evidenceDocument && (
-                    <span className="text-xs text-emerald-700 font-medium">
-                      ✓ Attached: {createForm.evidenceDocument}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#101828] mb-1">
-                  Exception Comments <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={createForm.comments}
-                  onChange={(e) => setCreateForm({ ...createForm, comments: e.target.value })}
-                  placeholder="Additional operational remarks or conditions for the assigned approval authority..."
-                  className="w-full p-2 border border-[#E2E8F0] rounded text-xs"
-                />
-              </div>
-
-              <div className="p-2.5 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-900 space-y-1">
-                <div className="font-semibold flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
-                  Approval Hierarchy Routing:
-                </div>
-                <div>
-                  This request will be dynamically assigned to the configured approver according to Exception Type + Business Segment + Branch Hierarchy.
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 bg-slate-50 border-t border-[#E2E8F0] flex justify-between items-center text-xs">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="btn-secondary cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={createSubmitting || !createForm.reason.trim() || !createForm.comments.trim() || (!createForm.entityId && !createForm.collateralId)}
-                onClick={handleCreateManualException}
-                className="btn-primary bg-[#F59E0B] hover:bg-[#D97706] text-white disabled:opacity-50 flex items-center gap-1.5 font-bold cursor-pointer"
-              >
-                <Send className="w-3.5 h-3.5" />
-                {createSubmitting ? 'Submitting Exception…' : 'Submit Exception for Approval'}
-              </button>
             </div>
           </div>
         </div>

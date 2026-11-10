@@ -22,6 +22,8 @@ export interface UserSession {
   userId: string;
   username: string;
   name: string;
+  fullName?: string;
+  displayName?: string;
   role: RoleCode;
   roleName: string;
   branch: string;
@@ -76,7 +78,7 @@ export interface RolePermission {
 export interface Customer {
   id: string;
   cif: string;
-  customerType: 'Individual' | 'Business' | 'Government';
+  customerType: 'Individual' | 'Business Organization' | 'Government Entity' | 'Business' | 'Government';
   name: string;
   nationalId?: string;
   businessRegNo?: string;
@@ -122,6 +124,9 @@ export interface LoanAccount {
   maturityDate?: string;
   expiryDate?: string;
   approvedLimit: number;
+  sanctionedLimit?: number;
+  sanctionedAmount?: number;
+  amount?: number;
   outstandingBalance: number;
   availableAmount: number;
   collateralContribution?: number;
@@ -157,6 +162,8 @@ export interface CollateralOwner {
   verificationDate?: string;
   verifyingOfficer?: string;
   remarks?: string;
+  makerId?: string;
+  relationshipDescription?: string;
   gpsX?: number;
   gpsY?: number;
   supersededDate?: string;
@@ -233,6 +240,26 @@ export interface LoanCollateralLink {
   checkerDtStamp?: string;
   recordStat?: string;
   authStat?: string;
+  // Link-level Charge Priority & Ownership Separation
+  collateralRank?: '1st' | '2nd' | string;
+  isFirstDegreeInternal?: boolean;
+  firstDegreeCollateralId?: string;
+  firstDegreeHolderName?: string;
+  firstDegreeFacilityRef?: string;
+  firstDegreeOutstandingBalance?: number;
+  firstDegreeBalanceAsOfDate?: string;
+  registeredMortgageAmount?: number;
+  mortgageRegistrationNumber?: string;
+  mortgageRegistrationDate?: string;
+  bankNotedAsSecondMortgagee?: boolean;
+  firstDegreeConfirmationDocId?: string;
+  firstDegreeExtractDocId?: string;
+  borrowerCustomerId?: string;
+  legalOwnerCustomerId?: string;
+  legalOwnerName?: string;
+  ownerWithoutCif?: boolean;
+  priorChargeDeduction?: number;
+  availableSecurityForRank?: number;
 }
 
 export interface Collateral {
@@ -290,6 +317,392 @@ export interface Collateral {
   authStat?: 'U' | 'A' | 'R' | string;
   owners?: CollateralOwner[];
   documents?: OwnershipDocument[];
+  // 1st / 2nd Degree Collateral Prioritization & Mortgage Registration
+  collateralRank?: '1st' | '2nd' | string;
+  isFirstDegreeInternal?: boolean;
+  firstDegreeCollateralId?: string;
+  firstDegreeHolderName?: string;
+  firstDegreeFacilityRef?: string;
+  firstDegreeOutstandingBalance?: number;
+  firstDegreeBalanceAsOfDate?: string;
+  registeredMortgageAmount?: number;
+  mortgageRegistrationNumber?: string;
+  mortgageRegistrationDate?: string;
+  firstDegreePolicyNumber?: string;
+  firstDegreeInsurer?: string;
+  firstDegreePolicyExpiry?: string;
+  bankNotedAsSecondMortgagee?: boolean;
+  firstDegreeConfirmationDocId?: string;
+  firstDegreeExtractDocId?: string;
+  promotionEligible?: boolean;
+  promotionStatus?: 'NOT_APPLICABLE' | 'ELIGIBLE' | 'REVIEWED' | 'PROMOTED' | string;
+  promotionReason?: string;
+  promotionFlagDate?: string;
+  promotionReviewNotes?: string;
+  promotionReviewedBy?: string;
+  promotionReviewedAt?: string;
+  // Module 4 Enhancement: Insurable Value, Data Requirements & Early Release
+  insurableValue?: number;
+  landValue?: number;
+  estimatedValue?: number;
+  estimatedValueSource?: string;
+  estimatedValuationDate?: string;
+  bankAssessedValueSource?: string;
+  isUnderConstruction?: boolean;
+  constructionCompletionPct?: number;
+  constructionRemainingPct?: number;
+  engineeringReportDocId?: string;
+  constructionInspectionDate?: string;
+  expectedCompletionDate?: string;
+  constructionReviewTriggered?: boolean;
+  locationAddress?: string;
+  locationCity?: string;
+  locationRegion?: string;
+  locationSubcity?: string;
+  locationWoreda?: string;
+  locationKebele?: string;
+  propertyCertNumber?: string;
+  vehiclePlateNumber?: string;
+  vehicleChassisNumber?: string;
+  vehicleEngineNumber?: string;
+  identifierSource?: string;
+  pendingInsuranceClaim?: boolean;
+  pendingInsuranceClaimRef?: string;
+  pendingInsuranceClaimAmount?: number;
+  activeReleaseRequestId?: string;
+  // Stage 2 & 3 Dynamic Subtype Fields
+  livestockTagNumber?: string;
+  livestockBreed?: string;
+  livestockQuantity?: number;
+  veterinaryHealthCertDate?: string;
+  farmCropType?: string;
+  farmLandHoldingCert?: string;
+  warehouseReceiptNumber?: string;
+  warehouseName?: string;
+  warehouseCommodityType?: string;
+  warehouseExpiryDate?: string;
+  ipRegistrationNumber?: string;
+  ipTitle?: string;
+  ipFilingDate?: string;
+  ipExpiryDate?: string;
+  guarantorName?: string;
+  guaranteeAgreementRef?: string;
+  boardResolutionRef?: string;
+  guaranteeExpiryDate?: string;
+  ownerWithoutCif?: boolean;
+  vehicleMake?: string;
+  vehicleModel?: string;
+  vehicleYear?: number;
+  vehicleType?: string;
+  machineryType?: string;
+  machineryManufacturer?: string;
+  machineryModel?: string;
+  machineryPurchaseDocRef?: string;
+  machineryOwnershipCertRef?: string;
+  furnitureType?: string;
+  furnitureQuantity?: number;
+  shareIssuer?: string;
+  shareType?: string;
+  shareQuantity?: number;
+  shareFaceValue?: number;
+  shareCertRef?: string;
+  billDrawer?: string;
+  billDrawee?: string;
+  billIssueDate?: string;
+  billMaturityDate?: string;
+  billFaceValue?: number;
+  billReference?: string;
+  billPaymentPlace?: string;
+  blockedAccountNumber?: string;
+  depositAmount?: number;
+  depositCurrency?: string;
+  depositMaturityDate?: string;
+  pledgeConfirmationRef?: string;
+  treasuryBillSeries?: string;
+  treasuryBillFaceValue?: number;
+  treasuryBillIssueDate?: string;
+  treasuryBillMaturityDate?: string;
+  custodyAccountRef?: string;
+  farmQuantity?: number;
+  farmStorageLocation?: string;
+  farmHarvestSeason?: string;
+  warehouseQuantity?: number;
+  warehouseReceiptDate?: string;
+  warehouseInspectionRef?: string;
+  ipType?: string;
+  ipAuthority?: string;
+  ipRegistrationDate?: string;
+  guarantorCif?: string;
+  guarantorIdNumber?: string;
+  guarantorTin?: string;
+  guarantorContact?: string;
+  guarantorAddress?: string;
+  guaranteeAmount?: number;
+  guaranteeEffectiveDate?: string;
+  buildingType?: string;
+  buildingUse?: string;
+  locationZone?: string;
+  coffeeSiteLocation?: string;
+  coffeeSiteCertRef?: string;
+  landUseRightCertRef?: string;
+}
+
+export interface InsuranceCoverageRule {
+  id: string;
+  ruleCode?: string;
+  collateralType: string;
+  businessSegment: string;
+  customerSegment?: string;
+  requiredCoveragePercentage: number;
+  requiredCoveragePct?: number;
+  overInsuranceTolerancePct: number;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  status: 'Active' | 'Inactive' | 'Draft' | string;
+  active?: boolean;
+  approvalStatus?: string;
+  description?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  creditPolicyApproved: boolean;
+  makerId?: string;
+  checkerId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InsuranceException {
+  id: string;
+  collateralId: string;
+  policyId?: string;
+  exceptionType: string;
+  reason: string;
+  approvedExceptionAmount: number;
+  validityStartDate: string;
+  validityEndDate: string;
+  reviewDate: string;
+  requestingUserId: string;
+  supervisorApproverId?: string;
+  approvalStatus: 'Pending' | 'Approved' | 'Rejected' | 'Expired' | 'Resolved' | string;
+  decisionDate?: string;
+  decisionComments?: string;
+  supportingDocId?: string;
+  resolutionNotes?: string;
+  resolvedAt?: string;
+  createdAt?: string;
+}
+
+export interface InsuranceAdequacyAssessment {
+  collateralId: string;
+  collateralCode: string;
+  collateralType: string;
+  businessSegment: string;
+  bankAssessedValue: number;
+  bankAssessedValueSource?: string;
+  bankAssessedInsurableValue?: number;
+  landValue?: number;
+  estimatedValue?: number;
+  estimatedValueSource?: string;
+  estimatedValuationDate?: string;
+  applicableRuleId?: string;
+  applicableRuleDescription?: string;
+  applicableRuleCode?: string;
+  requiredCoveragePercentage: number;
+  requiredCoveragePct?: number;
+  overInsuranceTolerancePct: number;
+  ruleCreditPolicyApproved: boolean;
+  missingRuleWarning: boolean;
+  requiredCoverageAmount: number;
+  totalInsuredAmount: number;
+  primaryTestPassed: boolean;
+  isPrimaryPass?: boolean;
+  primaryCoverageRatio?: number;
+  primaryTestStatus: 'Adequate' | 'Underinsured' | 'Uninsured' | 'Over insured' | string;
+  primaryTestResult?: string;
+  aggregateSecuredExposure: number;
+  secondaryTestPassed: boolean;
+  isSecondaryPass?: boolean;
+  secondaryCoverageRatio?: number;
+  exposureCoverageRatio?: number;
+  secondaryTestStatus: string;
+  secondaryTestResult?: string;
+  hasMissingOrStaleBalances: boolean;
+  staleOrMissingFacilities: string[];
+  contributingFacilities: Array<{
+    facilityId: string;
+    loanReference: string;
+    facilityType: string;
+    approvedLimit: number;
+    outstandingBalance: number;
+    asOfDate?: string;
+    borrowerName?: string;
+    linkageDate?: string;
+    facilityNumber?: string;
+  }>;
+  distinctFacilities?: Array<{
+    facilityId: string;
+    facilityNumber?: string;
+    loanReference?: string;
+    borrowerName?: string;
+    approvedLimit: number;
+    outstandingBalance: number;
+    asOfDate?: string;
+    linkageDate?: string;
+  }>;
+  overallAdequacyStatus: 'Adequate' | 'Underinsured' | 'Uninsured' | 'Over insured' | string;
+  adequacyStatus?: string;
+  isOverInsured: boolean;
+  overInsuranceMessage?: string;
+  missingDataWarnings: string[];
+  dataWarnings?: string[];
+  contributingPolicies: Array<{
+    id: string;
+    policyNumber: string;
+    insurer: string;
+    insurerName?: string;
+    insuredAmount: number;
+    effectiveDate: string;
+    startDate?: string;
+    expiryDate: string;
+    status: string;
+  }>;
+  activePolicies?: Array<{
+    id: string;
+    policyNumber: string;
+    insurer?: string;
+    insurerName?: string;
+    insuredAmount: number;
+    startDate?: string;
+    effectiveDate?: string;
+    expiryDate: string;
+    status: string;
+  }>;
+  hasActiveException: boolean;
+  activeExceptionDetails?: Record<string, any>;
+  activeExceptions?: Array<{
+    id: string;
+    exceptionType: string;
+    supervisorStatus?: string;
+    resolutionStatus?: string;
+    reason: string;
+    approvedExceptionAmount?: number;
+    reviewDate?: string;
+  }>;
+  calculationExplanation: string;
+}
+
+export interface PreReleaseImpactAssessment {
+  collateralId: string;
+  collateralCode: string;
+  collateralType: string;
+  currentCollateralValuation: number;
+  currentCollateralValue?: number;
+  currentInsurableValue?: number;
+  currentNetSecurityValue: number;
+  currentInsuredAmount: number;
+  currentAdequacyStatus: string;
+  releaseType: 'FULL_COLLATERAL' | 'PARTIAL_FACILITY_LINK' | string;
+  targetedFacilityIds: string[];
+  affectedFacilities: Array<{
+    facilityId: string;
+    facilityNumber?: string;
+    loanReference: string;
+    borrowerName?: string;
+    facilityType: string;
+    approvedLimit: number;
+    outstandingBalance: number;
+    preReleaseBalance?: number;
+    balanceAsOfDate?: string;
+    preReleaseAllocatedSecurity: number;
+    postReleaseAllocatedSecurity: number;
+    postReleaseAvailableCollateral?: number;
+    preReleaseCoverageRatio: number;
+    postReleaseCoverageRatio: number;
+    requiredMarginPct: number;
+    preReleasePassed: boolean;
+    postReleasePassed: boolean;
+    remainingCollateralCodes: string[];
+    statusMessage: string;
+    marginResult?: string;
+    testResult?: string;
+  }>;
+  currentAggregateExposure: number;
+  currentCoverageRatio?: number;
+  projectedPostReleaseAggregateExposure: number;
+  projectedPostReleaseExposure?: number;
+  projectedRemainingCollateralValue?: number;
+  projectedRemainingInsurableValue?: number;
+  projectedPostReleaseCoverageRatio?: number;
+  projectedPostReleaseMarginPct?: number;
+  currentTotalAllocatedSecurity: number;
+  projectedPostReleaseAllocatedSecurity: number;
+  conditionAAuthorizedCreditApproval: boolean;
+  conditionADetails?: string;
+  conditionA_CreditApproval?: { status: string; message: string };
+  conditionBRemainingCollateralAdequacy: boolean;
+  conditionBDetails?: string;
+  conditionB_RemainingAdequacy?: { status: string; message: string };
+  conditionCCrossCollateralValidation: boolean;
+  conditionCDetails?: string;
+  conditionC_CrossCollateralValidation?: { status: string; message: string };
+  conditionDExceptionsAndClaimsPassed: boolean;
+  conditionD_InsuranceExceptionsAndClaims?: { status: string; message: string };
+  hasUnresolvedInsuranceExceptions: boolean;
+  unresolvedExceptionIds: string[];
+  hasPendingInsuranceClaims: boolean;
+  pendingInsuranceClaimRef?: string;
+  pendingInsuranceClaimAmount?: number;
+  conditionDDetails?: string;
+  conditionEReleaseDocumentsFiled: boolean;
+  conditionE_ReleaseDocuments?: { status: string; message: string };
+  requiredDocumentTypes: string[];
+  missingDocumentTypes: string[];
+  filedDmsDocIds: string[];
+  conditionEDetails?: string;
+  canProceedWithRelease: boolean;
+  canProceed?: boolean;
+  overallStatus?: string;
+  hardBlocked: boolean;
+  blockingReasons: string[];
+  informationalWarnings: string[];
+  conditionsRequiringReview: string[];
+  cbsManualActionRequired: boolean;
+  cbsManualActionNotice: string;
+}
+
+export interface CollateralReleaseRequest {
+  id: string;
+  requestNumber?: string;
+  collateralId: string;
+  facilityIds: string;
+  releaseType: 'FULL_COLLATERAL' | 'PARTIAL_FACILITY_LINK' | string;
+  requesterId: string;
+  requesterUser?: string;
+  requestDate?: string;
+  reason: string;
+  supportingDocumentIds?: string;
+  dmsDocumentReference?: string;
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CBS_UPDATE_PENDING' | 'RELEASE_COMPLETED' | string;
+  approvalStatus?: string;
+  isBlocked: boolean;
+  blockReasons?: string;
+  impactAssessmentJson?: string;
+  approverId?: string;
+  decisionDate?: string;
+  decisionComments?: string;
+  cbsUpdateStatus: 'PENDING' | 'COMPLETED' | 'FAILED' | 'NOT_APPLICABLE' | string;
+  manualCbsUpdateStatus?: string;
+  cbsUpdatedBy?: string;
+  manualCbsUpdatedBy?: string;
+  cbsUpdatedAt?: string;
+  manualCbsUpdatedAt?: string;
+  cbsReferenceNo?: string;
+  manualCbsReference?: string;
+  cbsUpdateNotes?: string;
+  manualCbsNotes?: string;
+  workflowTaskId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LinkedFacilityDetailDto {
@@ -303,6 +716,9 @@ export interface LinkedFacilityDetailDto {
   loanReference: string;
   facilityType: string;
   approvedLimit: number;
+  sanctionedLimit?: number;
+  sanctionedAmount?: number;
+  amount?: number;
   outstandingBalance: number;
   availableAmount: number;
   lineCurrency: string;
@@ -719,6 +1135,7 @@ export interface MandatoryDocumentRule {
   ownershipCondition?: string;
   applicabilityCondition?: string;
   mandatory: boolean;
+  exceptionAllowed?: boolean;
   active?: boolean;
 }
 
@@ -739,7 +1156,7 @@ export interface SystemParameter {
 export interface CbsCustomer {
   id: string;
   cif: string;
-  customerType: 'Individual' | 'Business' | 'Government';
+  customerType: 'Individual' | 'Business Organization' | 'Government Entity' | 'Business' | 'Government';
   fullName: string;
   nationalId?: string;
   businessRegNo?: string;
@@ -898,6 +1315,60 @@ export interface ExposureAdequacySummary {
     allocatedAmount: number;
     linkageType?: string;
   }>;
+  // 1st / 2nd Degree and Combined Exposure evaluation
+  collateralRank?: '1st' | '2nd' | string;
+  isFirstDegreeInternal?: boolean;
+  firstDegreeOutstandingBalance?: number;
+  secondDegreeExposure?: number;
+  combinedExposure?: number;
+  exposureWarning?: boolean;
+  exposureWarningMessage?: string;
+  bankNotedAsSecondMortgagee?: boolean;
+  promotionEligible?: boolean;
+  promotionStatus?: string;
+}
+
+export interface SecondDegreeValidationResult {
+  valid: boolean;
+  canProceed: boolean;
+  errors: string[];
+  warnings: string[];
+  checks: ValidationCheckItemDto[];
+  combinedExposure: number;
+  bankAssessedValuation: number;
+  exposureExceeded: boolean;
+  excessExposure: number;
+  insuranceDeficiency: boolean;
+  explanation?: string;
+}
+
+export interface DegreeDetailsDto {
+  collateral: Collateral;
+  rank: string;
+  isSecondDegree: boolean;
+  isInternal: boolean;
+  firstDegreeHolderName?: string;
+  firstDegreeFacilityRef?: string;
+  firstDegreeOutstandingBalance?: number;
+  firstDegreeBalanceAsOfDate?: string;
+  registeredMortgageAmount?: number;
+  mortgageRegistrationNumber?: string;
+  mortgageRegistrationDate?: string;
+  bankNotedAsSecondMortgagee?: boolean;
+  parentCollateral?: Collateral | null;
+  confirmationDocument?: OwnershipDocument | null;
+  extractDocument?: OwnershipDocument | null;
+  combinedExposure: number;
+  bankAssessedValuation: number;
+  exposureExceeded: boolean;
+  excessExposure: number;
+  promotionEligible: boolean;
+  promotionStatus: string;
+  promotionReason?: string;
+  promotionFlagDate?: string;
+  promotionReviewNotes?: string;
+  promotionReviewedBy?: string;
+  promotionReviewedAt?: string;
 }
 
 export interface Customer360 {
@@ -1209,6 +1680,9 @@ export interface TopDeficitFacility {
   customerName: string;
   facilityType: string;
   approvedLimit: number;
+  sanctionedLimit?: number;
+  sanctionedAmount?: number;
+  amount?: number;
   outstandingBalance: number;
   pledgedCollateralValue: number;
   shortfallAmount: number;
@@ -1267,6 +1741,7 @@ export interface EnterpriseRiskConcentration {
 
 export interface ValidationCheckItemDto {
   category: string;
+  name?: string;
   ruleName?: string;
   checkName?: string;
   passed: boolean;
@@ -1274,6 +1749,7 @@ export interface ValidationCheckItemDto {
   overrideable: boolean;
   exceptionType?: string;
   failedRequirement?: string;
+  exceptionTarget?: string;
   code?: string;
   ruleKey?: string;
   severity?: 'INFO' | 'WARNING' | 'HARD_STOP' | string;
@@ -1308,6 +1784,34 @@ export interface EntryTimeExceptionRequest {
 // Module 3: Relationship & Allocation Types
 // ==========================================
 
+export interface FacilityCandidateDto {
+  id: string;
+  lineCode?: string;
+  loanReference?: string;
+  accountNumber?: string;
+  facilityType: string;
+  customerId?: string;
+  borrowerName?: string;
+  borrowerCif?: string;
+  approvedLimit: number;
+  outstandingBalance: number;
+  availableAmount: number;
+  lineCurrency?: string;
+  lineExpiryDate?: string;
+  status: string;
+  branch?: string;
+  segment?: string;
+  linkedCollateralCount: number;
+  linkedCollateralCodes: string[];
+  alreadyLinked: boolean;
+  existingAllocationToThisCollateral?: number;
+  eligible: boolean;
+  requiresInformation: boolean;
+  candidateStatus: 'ELIGIBLE' | 'REQUIRES_THIRD_PARTY_INFO' | 'DUPLICATE' | 'INELIGIBLE_STATUS' | 'CAPACITY_EXCEEDED' | string;
+  ineligibilityReason?: string;
+  thirdParty: boolean;
+}
+
 export interface CollateralCandidateDto {
   id: string;
   code: string;
@@ -1332,7 +1836,11 @@ export interface CollateralCandidateDto {
   thirdParty: boolean;
   thirdPartyValid: boolean;
   eligible: boolean;
+  requiresInformation?: boolean;
+  candidateStatus?: 'ELIGIBLE' | 'REQUIRES_THIRD_PARTY_INFO' | 'DUPLICATE' | 'INELIGIBLE_STATUS' | 'CAPACITY_EXCEEDED' | string;
   ineligibilityReason?: string;
+  linkedFacilityCount?: number;
+  linkedFacilityCodes?: string[];
   legalOwners?: string[];
 }
 
@@ -1369,16 +1877,21 @@ export interface CollateralFacilityLinkDto {
   collateralOwnerCustomerId?: string;
   collateralOwnerCif?: string;
   legalOwnerNames?: string;
+  relationshipContext?: 'Borrower-owned' | 'Third-party' | string;
   thirdParty?: boolean;
   relationshipToBorrower?: string;
   ownershipPercentage?: number;
   ownershipVerificationStatus?: string;
   pledgeAgreementRef?: string;
   consentInfo?: string;
+  consentDocumentRef?: string;
 
   facilityType?: string;
   facilityCurrency?: string;
   approvedLimit: number;
+  sanctionedLimit?: number;
+  sanctionedAmount?: number;
+  amount?: number;
   outstandingBalance: number;
   availableAmount: number;
   businessSegment?: string;
@@ -1414,6 +1927,26 @@ export interface CollateralFacilityLinkDto {
   authStat?: string;
   modNo?: number;
   changeReason?: string;
+
+  // Link-level Charge Priority & Ownership Separation
+  collateralRank?: string;
+  isFirstDegreeInternal?: boolean;
+  firstDegreeCollateralId?: string;
+  firstDegreeHolderName?: string;
+  firstDegreeFacilityRef?: string;
+  firstDegreeOutstandingBalance?: number;
+  firstDegreeBalanceAsOfDate?: string;
+  registeredMortgageAmount?: number;
+  mortgageRegistrationNumber?: string;
+  mortgageRegistrationDate?: string;
+  bankNotedAsSecondMortgagee?: boolean;
+  firstDegreeConfirmationDocId?: string;
+  firstDegreeExtractDocId?: string;
+  legalOwnerCustomerId?: string;
+  legalOwnerName?: string;
+  ownerWithoutCif?: boolean;
+  priorChargeDeduction?: number;
+  availableSecurityForRank?: number;
 }
 
 export interface CollateralSecuredFacilitiesSummaryDto {
@@ -1457,6 +1990,9 @@ export interface FacilityCollateralSummaryDto {
   facilityType: string;
   currency: string;
   approvedLimit: number;
+  sanctionedLimit?: number;
+  sanctionedAmount?: number;
+  amount?: number;
   outstandingBalance: number;
   availableAmount: number;
   businessSegment: string;
@@ -1496,7 +2032,27 @@ export interface RelationshipRequestDto {
   relationshipToBorrower?: string;
   pledgeAgreementRef?: string;
   consentInfo?: string;
+  consentDocumentRef?: string;
   thirdPartyPledge?: boolean;
+  relationshipContext?: 'Borrower-owned' | 'Third-party' | string;
+  finalSubmission?: boolean;
+  // Link-level Charge Priority & Ownership Separation
+  collateralRank?: string;
+  isFirstDegreeInternal?: boolean;
+  firstDegreeCollateralId?: string;
+  firstDegreeHolderName?: string;
+  firstDegreeFacilityRef?: string;
+  firstDegreeOutstandingBalance?: number;
+  firstDegreeBalanceAsOfDate?: string;
+  registeredMortgageAmount?: number;
+  mortgageRegistrationNumber?: string;
+  mortgageRegistrationDate?: string;
+  bankNotedAsSecondMortgagee?: boolean;
+  firstDegreeConfirmationDocId?: string;
+  firstDegreeExtractDocId?: string;
+  legalOwnerCustomerId?: string;
+  legalOwnerName?: string;
+  ownerWithoutCif?: boolean;
 }
 
 export interface RelationshipValidationResultDto {
@@ -1541,6 +2097,13 @@ export interface RelationshipValidationResultDto {
 
   ownerBorrowerMatch?: boolean;
   thirdParty?: boolean;
+  relationshipContext?: 'Borrower-owned' | 'Third-party' | string;
+  validationState?: 'NORMAL' | 'THIRD_PARTY_REQUIRED' | 'THIRD_PARTY_INCOMPLETE' | 'THIRD_PARTY_VALIDATED' | 'HARD_STOP' | 'PASS' | string;
+  duplicate?: boolean;
+  thirdPartyRequired?: boolean;
+  firstDegreeRequired?: boolean;
+  secondDegreeRequired?: boolean;
+  requiredDocuments?: string[];
   consentStatus?: string;
   pledgeAgreementRef?: string;
   hasRequiredPledgeEvidence?: boolean;
@@ -1559,6 +2122,12 @@ export interface LoanCollateralLinkHistoryDto {
   loanAccountId: string;
   facilityId?: string;
   customerId?: string;
+  relationshipContext?: string;
+  thirdParty?: boolean;
+  relationshipToBorrower?: string;
+  pledgeAgreementRef?: string;
+  consentInfo?: string;
+  consentDocumentRef?: string;
   previousAllocatedAmount: number;
   newAllocatedAmount: number;
   previousLinkageType?: string;

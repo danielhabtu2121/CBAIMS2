@@ -754,8 +754,8 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                     className="w-full p-2 border border-[#E2E8F0] rounded"
                   >
                     <option value="Individual">Individual</option>
-                    <option value="Business">Business</option>
-                    <option value="Government">Government</option>
+                    <option value="Business Organization">Business Organization</option>
+                    <option value="Government Entity">Government Entity</option>
                   </select>
                 </div>
               </div>
@@ -1065,11 +1065,11 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <input
                     type="number"
                     required
-                    value={selectedFac.approvedLimit || 0}
+                    value={selectedFac.approvedLimit ?? ''}
                     onChange={(e) => {
-                      const app = Number(e.target.value);
+                      const app = e.target.value === '' ? ('' as any) : Number(e.target.value);
                       const out = selectedFac.outstandingAmount || 0;
-                      setSelectedFac({ ...selectedFac, approvedLimit: app, availableAmount: Math.max(0, app - out) });
+                      setSelectedFac({ ...selectedFac, approvedLimit: app, availableAmount: app === '' ? 0 : Math.max(0, app - out) });
                     }}
                     className="w-full p-2 border border-[#E2E8F0] rounded tabular-nums"
                   />
@@ -1079,11 +1079,11 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <input
                     type="number"
                     required
-                    value={selectedFac.outstandingAmount || 0}
+                    value={selectedFac.outstandingAmount ?? ''}
                     onChange={(e) => {
-                      const out = Number(e.target.value);
+                      const out = e.target.value === '' ? ('' as any) : Number(e.target.value);
                       const app = selectedFac.approvedLimit || 0;
-                      setSelectedFac({ ...selectedFac, outstandingAmount: out, availableAmount: Math.max(0, app - out) });
+                      setSelectedFac({ ...selectedFac, outstandingAmount: out, availableAmount: out === '' ? app : Math.max(0, app - out) });
                     }}
                     className="w-full p-2 border border-[#E2E8F0] rounded tabular-nums"
                   />
@@ -1104,8 +1104,8 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <label className="block font-semibold text-[#101828] mb-1">Collateral Contribution</label>
                   <input
                     type="number"
-                    value={selectedFac.collateralContribution || 0}
-                    onChange={(e) => setSelectedFac({ ...selectedFac, collateralContribution: Number(e.target.value) })}
+                    value={selectedFac.collateralContribution ?? ''}
+                    onChange={(e) => setSelectedFac({ ...selectedFac, collateralContribution: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
                     className="w-full p-2 border border-[#E2E8F0] rounded tabular-nums"
                   />
                 </div>
@@ -1113,8 +1113,8 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <label className="block font-semibold text-[#101828] mb-1">Collateral % Required</label>
                   <input
                     type="number"
-                    value={selectedFac.collateralPct || 100}
-                    onChange={(e) => setSelectedFac({ ...selectedFac, collateralPct: Number(e.target.value) })}
+                    value={selectedFac.collateralPct ?? ''}
+                    onChange={(e) => setSelectedFac({ ...selectedFac, collateralPct: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
                     className="w-full p-2 border border-[#E2E8F0] rounded tabular-nums"
                   />
                 </div>
@@ -1378,11 +1378,11 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <input
                     type="number"
                     required
-                    value={selectedCol.collateralValue || 0}
+                    value={selectedCol.collateralValue ?? ''}
                     onChange={(e) => {
-                      const v = Number(e.target.value);
+                      const v = e.target.value === '' ? ('' as any) : Number(e.target.value);
                       const hc = selectedCol.haircut || 0;
-                      setSelectedCol({ ...selectedCol, collateralValue: v, limitContribution: Math.round(v * (1 - hc / 100)) });
+                      setSelectedCol({ ...selectedCol, collateralValue: v, limitContribution: v === '' ? 0 : Math.round(v * (1 - hc / 100)) });
                     }}
                     className="w-full p-2 border border-[#E2E8F0] rounded tabular-nums"
                   />
@@ -1391,11 +1391,11 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <label className="block font-semibold text-[#101828] mb-1">Haircut %</label>
                   <input
                     type="number"
-                    value={selectedCol.haircut || 0}
+                    value={selectedCol.haircut ?? ''}
                     onChange={(e) => {
-                      const hc = Number(e.target.value);
+                      const hc = e.target.value === '' ? ('' as any) : Number(e.target.value);
                       const v = selectedCol.collateralValue || 0;
-                      setSelectedCol({ ...selectedCol, haircut: hc, limitContribution: Math.round(v * (1 - hc / 100)) });
+                      setSelectedCol({ ...selectedCol, haircut: hc, limitContribution: hc === '' ? v : Math.round(v * (1 - hc / 100)) });
                     }}
                     className="w-full p-2 border border-[#E2E8F0] rounded tabular-nums"
                   />

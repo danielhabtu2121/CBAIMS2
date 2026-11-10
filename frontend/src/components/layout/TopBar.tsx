@@ -76,7 +76,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   onNavigate,
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -896,85 +895,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             </span>
           )}
         </button>
-
-        {/* Switch Persona Fast-Selector Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowPersonaMenu(!showPersonaMenu)}
-            style={{
-              backgroundColor: '#143666',
-              color: '#FFFFFF',
-              border: '1px solid #1B4580',
-              borderRadius: '6px',
-              padding: '5px 10px',
-              fontSize: '11px',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-            }}
-            title="Switch Testing Role Persona"
-          >
-            <RefreshCw style={{ width: '12px', height: '12px', color: '#1E6FD9' }} />
-            <span>Persona: {currentUser.role}</span>
-            <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.7 }} />
-          </button>
-
-          {showPersonaMenu && (
-            <div
-              style={{
-                position: 'absolute',
-                right: 0,
-                marginTop: '6px',
-                width: '260px',
-                maxHeight: '340px',
-                overflowY: 'auto',
-                backgroundColor: '#FFFFFF',
-                color: '#0F172A',
-                borderRadius: '8px',
-                border: '1px solid #DCE4EE',
-                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                padding: '6px',
-                zIndex: 60,
-              }}
-            >
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#5B6B82', padding: '6px 8px', borderBottom: '1px solid #DCE4EE' }}>
-                Select Active Role Persona (16 Pre-Seeded Roles)
-              </div>
-              {allUsers.map((u) => (
-                <button
-                  key={u.userId}
-                  onClick={() => {
-                    onSwitchUser(u);
-                    setShowPersonaMenu(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '6px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    backgroundColor: u.userId === currentUser.userId ? '#E8F0FA' : 'transparent',
-                    color: u.userId === currentUser.userId ? '#08192E' : '#0F172A',
-                    fontWeight: u.userId === currentUser.userId ? 700 : 400,
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{u.name}</span>
-                    <span style={{ fontSize: '10px', color: '#2E6FB8', fontWeight: 700 }}>{u.role}</span>
-                  </div>
-                  <span style={{ fontSize: '10px', color: '#5B6B82' }}>{u.branch}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* User Profile Avatar Dropdown */}
         <div style={{ position: 'relative' }}>
