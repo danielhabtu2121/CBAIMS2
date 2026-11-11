@@ -11,10 +11,17 @@ import {
   XCircle,
   KeyRound,
   RefreshCw,
-  X
+  X,
+  Building2,
+  FileCheck,
+  CheckSquare,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 import { UserSession } from '../../types';
 import { cimsApi } from '../../api/cimsApi';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<boolean | { success: boolean; message?: string }>;
@@ -33,6 +40,8 @@ interface PasswordPolicy {
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLogin,
+  onSelectPersona,
+  availablePersonas = [],
 }) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -93,6 +102,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
+  const handleQuickFill = (u: string, p: string = 'password123') => {
+    setIdentifier(u);
+    setPassword(p);
+    setError('');
+  };
+
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotMsg(null);
@@ -102,7 +117,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       if (res.success) {
         setForgotMsg({
           type: 'success',
-          text: res.message || 'Password reset instructions have been generated.',
+          text: res.message || 'Password reset token generated. Proceed to set your new password.',
         });
         setForgotStep('reset');
       } else {
@@ -153,543 +168,407 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#0A1C33',
-        backgroundImage: 'radial-gradient(circle at 1px 1px, #1E3A5F 1px, transparent 0)',
-        backgroundSize: '28px 28px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-    >
-      <div
-        style={{
-          width: '440px',
-          maxWidth: '100%',
-          backgroundColor: '#FFFFFF',
-          borderRadius: '14px',
-          border: '1px solid #C7D7E8',
-          boxShadow: '0 20px 40px -15px rgba(0, 20, 50, 0.35)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Brand Header */}
-        <div
-          style={{
-            backgroundColor: '#00205B',
-            padding: '28px 24px 22px 24px',
-            textAlign: 'center',
-            color: '#FFFFFF',
-            position: 'relative',
-          }}
-        >
-          <div
-            style={{
-              width: '84px',
-              height: '84px',
-              borderRadius: '16px',
-              backgroundColor: '#FFFFFF',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 14px auto',
-              padding: '6px',
-              overflow: 'hidden',
-            }}
-          >
-            <img
-              src="/dashen-logo.png"
-              alt="Dashen Bank Logo"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-            />
-          </div>
-          <h1 style={{ fontSize: '19px', fontWeight: 800, margin: 0, letterSpacing: '0.4px' }}>
-            ዳሸን ባንክ · DASHEN BANK
-          </h1>
-          <p style={{ fontSize: '11px', color: '#F7A800', fontWeight: 700, margin: '5px 0 0 0', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Collateral Insurance Management System (CIMS)
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans select-none">
+      {/* Background Subtle Ambient Glow */}
+      <div className="fixed inset-0 pointer-events-none opacity-40">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00205B] rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#1B4580] rounded-full blur-3xl" />
+      </div>
 
-        {/* Form Body */}
-        <div style={{ padding: '26px 24px' }}>
-          {error && (
-            <div
-              style={{
-                padding: '11px 13px',
-                backgroundColor: '#FEE2E2',
-                border: '1px solid #FCA5A5',
-                color: '#991B1B',
-                borderRadius: '8px',
-                fontSize: '12px',
-                marginBottom: '18px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '8px',
-                lineHeight: 1.4,
-              }}
-            >
-              <AlertCircle style={{ width: '16px', height: '16px', flexShrink: 0, marginTop: '2px' }} />
+      {/* Main Split Layout Container */}
+      <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200/80 grid grid-cols-1 lg:grid-cols-12 z-10">
+        {/* Left Column: Brand Showcase Hero (5 cols on lg) */}
+        <div className="lg:col-span-5 bg-[#00205B] text-white p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden border-b lg:border-b-0 lg:border-r border-[#143666]">
+          {/* Subtle Decorative Dashen Gold Accent Band */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D48806] via-[#F5B853] to-[#D48806]" />
+
+          <div>
+            {/* Logo & Bank Title */}
+            <div className="flex items-center gap-3.5 mb-8">
+              <div className="w-14 h-14 rounded-xl bg-white p-2 shadow-md flex items-center justify-center shrink-0">
+                <img
+                  src="/dashen-logo.png"
+                  alt="Dashen Bank Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <div>
-                <strong style={{ display: 'block', marginBottom: '2px' }}>Authentication Alert</strong>
-                <span>{error}</span>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#0F172A', marginBottom: '6px' }}>
-                Username or Corporate Email <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Mail style={{ position: 'absolute', left: '12px', top: '10px', width: '16px', height: '16px', color: '#64748B' }} />
-                <input
-                  type="text"
-                  required
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. brmgr_user or brmgr@bank.com"
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px 9px 36px',
-                    borderRadius: '7px',
-                    border: '1px solid #CBD5E1',
-                    fontSize: '13px',
-                    outline: 'none',
-                    transition: 'border-color 0.15s',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#1E40AF')}
-                  onBlur={(e) => (e.target.style.borderColor = '#CBD5E1')}
-                />
+                <span className="text-base font-extrabold tracking-wide text-white block uppercase">
+                  ዳሸን ባንክ · DASHEN BANK
+                </span>
+                <span className="text-xs font-bold text-[#D48806] uppercase tracking-wider block">
+                  Always One Step Ahead
+                </span>
               </div>
             </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>
-                  Account Password <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForgotIdentifier(identifier);
-                    setForgotMsg(null);
-                    setForgotStep('request');
-                    setShowForgotModal(true);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '11px',
-                    color: '#2563EB',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    padding: 0,
-                  }}
-                >
-                  Forgot Password?
-                </button>
+            {/* System Headline */}
+            <div className="space-y-3 mb-10">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-900/80 border border-blue-400/30 text-[#D48806] text-[11px] font-bold tracking-wider uppercase">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Enterprise Portal</span>
               </div>
-              <div style={{ position: 'relative' }}>
-                <Lock style={{ position: 'absolute', left: '12px', top: '10px', width: '16px', height: '16px', color: '#64748B' }} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your security password"
-                  style={{
-                    width: '100%',
-                    padding: '9px 36px 9px 36px',
-                    borderRadius: '7px',
-                    border: '1px solid #CBD5E1',
-                    fontSize: '13px',
-                    outline: 'none',
-                    transition: 'border-color 0.15s',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#1E40AF')}
-                  onBlur={(e) => (e.target.style.borderColor = '#CBD5E1')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '8px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#64748B',
-                    cursor: 'pointer',
-                    padding: '2px',
-                  }}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
-                </button>
-              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                Collateral &amp; Asset Insurance Management
+              </h2>
+              <p className="text-xs sm:text-sm text-blue-200/80 leading-relaxed">
+                Centralized collateral master registry, automated CBS loan linkage, real-time insurance adequacy, and dual-control approvals for Dashen Bank credit operations.
+              </p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '11px',
-                borderRadius: '8px',
-                backgroundColor: loading ? '#64748B' : '#00205B',
-                color: '#FFFFFF',
-                fontSize: '14px',
-                fontWeight: 700,
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                marginTop: '6px',
-                transition: 'background-color 0.15s',
-              }}
-            >
-              {loading ? (
-                <>
-                  <RefreshCw style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                  <span>Verifying Credentials...</span>
-                </>
-              ) : (
-                <>
-                  <Shield style={{ width: '16px', height: '16px' }} />
-                  <span>Sign In to CIMS</span>
-                </>
-              )}
-            </button>
-          </form>
+            {/* Feature Highlights Checklist */}
+            <div className="space-y-3.5">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-md bg-[#0E284E] border border-blue-400/20 text-[#D48806] flex items-center justify-center shrink-0 mt-0.5">
+                  <Building2 className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">Collateral Perfection &amp; 360° View</h4>
+                  <p className="text-[11px] text-blue-200/70">Movable and immovable asset tracking with automated LTV calculations.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-md bg-[#0E284E] border border-blue-400/20 text-[#D48806] flex items-center justify-center shrink-0 mt-0.5">
+                  <FileCheck className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">100% Insurance Adequacy</h4>
+                  <p className="text-[11px] text-blue-200/70">Continuous coverage monitoring and automated multi-tier renewal escalations.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-md bg-[#0E284E] border border-blue-400/20 text-[#D48806] flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckSquare className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">Maker-Checker Dual Control</h4>
+                  <p className="text-[11px] text-blue-200/70">Strict segregation of duties across registration, linkage, and release.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Regulatory Tag */}
+          <div className="pt-8 mt-8 border-t border-blue-900/60 flex items-center justify-between text-[11px] text-blue-300/70">
+            <span>National Bank of Ethiopia (NBE) Compliant</span>
+            <span className="font-mono text-[10px] text-blue-400">v2.0-SECURED</span>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#F8FAFC',
-            borderTop: '1px solid #E2E8F0',
-            textAlign: 'center',
-            fontSize: '10.5px',
-            color: '#64748B',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-          }}
-        >
-          <Shield style={{ width: '13px', height: '13px', color: '#00205B' }} />
-          <span>Protected Dashen Bank Banking Platform · All Sessions Fully Audited</span>
+        {/* Right Column: Authentication Form (7 cols on lg) */}
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white">
+          <div>
+            {/* Header */}
+            <div className="mb-8">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                Sign In to Your Account
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Enter your bank credentials to access your authorized portfolio.
+              </p>
+            </div>
+
+            {/* Error Banner */}
+            {error && (
+              <div className="mb-6 p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-start gap-3 animate-fadeIn">
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold mb-0.5 text-red-900">Authentication Alert</strong>
+                  <span className="text-red-700 leading-relaxed">{error}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <Input
+                label="Staff Username or Corporate Email"
+                required
+                id="username-input"
+                name="username"
+                autoComplete="username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="e.g. sysadmin or brmgr_user"
+                leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+              />
+
+              <div className="space-y-1.5 text-left">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="password-input"
+                    className="block text-xs font-semibold text-slate-700 tracking-tight"
+                  >
+                    Account Password <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotIdentifier(identifier);
+                      setForgotMsg(null);
+                      setForgotStep('request');
+                      setShowForgotModal(true);
+                    }}
+                    className="text-xs text-[#1F4E7A] hover:text-[#00205B] font-semibold hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <div className="relative flex items-center">
+                  <div className="absolute left-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="password-input"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your security password"
+                    className="w-full rounded-md border border-slate-300 text-sm py-2 pl-9 pr-10 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00205B]/20 focus:border-[#00205B] transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit CTA Button */}
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={loading}
+                  icon={!loading ? <ArrowRight className="w-4 h-4" /> : undefined}
+                  iconPosition="right"
+                >
+                  {loading ? 'Authenticating Session...' : 'Sign In to CBAIMS'}
+                </Button>
+              </div>
+            </form>
+
+            {/* Quick Persona Fill Chips for Convenience & QA Testing */}
+            <div className="mt-8 pt-6 border-t border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
+                Quick Sign-in for Testing:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: 'SysAdmin', user: 'sysadmin', role: 'SYSADMIN' },
+                  { label: 'Branch Mgr', user: 'brmgr_user', role: 'BRMGR' },
+                  { label: 'Risk Officer', user: 'cro_user', role: 'CRO' },
+                  { label: 'Relationship Off', user: 'bro_user', role: 'BRO' },
+                  { label: 'Deed Custodian', user: 'colldocoff_user', role: 'COLLDOCOFF' },
+                  { label: 'Auditor', user: 'auditor_user', role: 'AUDITOR' },
+                ].map((item) => (
+                  <button
+                    key={item.user}
+                    type="button"
+                    onClick={() => handleQuickFill(item.user)}
+                    className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-[#00205B] hover:border-blue-200 border border-slate-200/80 text-[11px] font-medium text-slate-600 transition-colors"
+                  >
+                    <span className="font-semibold">{item.label}</span>
+                    <span className="text-[10px] text-slate-400 ml-1">({item.user})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Security Notice */}
+          <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs text-slate-400 text-center">
+            <Shield className="w-3.5 h-3.5 text-[#00205B]" />
+            <span>Protected Dashen Bank Banking Platform · All Sessions Fully Audited</span>
+          </div>
         </div>
       </div>
 
       {/* Forgot Password / Reset Password Modal */}
       {showForgotModal && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '16px',
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none"
+          role="dialog"
+          aria-modal="true"
         >
-          <div
-            style={{
-              width: '460px',
-              maxWidth: '100%',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              overflow: 'hidden',
-            }}
-          >
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-200 animate-fadeIn">
             {/* Modal Header */}
-            <div
-              style={{
-                padding: '16px 20px',
-                backgroundColor: '#00205B',
-                color: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <KeyRound style={{ width: '18px', height: '18px', color: '#F7A800' }} />
-                <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>
-                  {forgotStep === 'request' ? 'Password Recovery' : 'Set New Security Password'}
-                </h3>
+            <div className="px-6 py-4 bg-[#00205B] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4 text-[#D48806]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-tight">
+                    {forgotStep === 'request' ? 'Password Recovery' : 'Set New Security Password'}
+                  </h3>
+                  <p className="text-[11px] text-blue-200">Dashen Security Services</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer' }}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors"
+                aria-label="Close"
               >
-                <X style={{ width: '18px', height: '18px' }} />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div style={{ padding: '20px' }}>
+            <div className="p-6">
               {forgotMsg && (
                 <div
-                  style={{
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    marginBottom: '16px',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px',
-                    backgroundColor: forgotMsg.type === 'success' ? '#ECFDF5' : '#FEF2F2',
-                    border: `1px solid ${forgotMsg.type === 'success' ? '#A7F3D0' : '#FECACA'}`,
-                    color: forgotMsg.type === 'success' ? '#065F46' : '#991B1B',
-                  }}
+                  className={`p-3 rounded-lg text-xs flex items-start gap-2 mb-4 ${
+                    forgotMsg.type === 'success'
+                      ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                      : 'bg-red-50 border border-red-200 text-red-800'
+                  }`}
                 >
                   {forgotMsg.type === 'success' ? (
-                    <CheckCircle2 style={{ width: '16px', height: '16px', flexShrink: 0, marginTop: '2px' }} />
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
                   ) : (
-                    <AlertCircle style={{ width: '16px', height: '16px', flexShrink: 0, marginTop: '2px' }} />
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                   )}
                   <span>{forgotMsg.text}</span>
                 </div>
               )}
 
               {forgotStep === 'request' ? (
-                <form onSubmit={handleRequestReset} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <p style={{ fontSize: '12px', color: '#475569', margin: 0 }}>
+                <form onSubmit={handleRequestReset} className="space-y-4">
+                  <p className="text-xs text-slate-600">
                     Enter your staff username or corporate bank email. A secure, time-limited reset token will be issued.
                   </p>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                      Username or Email
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={forgotIdentifier}
-                      onChange={(e) => setForgotIdentifier(e.target.value)}
-                      placeholder="e.g. brmgr_user or brmgr@bank.com"
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
-                    <button
+
+                  <Input
+                    label="Username or Corporate Email"
+                    required
+                    value={forgotIdentifier}
+                    onChange={(e) => setForgotIdentifier(e.target.value)}
+                    placeholder="e.g. brmgr_user or brmgr@bank.com"
+                  />
+
+                  <div className="flex items-center justify-end gap-2.5 pt-2">
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setShowForgotModal(false)}
-                      style={{
-                        padding: '8px 14px',
-                        borderRadius: '6px',
-                        backgroundColor: '#F1F5F9',
-                        color: '#475569',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      disabled={forgotLoading}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        backgroundColor: '#00205B',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
+                      variant="primary"
+                      loading={forgotLoading}
                     >
-                      {forgotLoading ? 'Processing...' : 'Generate Reset Token'}
-                    </button>
+                      Generate Reset Token
+                    </Button>
                   </div>
                 </form>
               ) : (
-                <form onSubmit={handleExecuteReset} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                      Reset Security Token <span style={{ color: '#DC2626' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={resetToken}
-                      onChange={(e) => setResetToken(e.target.value)}
-                      placeholder="Paste your 32-character token"
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '12px',
-                        fontFamily: 'monospace',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
+                <form onSubmit={handleExecuteReset} className="space-y-4">
+                  <Input
+                    label="Reset Security Token"
+                    required
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    placeholder="Paste your issued token"
+                    className="font-mono text-xs"
+                  />
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                      New Password <span style={{ color: '#DC2626' }}>*</span>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      New Password <span className="text-red-500 font-bold">*</span>
                     </label>
-                    <div style={{ position: 'relative' }}>
+                    <div className="relative flex items-center">
                       <input
                         type={showNewPassword ? 'text' : 'password'}
                         required
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Enter compliant new password"
-                        style={{
-                          width: '100%',
-                          padding: '8px 36px 8px 12px',
-                          borderRadius: '6px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          outline: 'none',
-                        }}
+                        className="w-full rounded-md border border-slate-300 text-sm py-2 px-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#00205B]/20 focus:border-[#00205B]"
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        style={{
-                          position: 'absolute',
-                          right: '10px',
-                          top: '8px',
-                          background: 'none',
-                          border: 'none',
-                          color: '#64748B',
-                          cursor: 'pointer',
-                        }}
+                        className="absolute right-3 text-slate-400 hover:text-slate-600"
                       >
-                        {showNewPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
 
-                    {/* Password Policy Validation Checklist */}
-                    <div style={{ marginTop: '8px', padding: '8px 10px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasMinLength(newPassword) ? '#059669' : '#64748B' }}>
-                        {hasMinLength(newPassword) ? <CheckCircle2 style={{ width: '12px', height: '12px' }} /> : <XCircle style={{ width: '12px', height: '12px' }} />}
+                    {/* Policy validation checklist */}
+                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] space-y-1 mt-2">
+                      <div className={`flex items-center gap-1.5 ${hasMinLength(newPassword) ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                        {hasMinLength(newPassword) ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <XCircle className="w-3.5 h-3.5 text-slate-400" />}
                         <span>At least {policy.minLength} characters</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasUppercase(newPassword) ? '#059669' : '#64748B' }}>
-                        {hasUppercase(newPassword) ? <CheckCircle2 style={{ width: '12px', height: '12px' }} /> : <XCircle style={{ width: '12px', height: '12px' }} />}
+                      <div className={`flex items-center gap-1.5 ${hasUppercase(newPassword) ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                        {hasUppercase(newPassword) ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <XCircle className="w-3.5 h-3.5 text-slate-400" />}
                         <span>At least one uppercase letter (A-Z)</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasDigit(newPassword) ? '#059669' : '#64748B' }}>
-                        {hasDigit(newPassword) ? <CheckCircle2 style={{ width: '12px', height: '12px' }} /> : <XCircle style={{ width: '12px', height: '12px' }} />}
-                        <span>At least one digit (0-9)</span>
+                      <div className={`flex items-center gap-1.5 ${hasDigit(newPassword) ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                        {hasDigit(newPassword) ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <XCircle className="w-3.5 h-3.5 text-slate-400" />}
+                        <span>At least one number (0-9)</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasSpecial(newPassword) ? '#059669' : '#64748B' }}>
-                        {hasSpecial(newPassword) ? <CheckCircle2 style={{ width: '12px', height: '12px' }} /> : <XCircle style={{ width: '12px', height: '12px' }} />}
+                      <div className={`flex items-center gap-1.5 ${hasSpecial(newPassword) ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                        {hasSpecial(newPassword) ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <XCircle className="w-3.5 h-3.5 text-slate-400" />}
                         <span>At least one special character (!@#$%^&*...)</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                      Confirm New Password <span style={{ color: '#DC2626' }}>*</span>
-                    </label>
-                    <input
+                    <Input
+                      label="Confirm New Password"
                       type={showNewPassword ? 'text' : 'password'}
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter new password"
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
                     />
                     {confirmPassword && confirmPassword !== newPassword && (
-                      <span style={{ fontSize: '11px', color: '#DC2626', marginTop: '2px', display: 'block' }}>
-                        Passwords do not match
-                      </span>
+                      <span className="text-[11px] text-red-600 mt-1 block">Passwords do not match</span>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                  <div className="flex items-center justify-between pt-2">
                     <button
                       type="button"
                       onClick={() => setForgotStep('request')}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#2563EB',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        padding: 0,
-                      }}
+                      className="text-xs text-[#1F4E7A] hover:underline"
                     >
                       ← Back to request token
                     </button>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
+                    <div className="flex gap-2">
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setShowForgotModal(false)}
-                        style={{
-                          padding: '8px 14px',
-                          borderRadius: '6px',
-                          backgroundColor: '#F1F5F9',
-                          color: '#475569',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
                       >
                         Cancel
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="submit"
+                        variant="primary"
+                        loading={forgotLoading}
                         disabled={forgotLoading || !isPasswordCompliant(newPassword) || newPassword !== confirmPassword}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          backgroundColor: '#00205B',
-                          color: '#FFFFFF',
-                          border: 'none',
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          cursor: (forgotLoading || !isPasswordCompliant(newPassword) || newPassword !== confirmPassword) ? 'not-allowed' : 'pointer',
-                          opacity: (!isPasswordCompliant(newPassword) || newPassword !== confirmPassword) ? 0.6 : 1,
-                        }}
                       >
-                        {forgotLoading ? 'Updating...' : 'Set Password'}
-                      </button>
+                        Set Password
+                      </Button>
                     </div>
                   </div>
                 </form>
