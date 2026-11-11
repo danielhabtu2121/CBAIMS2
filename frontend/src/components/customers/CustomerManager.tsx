@@ -196,7 +196,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             e.stopPropagation();
             load360Data(r);
           }}
-          className="btn-ghost py-1 px-2.5 text-xs text-[#1F4E7A] font-semibold flex items-center gap-1"
+          className="btn-ghost py-1 px-2.5 text-xs text-[#00205B] hover:text-[#D48806] font-semibold flex items-center gap-1 transition-colors"
         >
           <Eye className="w-3.5 h-3.5" />
           View 360
@@ -284,29 +284,29 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
 
       {/* Customer 360 Modal */}
       {show360Modal && selectedCustomer && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-5xl w-full h-[90vh] max-h-[92vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-5xl w-full h-[90vh] max-h-[92vh] flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0">
+            <div className="p-5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-start shrink-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold">{selectedCustomer.name}</h2>
                   <StatusChip label={selectedCustomer.status} />
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1F4E7A] text-white font-medium">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/15 text-white border border-white/20 font-medium">
                     {selectedCustomer.segment}
                   </span>
                 </div>
-                <div className="text-xs text-blue-200 mt-1 flex gap-4">
-                  <span>CIF: <strong>{selectedCustomer.cif}</strong></span>
-                  <span>Branch: <strong>{selectedCustomer.branch}</strong></span>
-                  <span>Source: <strong>{selectedCustomer.source === 'CBS_SIM' ? 'CBS Core' : 'Manual Entry'}</strong></span>
+                <div className="text-xs text-slate-300 mt-1 flex gap-4">
+                  <span>CIF: <strong className="text-white">{selectedCustomer.cif}</strong></span>
+                  <span>Branch: <strong className="text-white">{selectedCustomer.branch}</strong></span>
+                  <span>Source: <strong className="text-white">{selectedCustomer.source === 'CBS_SIM' ? 'CBS Core' : 'Manual Entry'}</strong></span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 {canMaintain && (
                   <button
                     onClick={() => openMaintainModal(selectedCustomer)}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-amber-500/90 text-[#0B2237] hover:bg-amber-400 transition"
+                    className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-[#D48806] hover:bg-[#b87405] text-white shadow-xs transition-colors"
                     title="Submit a change to this customer for checker approval"
                   >
                     Maintain / Edit
@@ -314,39 +314,39 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                 )}
                 <button
                   onClick={() => load360Data(selectedCustomer)}
-                  className="p-1.5 text-blue-200 hover:text-white rounded hover:bg-[#173F63] transition"
+                  className="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition"
                   title="Refresh 360 Data"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading360 ? 'animate-spin' : ''}`} />
                 </button>
-                <button onClick={() => setShow360Modal(false)} className="text-white hover:text-gray-300 text-lg font-bold">
+                <button onClick={() => setShow360Modal(false)} className="text-slate-300 hover:text-white text-lg font-bold">
                   ✕
                 </button>
               </div>
             </div>
 
             {/* Quick KPI Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 bg-[#EFF5FB] border-b border-[#E2E8F0] p-3 text-center text-xs shrink-0 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 bg-slate-50 border-b border-slate-200 p-3.5 text-center text-xs shrink-0 gap-3">
               <div className="min-w-0">
-                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Total Approved Limits</div>
-                <div className="text-[#102E4A] font-bold text-sm tabular-nums truncate">ETB {totalFacilityLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                <div className="text-slate-500 text-[11px] font-semibold truncate">Total Approved Limits</div>
+                <div className="text-[#00205B] font-bold text-sm tabular-nums truncate">ETB {totalFacilityLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
               <div className="min-w-0">
-                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Total Outstanding Exposure</div>
-                <div className="text-[#102E4A] font-bold text-sm tabular-nums truncate">ETB {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                <div className="text-slate-500 text-[11px] font-semibold truncate">Total Outstanding Exposure</div>
+                <div className="text-[#00205B] font-bold text-sm tabular-nums truncate">ETB {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
               <div className="min-w-0">
-                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Collateral Valuation</div>
+                <div className="text-slate-500 text-[11px] font-semibold truncate">Collateral Valuation</div>
                 <div className="text-emerald-700 font-bold text-sm tabular-nums truncate">ETB {totalCollateralVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
               <div className="min-w-0">
-                <div className="text-[#5B6472] text-[11px] font-semibold truncate">Insured Coverage</div>
-                <div className="text-blue-700 font-bold text-sm tabular-nums truncate">ETB {totalInsuredAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                <div className="text-slate-500 text-[11px] font-semibold truncate">Insured Coverage</div>
+                <div className="text-[#00205B] font-bold text-sm tabular-nums truncate">ETB {totalInsuredAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
             </div>
 
             {/* 360 Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-slate-50 px-6 gap-2 pt-2 overflow-x-auto shrink-0 z-10 scrollbar-thin">
+            <div className="flex border-b border-slate-200 bg-slate-50/70 px-6 gap-2 pt-2 overflow-x-auto shrink-0 z-10 scrollbar-thin">
               {[
                 { id: 'overview', label: 'Overview' },
                 { id: 'facilities', label: `Facilities (${currentFacilities.length})` },
@@ -360,8 +360,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActive360Tab(tab.id as any)}
-                  className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition shrink-0 ${
-                    active360Tab === tab.id ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+                  className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors shrink-0 ${
+                    active360Tab === tab.id ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
                   {tab.label}
@@ -517,7 +517,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                   {c.currency || 'ETB'} {c.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </td>
                                 <td className="p-2.5 text-center font-semibold">{c.haircut || 0}%</td>
-                                <td className="p-2.5 text-right tabular-nums font-semibold text-[#102E4A]">
+                                <td className="p-2.5 text-right tabular-nums font-semibold text-[#00205B]">
                                   {c.currency || 'ETB'} {net.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </td>
                                 <td className="p-2.5 text-right tabular-nums">
@@ -680,11 +680,11 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                               </td>
                               <td className="p-2.5">
                                 {matchedCol ? (
-                                  <span className="font-mono text-xs font-semibold text-[#102E4A]" title={matchedCol.description}>
+                                  <span className="font-mono text-xs font-bold text-[#00205B]" title={matchedCol.description}>
                                     {matchedCol.code}
                                   </span>
                                 ) : (
-                                  <span className="text-[#5B6472] font-mono text-[11px]">{p.collateralId || '—'}</span>
+                                  <span className="text-slate-500 font-mono text-[11px]">{p.collateralId || '—'}</span>
                                 )}
                               </td>
                               <td className="p-2.5">{p.insurerName}</td>
@@ -704,7 +704,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                   <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Under-Insured</span>
                                 )}
                                 {isAdequate === null && (
-                                  <span className="text-[#5B6472]">—</span>
+                                  <span className="text-slate-500">—</span>
                                 )}
                               </td>
                               <td className="p-2.5"><StatusChip label={p.status} /></td>
@@ -722,7 +722,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                       setShow360Modal(false);
                                       onNavigate('insurance', { policyId: p.id, id: p.id });
                                     }}
-                                    className="btn-ghost py-0.5 px-2 text-[11px] text-slate-700 hover:text-[#102E4A] border border-slate-200 hover:border-slate-300 rounded inline-flex items-center gap-1"
+                                    className="btn-ghost py-0.5 px-2 text-[11px] text-slate-700 hover:text-[#00205B] border border-slate-200 hover:border-slate-300 rounded inline-flex items-center gap-1"
                                     title="Open policy in full Insurance Manager"
                                   >
                                     <ExternalLink className="w-3 h-3 text-slate-500" /> Full Manage
@@ -793,7 +793,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                             <td className="p-2.5 font-semibold">{a.actionType}</td>
                             <td className="p-2.5">{a.entityType} ({a.entityId})</td>
                             <td className="p-2.5">{a.makerId}</td>
-                            <td className="p-2.5 font-semibold text-[#102E4A]">{a.candidateRole}</td>
+                            <td className="p-2.5 font-semibold text-[#00205B]">{a.candidateRole}</td>
                             <td className="p-2.5">{a.submittedAt}</td>
                             <td className="p-2.5"><StatusChip label={a.status} /></td>
                           </tr>
@@ -878,14 +878,14 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
       {selected360Policy && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden text-xs">
-            <div className="bg-[#102E4A] text-white p-4 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white p-4 flex justify-between items-center">
               <div>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-300" />
+                  <Shield className="w-4 h-4 text-[#D48806]" />
                   <h3 className="font-bold text-base">{selected360Policy.policyNumber}</h3>
                   <StatusChip label={selected360Policy.status} />
                 </div>
-                <p className="text-blue-200 text-xs mt-0.5">{selected360Policy.insurerName} • {selected360Policy.coverageType}</p>
+                <p className="text-slate-300 text-xs mt-0.5">{selected360Policy.insurerName} • {selected360Policy.coverageType}</p>
               </div>
               <button
                 onClick={() => setSelected360Policy(null)}
@@ -899,24 +899,24 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
                 <div>
-                  <span className="text-[#5B6472]">Sum Insured:</span>
+                  <span className="text-slate-500">Sum Insured:</span>
                   <div className="font-bold text-sm text-emerald-700 tabular-nums">
                     ETB {selected360Policy.insuredAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </div>
                 </div>
                 <div>
-                  <span className="text-[#5B6472]">Annual Premium:</span>
-                  <div className="font-bold text-sm text-[#102E4A] tabular-nums">
+                  <span className="text-slate-500">Annual Premium:</span>
+                  <div className="font-bold text-sm text-[#00205B] tabular-nums">
                     ETB {selected360Policy.premium?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </div>
                 </div>
                 <div>
-                  <span className="text-[#5B6472]">Effective Date:</span>
-                  <div className="font-medium text-[#101828]">{selected360Policy.effectiveDate || '—'}</div>
+                  <span className="text-slate-500">Effective Date:</span>
+                  <div className="font-medium text-slate-800">{selected360Policy.effectiveDate || '—'}</div>
                 </div>
                 <div>
-                  <span className="text-[#5B6472]">Expiry Date:</span>
-                  <div className="font-medium text-[#101828] flex items-center gap-1.5">
+                  <span className="text-slate-500">Expiry Date:</span>
+                  <div className="font-medium text-slate-800 flex items-center gap-1.5">
                     <span>{selected360Policy.expiryDate || '—'}</span>
                     {selected360Policy.expiryDate && new Date(selected360Policy.expiryDate) < new Date() && (
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">Expired</span>
@@ -939,17 +939,17 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                   ? ((selected360Policy.insuredAmount || 0) / matchedCol.valuationAmount) * 100 
                   : 0;
                 return (
-                  <div className="cims-card p-3 border border-blue-100 bg-blue-50/40 space-y-2">
-                    <div className="font-bold text-xs text-[#102E4A] flex items-center justify-between">
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+                    <div className="font-bold text-xs text-[#00205B] flex items-center justify-between">
                       <span>Pledged Collateral Asset</span>
-                      <span className="font-mono text-blue-700 font-bold">{matchedCol.code}</span>
+                      <span className="font-mono text-[#00205B] font-bold">{matchedCol.code}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div><span className="text-[#5B6472]">Category:</span> {matchedCol.category}</div>
-                      <div><span className="text-[#5B6472]">Market Value:</span> ETB {matchedCol.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                      <div className="col-span-2"><span className="text-[#5B6472]">Asset Description:</span> {matchedCol.description}</div>
-                      <div className="col-span-2 pt-1 border-t border-blue-100 flex items-center justify-between">
-                        <span className="text-[#5B6472]">Insurance Coverage Ratio:</span>
+                      <div><span className="text-slate-500">Category:</span> {matchedCol.category}</div>
+                      <div><span className="text-slate-500">Market Value:</span> ETB {matchedCol.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      <div className="col-span-2"><span className="text-slate-500">Asset Description:</span> {matchedCol.description}</div>
+                      <div className="col-span-2 pt-1 border-t border-slate-200 flex items-center justify-between">
+                        <span className="text-slate-500">Insurance Coverage Ratio:</span>
                         <span className={`font-bold ${covPct >= 100 ? 'text-emerald-700' : 'text-amber-700'}`}>
                           {covPct.toFixed(1)}% {covPct >= 100 ? '(Adequate)' : '(Under-Insured)'}
                         </span>
@@ -960,9 +960,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               })()}
 
               <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-50 p-2.5 rounded border border-slate-200">
-                <div><span className="text-[#5B6472]">Policy Version:</span> <strong>v{selected360Policy.version || 1}</strong></div>
-                <div><span className="text-[#5B6472]">Authorization:</span> <strong>{selected360Policy.authStat === 'A' ? 'Authorized' : 'Pending'}</strong></div>
-                <div><span className="text-[#5B6472]">Record Status:</span> <strong>{selected360Policy.recordStat === 'O' ? 'Open' : 'Closed'}</strong></div>
+                <div><span className="text-slate-500">Policy Version:</span> <strong>v{selected360Policy.version || 1}</strong></div>
+                <div><span className="text-slate-500">Authorization:</span> <strong>{selected360Policy.authStat === 'A' ? 'Authorized' : 'Pending'}</strong></div>
+                <div><span className="text-slate-500">Record Status:</span> <strong>{selected360Policy.recordStat === 'O' ? 'Open' : 'Closed'}</strong></div>
               </div>
             </div>
 
@@ -981,7 +981,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                     setShow360Modal(false);
                     onNavigate('insurance', { policyId: polId, id: polId });
                   }}
-                  className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-[#102E4A] hover:bg-[#1F4E7A] text-white"
+                  className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-[#00205B] hover:bg-[#0E284E] text-white rounded-lg font-semibold"
                 >
                   <span>Open in Full Insurance Manager</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -994,14 +994,14 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
 
       {/* Register Customer Manually Modal (Maker Action) */}
       {showManualRegModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-lg w-full overflow-hidden">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Register Customer Manually</h3>
-                <p className="text-[11px] text-blue-200">Routes to Checker Approval before activation</p>
+                <p className="text-[11px] text-slate-300">Routes to Checker Approval before activation</p>
               </div>
-              <button onClick={() => setShowManualRegModal(false)} className="text-white hover:text-gray-300">✕</button>
+              <button onClick={() => setShowManualRegModal(false)} className="text-slate-300 hover:text-white">✕</button>
             </div>
             <form
               onSubmit={async (e) => {
@@ -1219,14 +1219,14 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
 
       {/* Maintain / Edit Customer Modal (Maker Action - post-registration amendment) */}
       {showMaintainModal && selectedCustomer && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-lg w-full overflow-hidden">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Maintain Customer Details</h3>
-                <p className="text-[11px] text-blue-200">{selectedCustomer.name} ({selectedCustomer.cif}) — changes route to Checker Approval</p>
+                <p className="text-[11px] text-slate-300">{selectedCustomer.name} ({selectedCustomer.cif}) — changes route to Checker Approval</p>
               </div>
-              <button onClick={() => setShowMaintainModal(false)} className="text-white hover:text-gray-300">✕</button>
+              <button onClick={() => setShowMaintainModal(false)} className="text-slate-300 hover:text-white">✕</button>
             </div>
             <form
               onSubmit={(e) => { e.preventDefault(); submitMaintain(); }}

@@ -131,17 +131,17 @@ export function DataGrid<T extends Record<string, any>>({
   };
 
   return (
-    <div className="cims-card overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header bar */}
-      <div className="p-4 border-b border-[#E2E8F0] bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 border-b border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          {title && <h2 className="text-base font-semibold text-[#101828]">{title}</h2>}
-          {subtitle && <p className="text-xs text-[#5B6472] mt-0.5">{subtitle}</p>}
+          {title && <h2 className="text-base font-bold text-[#00205B]">{title}</h2>}
+          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
-        <div className="flex items-center flex-wrap gap-2">
+        <div className="flex items-center flex-wrap gap-2.5">
           {actions}
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#5B6472]" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
             <input
               type="text"
               placeholder={searchPlaceholder}
@@ -150,7 +150,7 @@ export function DataGrid<T extends Record<string, any>>({
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-9 pr-8 py-1.5 text-xs bg-[#EFF5FB] border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3E7AB0] w-48 md:w-64 text-[#101828]"
+              className="pl-9 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806] w-48 md:w-64 text-slate-800 transition-colors"
             />
             {search && (
               <button
@@ -158,7 +158,7 @@ export function DataGrid<T extends Record<string, any>>({
                   setSearch('');
                   setCurrentPage(1);
                 }}
-                className="absolute right-2.5 top-2.5 text-[#5B6472] hover:text-[#101828] cursor-pointer"
+                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -170,39 +170,45 @@ export function DataGrid<T extends Record<string, any>>({
           <div className="relative">
             <button
               onClick={() => setShowColToggle(!showColToggle)}
-              className="btn-secondary py-1.5 px-3 text-xs"
+              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-colors font-medium shadow-2xs"
               title="Show/Hide Columns"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              Columns
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+              <span>Columns</span>
             </button>
             {showColToggle && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E2E8F0] rounded-md shadow-lg p-2 z-50">
-                <div className="text-xs font-semibold text-[#5B6472] pb-1 border-b border-[#E2E8F0] mb-1">
+              <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-lg p-2.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="text-xs font-bold text-slate-700 pb-1.5 border-b border-slate-100 mb-1.5 px-1">
                   Toggle Columns
                 </div>
-                {columns.map((col, idx) => {
-                  const key = col.header || String(idx);
-                  return (
-                    <label key={key} className="flex items-center gap-2 py-1 px-1 text-xs text-[#101828] cursor-pointer hover:bg-[#EFF5FB] rounded">
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns[key] ?? true}
-                        onChange={(e) => setVisibleColumns({ ...visibleColumns, [key]: e.target.checked })}
-                        className="rounded text-[#102E4A] focus:ring-[#3E7AB0]"
-                      />
-                      {col.header}
-                    </label>
-                  );
-                })}
+                <div className="max-h-60 overflow-y-auto space-y-0.5">
+                  {columns.map((col, idx) => {
+                    const key = col.header || String(idx);
+                    return (
+                      <label key={key} className="flex items-center gap-2 py-1.5 px-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[key] ?? true}
+                          onChange={(e) => setVisibleColumns({ ...visibleColumns, [key]: e.target.checked })}
+                          className="rounded text-[#00205B] focus:ring-[#D48806]"
+                        />
+                        <span className="font-medium truncate">{col.header}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
 
           {/* Export Dropdown */}
-          <button onClick={exportCSV} className="btn-secondary py-1.5 px-3 text-xs" title="Export CSV">
-            <Download className="w-3.5 h-3.5" />
-            Export
+          <button
+            onClick={exportCSV}
+            className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-colors font-medium shadow-2xs"
+            title="Export CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export</span>
           </button>
         </div>
       </div>
@@ -211,7 +217,7 @@ export function DataGrid<T extends Record<string, any>>({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-[13px]">
           <thead>
-            <tr className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold text-xs select-none">
+            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-700 font-semibold text-xs select-none">
               {columns.map((col, idx) => {
                 const key = col.header || String(idx);
                 if (visibleColumns[key] === false) return null;
@@ -220,13 +226,13 @@ export function DataGrid<T extends Record<string, any>>({
                     key={key}
                     onClick={() => col.sortable !== false && col.accessorKey && handleSort(col.accessorKey as string)}
                     className={`py-3 px-4 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${
-                      col.sortable !== false && col.accessorKey ? 'cursor-pointer hover:bg-[#DCE9F5]/50' : ''
+                      col.sortable !== false && col.accessorKey ? 'cursor-pointer hover:bg-slate-100/80 transition-colors' : ''
                     }`}
                   >
                     <div className={`inline-flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : ''}`}>
-                      <span>{col.header}</span>
+                      <span className="font-bold text-[#00205B]">{col.header}</span>
                       {col.sortable !== false && col.accessorKey && (
-                        <ArrowUpDown className="w-3 h-3 text-[#5B6472] opacity-60" />
+                        <ArrowUpDown className="w-3 h-3 text-slate-400 opacity-70" />
                       )}
                     </div>
                   </th>
@@ -234,10 +240,10 @@ export function DataGrid<T extends Record<string, any>>({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E2E8F0] bg-white">
+          <tbody className="divide-y divide-slate-100 bg-white">
             {pagedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-10 text-[#5B6472] text-sm">
+                <td colSpan={columns.length} className="text-center py-12 text-slate-400 text-xs font-medium">
                   No records found matching criteria.
                 </td>
               </tr>
@@ -246,7 +252,7 @@ export function DataGrid<T extends Record<string, any>>({
                 <tr
                   key={keyExtractor(row)}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className={`hover:bg-[#EFF5FB]/70 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`hover:bg-slate-50/80 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                 >
                   {columns.map((col, idx) => {
                     const key = col.header || String(idx);
@@ -254,7 +260,7 @@ export function DataGrid<T extends Record<string, any>>({
                     return (
                       <td
                         key={key}
-                        className={`py-3 px-4 ${col.align === 'right' ? 'text-right tabular-nums' : col.align === 'center' ? 'text-center' : 'text-left'}`}
+                        className={`py-3 px-4 text-slate-700 ${col.align === 'right' ? 'text-right tabular-nums' : col.align === 'center' ? 'text-center' : 'text-left'}`}
                       >
                         {col.cell ? col.cell(row) : (col.accessorKey ? row[col.accessorKey as string] : '')}
                       </td>
@@ -268,11 +274,11 @@ export function DataGrid<T extends Record<string, any>>({
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-3 border-t border-[#E2E8F0] bg-white flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#5B6472]">
+      <div className="p-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <div>
-          Showing <span className="font-semibold text-[#101828] tabular-nums">{(safePage - 1) * pageSize + (sortedData.length > 0 ? 1 : 0)}</span> to{' '}
-          <span className="font-semibold text-[#101828] tabular-nums">{Math.min(safePage * pageSize, sortedData.length)}</span> of{' '}
-          <span className="font-semibold text-[#101828] tabular-nums">{sortedData.length}</span> entries
+          Showing <span className="font-bold text-slate-800 tabular-nums">{(safePage - 1) * pageSize + (sortedData.length > 0 ? 1 : 0)}</span> to{' '}
+          <span className="font-bold text-slate-800 tabular-nums">{Math.min(safePage * pageSize, sortedData.length)}</span> of{' '}
+          <span className="font-bold text-slate-800 tabular-nums">{sortedData.length}</span> entries
         </div>
 
         <div className="flex items-center gap-4">
@@ -284,7 +290,7 @@ export function DataGrid<T extends Record<string, any>>({
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="bg-[#EFF5FB] border border-[#E2E8F0] rounded px-2 py-1 text-xs text-[#101828] focus:outline-none"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#D48806]"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -298,17 +304,17 @@ export function DataGrid<T extends Record<string, any>>({
             <button
               onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
               disabled={safePage === 1}
-              className="p-1 rounded border border-[#E2E8F0] bg-white text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#EFF5FB]"
+              className="p-1 rounded-lg border border-slate-200 bg-white text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="px-2 font-semibold text-[#101828] tabular-nums">
+            <span className="px-2 font-bold text-[#00205B] tabular-nums">
               {safePage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
               disabled={safePage === totalPages}
-              className="p-1 rounded border border-[#E2E8F0] bg-white text-[#101828] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#EFF5FB]"
+              className="p-1 rounded-lg border border-slate-200 bg-white text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

@@ -267,19 +267,19 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
 
       {/* Facility Detail Modal */}
       {showDetailModal && selectedFacility && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0 min-w-0">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
+            <div className="p-5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-start shrink-0 min-w-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold">{selectedFacility.lineCode} — {selectedFacility.facilityType}</h2>
                   <StatusChip label={selectedFacility.status} />
                 </div>
-                <div className="text-xs text-blue-200 mt-1 flex gap-4">
-                  <span>Loan Ref: {selectedFacility.loanReference}</span>
-                  <span>Segment: {selectedFacility.segment}</span>
-                  <span>Branch: {selectedFacility.branch}</span>
-                  <span>Currency: {selectedFacility.lineCurrency}</span>
+                <div className="text-xs text-slate-300 mt-1 flex gap-4">
+                  <span>Loan Ref: <strong className="text-white">{selectedFacility.loanReference}</strong></span>
+                  <span>Segment: <strong className="text-white">{selectedFacility.segment}</strong></span>
+                  <span>Branch: <strong className="text-white">{selectedFacility.branch}</strong></span>
+                  <span>Currency: <strong className="text-white">{selectedFacility.lineCurrency}</strong></span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -290,37 +290,37 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                     setLinkModalMode('create');
                     setShowLinkModal(true);
                   }}
-                  className="btn-primary py-1 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded flex items-center gap-1 font-semibold shadow-xs"
+                  className="btn-primary py-1.5 px-3 text-xs bg-[#D48806] hover:bg-[#b87405] text-white rounded-lg flex items-center gap-1 font-semibold shadow-xs transition-colors"
                   title="Allocate collateral security to this loan"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   + Allocate Collateral
                 </button>
-                <button onClick={() => setShowDetailModal(false)} className="text-white hover:text-gray-300 text-lg ml-1">
+                <button onClick={() => setShowDetailModal(false)} className="text-slate-300 hover:text-white text-lg ml-1">
                   ✕
                 </button>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-6 gap-2 pt-2 overflow-x-auto shrink-0 scrollbar-thin">
+            <div className="flex border-b border-slate-200 bg-slate-50 px-6 gap-2 pt-2 overflow-x-auto shrink-0 scrollbar-thin">
               <button
                 onClick={() => setActiveTab('details')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'details' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'details' ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 Facility Details (CBS Core)
               </button>
               <button
                 onClick={() => setActiveTab('collateral')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'collateral' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'collateral' ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 Linked Collateral Securities ({linkedCollaterals.length})
               </button>
               <button
                 onClick={() => setActiveTab('policies')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'policies' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'policies' ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 Securing Insurance Policies ({linkedPolicies.length})
@@ -345,17 +345,17 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                           Relationship & Customer
                         </h4>
                         <div>
-                          <span className="text-[#5B6472] block text-[11px]">Customer:</span>
-                          <strong className="text-sm text-[#102E4A]">{linkedCust ? `${linkedCust.name} (${linkedCust.cif})` : selectedFacility.customerId}</strong>
+                          <span className="text-slate-500 block text-[11px]">Customer:</span>
+                          <strong className="text-sm text-[#00205B]">{linkedCust ? `${linkedCust.name} (${linkedCust.cif})` : selectedFacility.customerId}</strong>
                         </div>
                         <div className="grid grid-cols-2 gap-2 pt-1">
                           <div>
-                            <span className="text-[#5B6472] block text-[11px]">Loan Reference:</span>
-                            <strong className="font-mono text-[#102E4A]">{selectedFacility.loanReference}</strong>
+                            <span className="text-slate-500 block text-[11px]">Loan Reference:</span>
+                            <strong className="font-mono text-[#00205B]">{selectedFacility.loanReference}</strong>
                           </div>
                           <div>
-                            <span className="text-[#5B6472] block text-[11px]">Line Code:</span>
-                            <strong className="font-mono text-[#102E4A]">{selectedFacility.lineCode}</strong>
+                            <span className="text-slate-500 block text-[11px]">Line Code:</span>
+                            <strong className="font-mono text-[#00205B]">{selectedFacility.lineCode}</strong>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 pt-1">
@@ -390,14 +390,14 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                           Limits & Balances (Derived Exposure)
                         </h4>
                         <div>
-                          <span className="text-[#5B6472] block text-[11px]">Approved Limit:</span>
-                          <strong className="text-sm tabular-nums text-[#102E4A]">
+                          <span className="text-slate-500 block text-[11px]">Approved Limit:</span>
+                          <strong className="text-sm tabular-nums text-[#00205B]">
                             {selectedFacility.lineCurrency} {selectedFacility.approvedLimit?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </strong>
                         </div>
                         <div>
-                          <span className="text-[#5B6472] block text-[11px]">Outstanding Balance (Current Exposure):</span>
-                          <strong className="text-sm tabular-nums text-[#102E4A] font-bold">
+                          <span className="text-slate-500 block text-[11px]">Outstanding Balance (Current Exposure):</span>
+                          <strong className="text-sm tabular-nums text-[#00205B] font-bold">
                             {selectedFacility.lineCurrency} {selectedFacility.outstandingBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </strong>
                         </div>
@@ -634,7 +634,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                         ) : (
                           securingSummary.securingCollaterals.map((c) => (
                             <tr key={c.id} className="hover:bg-[#EFF5FB]/60 group">
-                              <td className="p-2.5 font-semibold text-[#102E4A]">
+                              <td className="p-2.5 font-bold text-[#00205B]">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -841,7 +841,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                             const col = collaterals.find(c => c.id === p.collateralId || c.code === p.collateralId);
                             return (
                               <tr key={p.id} className="hover:bg-[#EFF5FB] group">
-                                <td className="p-2.5 font-semibold text-[#102E4A]">
+                                <td className="p-2.5 font-bold text-[#00205B]">
                                   <button
                                     onClick={() => {
                                       if (onNavigate) {
