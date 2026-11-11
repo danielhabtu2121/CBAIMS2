@@ -5465,6 +5465,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
           mode={m3LinkModalMode}
           existingLink={m3LinkToEdit}
           preselectedCollateralId={selectedCol?.id}
+          preselectedCollateral={selectedCol}
         />
       )}
 

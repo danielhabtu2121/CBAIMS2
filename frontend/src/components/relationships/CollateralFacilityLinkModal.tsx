@@ -49,6 +49,8 @@ interface CollateralFacilityLinkModalProps {
   preselectedCollateralId?: string;
   preselectedFacilityId?: string;
   preselectedLoanAccountId?: string;
+  preselectedFacility?: LoanAccount | null;
+  preselectedCollateral?: Collateral | null;
 }
 
 export const CollateralFacilityLinkModal: React.FC<CollateralFacilityLinkModalProps> = ({
@@ -61,6 +63,8 @@ export const CollateralFacilityLinkModal: React.FC<CollateralFacilityLinkModalPr
   preselectedCollateralId,
   preselectedFacilityId,
   preselectedLoanAccountId,
+  preselectedFacility,
+  preselectedCollateral,
 }) => {
   // Master lists
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -296,11 +300,108 @@ export const CollateralFacilityLinkModal: React.FC<CollateralFacilityLinkModalPr
 
   // Selected collateral
   const selectedCollateral = useMemo(() => {
-    if (!selectedCollateralId) return null;
+    if (preselectedCollateral) return preselectedCollateral;
+    const cid = selectedCollateralId || preselectedCollateralId;
+    if (!cid) return null;
     return (
-      collaterals.find((c) => c.id === selectedCollateralId || c.code === selectedCollateralId) || null
+      collaterals.find((c) => c.id === cid || c.code === cid) || null
     );
-  }, [collaterals, selectedCollateralId]);
+  }, [collaterals, selectedCollateralId, preselectedCollateral, preselectedCollateralId]);
+
+  // Strict customer-isolated credit facilities
+  const availableFacilities = useMemo(() => {
+    if (selectedCollateralId && eligibleBackendFacilities.length > 0) {
+      return eligibleBackendFacilities;
+    }
+
+    const effectiveCustId =
+      allocationMode === 'cross_customer' && targetCustomerId
+        ? targetCustomerId
+        : selectedCustomerId;
+
+    if (!effectiveCustId) {
+      return facilities;
+    }
+
+    const target = effectiveCustId.trim().toLowerCase();
+    const cust = customers.find(
+      (c) =>
+        (c.id && c.id.trim().toLowerCase() === target) ||
+        (c.cif && c.cif.trim().toLowerCase() === target)
+    );
+
+    const validIds = new Set<string>();
+    validIds.add(target);
+    if (cust) {
+      if (cust.id) validIds.add(cust.id.trim().toLowerCase());
+      if (cust.cif) validIds.add(cust.cif.trim().toLowerCase());
+    }
+
+    return facilities.filter((f) => {
+      if (!f.customerId) return false;
+      const fCust = f.customerId.trim().toLowerCase();
+      if (validIds.has(fCust)) return true;
+      if (cust) {
+        if (cust.id && cust.id.trim().toLowerCase() === fCust) return true;
+        if (cust.cif && cust.cif.trim().toLowerCase() === fCust) return true;
+      }
+      return false;
+    });
+  }, [
+    selectedCollateralId,
+    eligibleBackendFacilities,
+    allocationMode,
+    targetCustomerId,
+    selectedCustomerId,
+    customers,
+    facilities,
+  ]);
+
+  // Selected facility
+  const selectedFacility = useMemo(
+    () => {
+      if (preselectedFacility) return preselectedFacility;
+      const fid = selectedLoanAccountId || preselectedLoanAccountId || preselectedFacilityId;
+      if (!fid) return null;
+      const found =
+        facilities.find((f) => f.id === fid || f.lineCode === fid || f.loanReference === fid) ||
+        availableFacilities.find((f) => f.id === fid);
+      if (found) return found;
+      const foundCand = candidateFacilities.find(
+        (f) => f.id === fid || f.lineCode === fid || f.loanReference === fid
+      );
+      if (foundCand) {
+        return {
+          id: foundCand.id,
+          lineCode: foundCand.lineCode || foundCand.id,
+          loanReference: foundCand.loanReference || foundCand.id,
+          customerId: foundCand.customerId || '',
+          facilityType: foundCand.facilityType,
+          lineCurrency: foundCand.lineCurrency || 'ETB',
+          revolvingLine: false,
+          lineStartDate: '',
+          lineExpiryDate: foundCand.lineExpiryDate || '',
+          approvedLimit: foundCand.approvedLimit,
+          outstandingBalance: foundCand.outstandingBalance,
+          availableAmount: foundCand.availableAmount,
+          segment: (foundCand.segment || 'CORPORATE') as any,
+          branch: foundCand.branch || 'Addis Ababa Main',
+          status: foundCand.status,
+          source: 'CBS_SIM',
+        } as LoanAccount;
+      }
+      return null;
+    },
+    [
+      availableFacilities,
+      candidateFacilities,
+      facilities,
+      selectedLoanAccountId,
+      preselectedFacility,
+      preselectedLoanAccountId,
+      preselectedFacilityId,
+    ]
+  );
 
   // Selected customer
   const selectedCustomer = useMemo(() => {
@@ -316,7 +417,7 @@ export const CollateralFacilityLinkModal: React.FC<CollateralFacilityLinkModalPr
           (c.name && c.name.toLowerCase() === custId.toLowerCase())
       ) || null
     );
-  }, [customers, isPreselectedFacility, facilities, selectedLoanAccountId, selectedCollateral, selectedCustomerId]);
+  }, [customers, isPreselectedFacility, selectedFacility, selectedCollateral, selectedCustomerId]);
 
   const targetCustomer = useMemo(() => {
     if (!targetCustomerId) return null;
@@ -423,86 +524,6 @@ export const CollateralFacilityLinkModal: React.FC<CollateralFacilityLinkModalPr
     });
   }, [candidateFacilities, facilityStatusFilter, facilitySearchQuery]);
 
-  // Strict customer-isolated credit facilities
-  const availableFacilities = useMemo(() => {
-    if (selectedCollateralId && eligibleBackendFacilities.length > 0) {
-      return eligibleBackendFacilities;
-    }
-
-    const effectiveCustId =
-      allocationMode === 'cross_customer' && targetCustomerId
-        ? targetCustomerId
-        : selectedCustomerId;
-
-    if (!effectiveCustId) {
-      return facilities;
-    }
-
-    const target = effectiveCustId.trim().toLowerCase();
-    const cust = customers.find(
-      (c) =>
-        (c.id && c.id.trim().toLowerCase() === target) ||
-        (c.cif && c.cif.trim().toLowerCase() === target)
-    );
-
-    const validIds = new Set<string>();
-    validIds.add(target);
-    if (cust) {
-      if (cust.id) validIds.add(cust.id.trim().toLowerCase());
-      if (cust.cif) validIds.add(cust.cif.trim().toLowerCase());
-    }
-
-    return facilities.filter((f) => {
-      if (!f.customerId) return false;
-      const fCust = f.customerId.trim().toLowerCase();
-      if (validIds.has(fCust)) return true;
-      if (cust) {
-        if (cust.id && cust.id.trim().toLowerCase() === fCust) return true;
-        if (cust.cif && cust.cif.trim().toLowerCase() === fCust) return true;
-      }
-      return false;
-    });
-  }, [
-    selectedCollateralId,
-    eligibleBackendFacilities,
-    allocationMode,
-    targetCustomerId,
-    selectedCustomerId,
-    customers,
-    facilities,
-  ]);
-
-  // Selected facility
-  const selectedFacility = useMemo(
-    () => {
-      const found = facilities.find((f) => f.id === selectedLoanAccountId || f.lineCode === selectedLoanAccountId || f.loanReference === selectedLoanAccountId) ||
-        availableFacilities.find((f) => f.id === selectedLoanAccountId);
-      if (found) return found;
-      const foundCand = candidateFacilities.find((f) => f.id === selectedLoanAccountId || f.lineCode === selectedLoanAccountId || f.loanReference === selectedLoanAccountId);
-      if (foundCand) {
-        return {
-          id: foundCand.id,
-          lineCode: foundCand.lineCode || foundCand.id,
-          loanReference: foundCand.loanReference || foundCand.id,
-          customerId: foundCand.customerId || '',
-          facilityType: foundCand.facilityType,
-          lineCurrency: foundCand.lineCurrency || 'ETB',
-          revolvingLine: false,
-          lineStartDate: '',
-          lineExpiryDate: foundCand.lineExpiryDate || '',
-          approvedLimit: foundCand.approvedLimit,
-          outstandingBalance: foundCand.outstandingBalance,
-          availableAmount: foundCand.availableAmount,
-          segment: (foundCand.segment || 'CORPORATE') as any,
-          branch: foundCand.branch || 'Addis Ababa Main',
-          status: foundCand.status,
-          source: 'CBS_SIM',
-        } as LoanAccount;
-      }
-      return null;
-    },
-    [availableFacilities, candidateFacilities, facilities, selectedLoanAccountId]
-  );
 
   // Third-party legal ownership and borrower identity resolution (Relationship-Specific)
   const isThirdParty = useMemo(() => {

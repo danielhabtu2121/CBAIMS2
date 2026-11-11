@@ -927,6 +927,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
           existingLink={linkToEdit}
           preselectedFacilityId={selectedFacility.id}
           preselectedLoanAccountId={selectedFacility.id}
+          preselectedFacility={selectedFacility}
         />
       )}
 
