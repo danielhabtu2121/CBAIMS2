@@ -15,7 +15,6 @@ import {
   Cpu,
   ChevronLeft,
   ChevronRight,
-  Shield,
 } from 'lucide-react';
 import { RoleCode, RolePermission } from '../../types';
 
@@ -179,10 +178,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`h-full flex flex-col justify-between shrink-0 select-none bg-[#0E284E] text-white border-r border-[#1B4580] transition-all duration-200 z-30 ${
+      className={`h-full flex flex-col justify-between shrink-0 select-none bg-[#00205B] text-white border-r border-[#143666] transition-all duration-200 z-30 shadow-md ${
         collapsed ? 'w-16' : 'w-60'
       }`}
     >
+      {/* Brand Header */}
+      <div className="h-14 flex items-center px-3.5 border-b border-[#143666] bg-[#07152B]/80 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 shadow-xs">
+            <img src="/dashen-logo.png" alt="Dashen Bank Logo" className="w-full h-full object-contain" />
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <span className="text-[12px] font-extrabold tracking-wider text-white uppercase block leading-tight">
+                DASHEN BANK
+              </span>
+              <span className="text-[10px] text-[#D48806] font-semibold tracking-tight block truncate">
+                CBAIMS ENTERPRISE
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Scrollable Navigation Item List */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar-dark py-3 px-2 space-y-4">
         {sections.map((sec) => {
@@ -190,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <div key={sec} className="space-y-1">
               {!collapsed && (
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#8FA5C2] px-2.5 py-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-200/60 px-2.5 py-1 select-none">
                   {sec}
                 </div>
               )}
@@ -202,17 +220,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <button
                       key={item.id}
                       onClick={() => onNavigate(item.id)}
-                      className={`w-full flex items-center justify-between py-2 px-2.5 rounded-md text-xs font-semibold transition-all group ${
+                      className={`w-full flex items-center justify-between py-2 px-2.5 rounded-lg text-xs font-semibold transition-all group ${
                         isActive
-                          ? 'bg-[#1B4580] text-white border-l-4 border-[#8B6BFF] shadow-xs'
-                          : 'text-[#C5D5E8] hover:bg-[#143666] hover:text-white border-l-4 border-transparent'
+                          ? 'bg-[#143666] text-white border-l-3 border-[#D48806] shadow-xs'
+                          : 'text-blue-100/80 hover:bg-[#0E284E] hover:text-white border-l-3 border-transparent'
                       } ${collapsed ? 'justify-center px-0' : ''}`}
                       title={collapsed ? item.label : undefined}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Icon
                           className={`w-4 h-4 shrink-0 transition-colors ${
-                            isActive ? 'text-[#8B6BFF]' : 'text-[#8FA5C2] group-hover:text-white'
+                            isActive ? 'text-[#D48806]' : 'text-blue-300/70 group-hover:text-white'
                           }`}
                         />
                         {!collapsed && (
@@ -222,10 +240,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                       {!collapsed && item.badgeCount !== undefined && item.badgeCount > 0 && (
                         <span
-                          className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-1 ${
+                          className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full shrink-0 ml-1 shadow-xs ${
                             item.id === 'exceptions'
-                              ? 'bg-red-600 text-white'
-                              : 'bg-[#8B6BFF] text-white'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-[#D48806] text-white'
                           }`}
                         >
                           {item.badgeCount}
@@ -241,22 +259,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Pinned Collapse Toggle Footer */}
-      <div className="shrink-0 p-2.5 border-t border-[#1B4580] bg-[#0A1C36] flex items-center justify-between">
+      <div className="shrink-0 p-2.5 border-t border-[#143666] bg-[#07152B]/90 flex items-center justify-between">
         {!collapsed && (
-          <div className="flex items-center gap-2 text-[11px] text-[#8FA5C2] font-medium pl-1">
-            <img src="/dashen-logo.png" alt="Dashen Bank" className="w-4 h-4 object-contain rounded-xs bg-white p-0.5" />
-            <span className="font-semibold text-slate-200">Dashen CBAIMS</span>
+          <div className="flex items-center gap-2 text-[11px] text-blue-200/70 font-medium pl-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
+            <span className="text-[10.5px]">Production Online</span>
           </div>
         )}
         <button
           onClick={onToggleCollapse}
-          className={`flex items-center gap-1.5 text-[#C5D5E8] hover:text-white hover:bg-[#1B4580] rounded p-1.5 transition-colors text-xs ${
+          className={`flex items-center gap-1.5 text-blue-200/80 hover:text-white hover:bg-[#143666] rounded-md p-1.5 transition-colors text-xs ${
             collapsed ? 'w-full justify-center' : ''
           }`}
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          {!collapsed && <span className="text-[11px]">Collapse</span>}
+          {!collapsed && <span className="text-[11px] font-medium">Collapse</span>}
         </button>
       </div>
     </aside>

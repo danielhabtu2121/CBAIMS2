@@ -26,45 +26,30 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ activePage, detailItem
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: '#F4F8FD',
-        padding: '10px 24px',
-        borderBottom: '1px solid #DCE4EE',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        fontSize: '12px',
-        color: '#5B6B82',
-      }}
+    <nav
+      aria-label="Breadcrumb"
+      className="bg-white/80 backdrop-blur-xs px-6 py-2.5 border-b border-slate-200/80 flex items-center gap-1.5 text-xs text-slate-500 select-none"
     >
       <button
         onClick={onNavigateHome}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          background: 'transparent',
-          border: 'none',
-          color: '#2C6295',
-          fontWeight: 600,
-          cursor: 'pointer',
-          padding: 0,
-        }}
+        className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#00205B] font-semibold transition-colors focus:outline-none focus:ring-1 focus:ring-[#00205B] rounded px-1 -mx-1"
       >
-        <Home style={{ width: '13px', height: '13px' }} />
+        <Home className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#00205B]" />
         <span>Home</span>
       </button>
-      <ChevronRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-      <span style={{ fontWeight: detailItemName ? 500 : 700, color: detailItemName ? '#5B6B82' : '#0F172A' }}>
+
+      <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+      <span className={`transition-colors ${detailItemName ? 'font-medium text-slate-600' : 'font-bold text-slate-900'}`}>
         {pageTitles[activePage] || activePage}
       </span>
+
       {detailItemName && (
         <>
-          <ChevronRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-          <span style={{ fontWeight: 700, color: '#0F172A' }}>{detailItemName}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="font-bold text-slate-900 truncate max-w-xs">{detailItemName}</span>
         </>
       )}
-    </div>
+    </nav>
   );
 };

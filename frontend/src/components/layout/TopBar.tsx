@@ -17,6 +17,8 @@ import {
   FileText,
   AlertTriangle,
   ArrowRight,
+  Globe,
+  Building,
 } from 'lucide-react';
 import {
   UserSession,
@@ -79,12 +81,16 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close flyout on outside click
+  // Close flyout & user menu on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setIsFlyoutOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -274,103 +280,35 @@ export const TopBar: React.FC<TopBarProps> = ({
     ? (availableSegments && availableSegments.length > 0 ? availableSegments : ['Corporate Banking', 'Retail Banking', 'MSME Banking', 'Interest-Free Banking (IFB)'])
     : userSegmentList;
 
-  return (
-    <header
-      style={{
-        height: '56px',
-        backgroundColor: '#0E284E',
-        color: '#FFFFFF',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 20px',
-        borderBottom: '1px solid #1B4580',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-      }}
-    >
-      {/* Left side: Logo & Wordmark & Segment Chip */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div
-            style={{
-              height: '38px',
-              padding: '2px 4px',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '8px',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <img
-              src="/dashen-logo.png"
-              alt="Dashen Bank Logo"
-              style={{
-                height: '34px',
-                width: 'auto',
-                objectFit: 'contain',
-                borderRadius: '6px',
-              }}
-            />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '0.4px', color: '#FFFFFF' }}>
-                DASHEN BANK
-              </span>
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  backgroundColor: '#D97706',
-                  color: '#FFFFFF',
-                  padding: '1px 6px',
-                  borderRadius: '4px',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                CBAIMS
-              </span>
-            </div>
-            <div style={{ fontSize: '9px', fontWeight: 600, color: '#B9D3EB', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-              Collateral &amp; Bank Asset Insurance Management
-            </div>
-          </div>
-        </div>
+  const userInitials = currentUser.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
 
-        {/* Business Segment Selector / Scope Badge */}
+  return (
+    <header className="h-14 bg-[#00205B] text-white flex items-center justify-between px-4 sm:px-6 border-b border-[#143666] sticky top-0 z-40 select-none shadow-xs">
+      {/* Left side: Segment Chip / Scope Selector */}
+      <div className="flex items-center gap-3">
         {canSelectSegment ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}>
-            <span style={{ fontSize: '11px', color: '#B9D3EB', fontWeight: 600 }}>Segment:</span>
+          <div className="flex items-center gap-2 bg-[#0E284E] border border-[#1B4580] rounded-lg px-2.5 py-1 shadow-xs">
+            <Globe className="w-3.5 h-3.5 text-[#D48806] shrink-0" />
+            <span className="text-[11px] text-blue-200 font-semibold hidden sm:inline">Segment:</span>
             <select
               value={selectedSegment}
               onChange={(e) => onSelectSegment(e.target.value)}
-              style={{
-                backgroundColor: '#143666',
-                color: '#FFFFFF',
-                border: '1px solid #25589E',
-                borderRadius: '6px',
-                padding: '4px 10px',
-                fontSize: '11px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              }}
+              className="bg-transparent text-white text-xs font-semibold cursor-pointer outline-none focus:ring-0 border-none py-0.5 pr-2"
               title="Filter entire application data by Business Segment"
             >
               {isMultiSegmentRole && (
-                <option value="ALL" style={{ backgroundColor: '#0E284E', color: '#FFFFFF' }}>
-                  🌐 All Segments {currentUser.role === 'BRMGR' ? '(Branch-Wide)' : currentUser.role === 'DISTDIR' ? '(District-Wide)' : '(Bank-Wide)'}
+                <option value="ALL" className="bg-[#00205B] text-white">
+                  All Segments {currentUser.role === 'BRMGR' ? '(Branch)' : currentUser.role === 'DISTDIR' ? '(District)' : '(Bank)'}
                 </option>
               )}
               {segmentOptions.map((seg) => (
-                <option key={seg} value={seg} style={{ backgroundColor: '#0E284E', color: '#FFFFFF' }}>
-                  🏢 {seg}
+                <option key={seg} value={seg} className="bg-[#00205B] text-white">
+                  {seg}
                 </option>
               ))}
             </select>
@@ -378,184 +316,102 @@ export const TopBar: React.FC<TopBarProps> = ({
         ) : (
           <div
             title="Authorized Segment (Locked to Your Assigned Role & Jurisdiction Scope)"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginLeft: '12px',
-              backgroundColor: '#143666',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              border: '1px solid #1B4580',
-              fontSize: '11px',
-              color: '#B9D3EB',
-            }}
+            className="flex items-center gap-2 bg-[#0E284E] border border-[#1B4580] rounded-lg px-2.5 py-1 text-xs text-blue-200"
           >
-            <span>Segment:</span>
-            <strong style={{ color: '#FFFFFF' }}>{currentUser.segment || selectedSegment || 'Corporate Banking'}</strong>
-            <span style={{ fontSize: '10px', opacity: 0.8 }} title="Organizational scope locked">🔒</span>
+            <Building className="w-3.5 h-3.5 text-[#D48806] shrink-0" />
+            <span className="hidden sm:inline text-[11px] font-medium text-blue-300">Segment:</span>
+            <span className="font-semibold text-white">{currentUser.segment || selectedSegment || 'Corporate Banking'}</span>
+            <span className="text-[10px] text-blue-300/80" title="Organizational scope locked">🔒</span>
           </div>
         )}
       </div>
 
-      {/* Center: Global Search */}
+      {/* Center: Global Search Bar */}
       <div
         ref={searchContainerRef}
-        style={{ flex: 1, maxWidth: '460px', margin: '0 24px', position: 'relative' }}
+        className="flex-1 max-w-md mx-4 sm:mx-8 relative"
       >
-        <Search
-          style={{
-            position: 'absolute',
-            left: '10px',
-            top: '9px',
-            width: '14px',
-            height: '14px',
-            color: '#B9D3EB',
-            pointerEvents: 'none',
-          }}
-        />
-        <input
-          type="text"
-          placeholder="Global Search (CIF, Policy #, Collateral ID, Reg No)..."
-          value={searchQuery}
-          onFocus={() => setIsFlyoutOpen(true)}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setIsFlyoutOpen(true);
-            if (onGlobalSearch) onGlobalSearch(e.target.value);
-          }}
-          onKeyDown={handleKeyDown}
-          style={{
-            width: '100%',
-            backgroundColor: '#143666',
-            border: isFlyoutOpen ? '1px solid #60A5FA' : '1px solid #1B4580',
-            borderRadius: '6px',
-            padding: '7px 28px 7px 32px',
-            fontSize: '12px',
-            color: '#FFFFFF',
-            outline: 'none',
-            boxShadow: isFlyoutOpen ? '0 0 0 2px rgba(96, 165, 250, 0.25)' : 'none',
-            transition: 'all 0.15s ease-in-out',
-          }}
-        />
-        {searchQuery && (
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setIsFlyoutOpen(false);
-              if (onGlobalSearch) onGlobalSearch('');
+        <div className="relative flex items-center">
+          <Search className="absolute left-3 w-4 h-4 text-blue-300 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search CIF, Facility, Collateral, Policy, Document..."
+            value={searchQuery}
+            onFocus={() => setIsFlyoutOpen(true)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsFlyoutOpen(true);
+              if (onGlobalSearch) onGlobalSearch(e.target.value);
             }}
-            style={{
-              position: 'absolute',
-              right: '8px',
-              top: '8px',
-              background: 'transparent',
-              border: 'none',
-              color: '#B9D3EB',
-              cursor: 'pointer',
-              padding: '2px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-            title="Clear search"
-          >
-            <X style={{ width: '13px', height: '13px' }} />
-          </button>
-        )}
-
-        {/* Global Search Results Flyout */}
-        {isFlyoutOpen && searchQuery.trim().length >= 2 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 6px)',
-              left: 0,
-              width: '540px',
-              maxHeight: '440px',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '8px',
-              border: '1px solid #CBD5E1',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-              zIndex: 9999,
-              overflowY: 'auto',
-              color: '#101828',
-            }}
-          >
-            {/* Header info bar */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '8px 12px',
-                backgroundColor: '#F8FAFC',
-                borderBottom: '1px solid #E2E8F0',
-                fontSize: '11px',
-                color: '#64748B',
+            onKeyDown={handleKeyDown}
+            className="w-full bg-[#0E284E] border border-[#1B4580] hover:border-blue-400 focus:border-[#D48806] focus:ring-2 focus:ring-[#D48806]/20 rounded-lg py-1.5 pl-9 pr-9 text-xs text-white placeholder:text-blue-300/60 transition-all outline-none"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setIsFlyoutOpen(false);
+                if (onGlobalSearch) onGlobalSearch('');
               }}
+              className="absolute right-2.5 text-blue-300 hover:text-white p-0.5 rounded transition-colors"
+              title="Clear search"
             >
-              <span>
-                Search results for: <strong style={{ color: '#0F172A' }}>"{searchQuery}"</strong>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Global Search Results Flyout Popover */}
+        {isFlyoutOpen && searchQuery.trim().length >= 2 && (
+          <div className="absolute top-full left-0 mt-2 w-full min-w-[340px] sm:min-w-[480px] max-h-96 bg-white rounded-xl border border-slate-200 shadow-2xl z-50 overflow-y-auto text-slate-800 animate-fadeIn custom-scrollbar">
+            {/* Header info bar */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs">
+              <span className="text-slate-600">
+                Matches for: <strong className="text-slate-900 font-bold">"{searchQuery}"</strong>
               </span>
-              <span style={{ fontWeight: 600, color: searchResults.totalCount > 0 ? '#0284C7' : '#DC2626' }}>
-                {searchResults.totalCount} {searchResults.totalCount === 1 ? 'match' : 'matches'} found
+              <span className={`font-semibold px-2 py-0.5 rounded-full text-[11px] ${searchResults.totalCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+                }`}>
+                {searchResults.totalCount} {searchResults.totalCount === 1 ? 'result' : 'results'}
               </span>
             </div>
 
-            {/* Results sections */}
+            {/* Empty state in search */}
             {searchResults.totalCount === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#64748B' }}>
-                <Search style={{ width: '28px', height: '28px', margin: '0 auto 8px', color: '#94A3B8' }} />
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#1E293B' }}>No matches found</div>
-                <div style={{ fontSize: '11px', marginTop: '4px', color: '#64748B' }}>
-                  No customer, facility, collateral, policy, document, or exception matched your query.
+              <div className="p-8 text-center text-slate-500">
+                <Search className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                <div className="text-sm font-semibold text-slate-700">No records found</div>
+                <div className="text-xs text-slate-400 mt-1">
+                  Try searching by CIF number, title deed reference, or loan ID.
                 </div>
               </div>
             ) : (
-              <div style={{ padding: '6px 0' }}>
+              <div className="p-2 space-y-3">
                 {/* Customers */}
                 {searchResults.customers.length > 0 && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Users style={{ width: '12px', height: '12px' }} />
-                      Customers ({searchResults.customers.length})
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Users className="w-3 h-3 text-blue-700" />
+                      <span>Customers ({searchResults.customers.length})</span>
                     </div>
                     {searchResults.customers.map((c) => (
                       <div
                         key={c.id || c.cif}
                         onClick={() => handleSelectResult('customers', { customerId: c.cif || c.id })}
-                        style={{
-                          padding: '8px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        className="px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-blue-50/70 transition-colors"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#DBEAFE', color: '#1E40AF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Users style={{ width: '14px', height: '14px' }} />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                            <Users className="w-3.5 h-3.5" />
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {c.name}
-                            </div>
-                            <div style={{ fontSize: '10px', color: '#64748B', display: 'flex', gap: '6px' }}>
-                              <span>CIF: <strong style={{ color: '#1E40AF' }}>{c.cif}</strong></span>
-                              {c.segment && <span>• {c.segment}</span>}
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 truncate">{c.name}</div>
+                            <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                              <span>CIF: <strong className="text-blue-700 font-mono">{c.cif}</strong></span>
                               {c.branch && <span>• {c.branch}</span>}
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F1F5F9', color: '#334155', fontWeight: 600 }}>
-                            {c.status || 'Active'}
-                          </span>
-                          <ArrowRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -563,46 +419,32 @@ export const TopBar: React.FC<TopBarProps> = ({
 
                 {/* Facilities */}
                 {searchResults.facilities.length > 0 && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <CreditCard style={{ width: '12px', height: '12px' }} />
-                      Loan Facilities ({searchResults.facilities.length})
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <CreditCard className="w-3 h-3 text-emerald-600" />
+                      <span>Facilities &amp; Loans ({searchResults.facilities.length})</span>
                     </div>
                     {searchResults.facilities.map((f) => (
                       <div
                         key={f.id}
                         onClick={() => handleSelectResult('facilities', { facilityId: f.id })}
-                        style={{
-                          padding: '8px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ECFDF5')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        className="px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-emerald-50/70 transition-colors"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#D1FAE5', color: '#065F46', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <CreditCard style={{ width: '14px', height: '14px' }} />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                            <CreditCard className="w-3.5 h-3.5" />
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 truncate">
                               {f.loanReference || f.lineCode || f.id}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748B', display: 'flex', gap: '6px' }}>
+                            <div className="text-[11px] text-slate-500 flex items-center gap-2">
                               <span>{f.facilityType || 'Loan'}</span>
                               {f.approvedLimit && <span>• ETB {Number(f.approvedLimit).toLocaleString()}</span>}
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#ECFDF5', color: '#047857', fontWeight: 600 }}>
-                            {f.status || 'Active'}
-                          </span>
-                          <ArrowRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -610,47 +452,32 @@ export const TopBar: React.FC<TopBarProps> = ({
 
                 {/* Collaterals */}
                 {searchResults.collaterals.length > 0 && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Building2 style={{ width: '12px', height: '12px' }} />
-                      Collateral Assets ({searchResults.collaterals.length})
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Building2 className="w-3 h-3 text-amber-600" />
+                      <span>Collateral Assets ({searchResults.collaterals.length})</span>
                     </div>
                     {searchResults.collaterals.map((col) => (
                       <div
                         key={col.id}
                         onClick={() => handleSelectResult('collateral', { collateralId: col.id })}
-                        style={{
-                          padding: '8px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF3C7')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        className="px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-amber-50/70 transition-colors"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#FDE68A', color: '#92400E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Building2 style={{ width: '14px', height: '14px' }} />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                            <Building2 className="w-3.5 h-3.5" />
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 truncate">
                               {col.code} — {col.description || col.category}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748B', display: 'flex', gap: '6px' }}>
-                              <span>Category: {col.category}</span>
-                              {col.registrationNumber && <span>• Reg: {col.registrationNumber}</span>}
+                            <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                              <span>{col.category}</span>
                               {col.valuationAmount && <span>• ETB {Number(col.valuationAmount).toLocaleString()}</span>}
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#FEF3C7', color: '#92400E', fontWeight: 600 }}>
-                            {col.status || 'Active'}
-                          </span>
-                          <ArrowRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -658,141 +485,91 @@ export const TopBar: React.FC<TopBarProps> = ({
 
                 {/* Policies */}
                 {searchResults.policies.length > 0 && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, color: '#3730A3', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Shield style={{ width: '12px', height: '12px' }} />
-                      Insurance Policies ({searchResults.policies.length})
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Shield className="w-3 h-3 text-indigo-600" />
+                      <span>Insurance Policies ({searchResults.policies.length})</span>
                     </div>
                     {searchResults.policies.map((p) => (
                       <div
                         key={p.id}
                         onClick={() => handleSelectResult('insurance', { policyId: p.id })}
-                        style={{
-                          padding: '8px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EEF2FF')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        className="px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-indigo-50/70 transition-colors"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#E0E7FF', color: '#3730A3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Shield style={{ width: '14px', height: '14px' }} />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-indigo-100 text-indigo-800 flex items-center justify-center shrink-0">
+                            <Shield className="w-3.5 h-3.5" />
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 truncate">
                               {p.policyNumber} — {p.insurerName}
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748B', display: 'flex', gap: '6px' }}>
+                            <div className="text-[11px] text-slate-500">
                               <span>{p.coverageType}</span>
-                              {p.collateralId && <span>• Collateral: {p.collateralId}</span>}
-                              {p.insuredAmount && <span>• Sum: ETB {Number(p.insuredAmount).toLocaleString()}</span>}
+                              {p.insuredAmount && <span> • ETB {Number(p.insuredAmount).toLocaleString()}</span>}
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#EEF2FF', color: '#4338CA', fontWeight: 600 }}>
-                            {p.status || 'Active'}
-                          </span>
-                          <ArrowRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Documents */}
+                {/* Documents & Exceptions */}
                 {searchResults.documents.length > 0 && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, color: '#6B21A8', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <FileText style={{ width: '12px', height: '12px' }} />
-                      DMS Documents ({searchResults.documents.length})
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-purple-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="w-3 h-3 text-purple-600" />
+                      <span>Documents ({searchResults.documents.length})</span>
                     </div>
                     {searchResults.documents.map((d) => (
                       <div
                         key={d.id}
                         onClick={() => handleSelectResult('documents', { id: d.id, entityId: d.entityId })}
-                        style={{
-                          padding: '8px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F3E8FF')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        className="px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-purple-50/70 transition-colors"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#F3E8FF', color: '#6B21A8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <FileText style={{ width: '14px', height: '14px' }} />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
+                            <FileText className="w-3.5 h-3.5" />
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {d.name || d.fileName}
-                            </div>
-                            <div style={{ fontSize: '10px', color: '#64748B', display: 'flex', gap: '6px' }}>
-                              <span>{d.type}</span>
-                              {d.entityId && <span>• Linked: {d.entityType} ({d.entityId})</span>}
-                            </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 truncate">{d.name || d.fileName}</div>
+                            <div className="text-[11px] text-slate-500">{d.type}</div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F3E8FF', color: '#7E22CE', fontWeight: 600 }}>
-                            v{d.version || 1}
-                          </span>
-                          <ArrowRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Exceptions */}
                 {searchResults.exceptions.length > 0 && (
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, color: '#9F1239', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <AlertTriangle style={{ width: '12px', height: '12px' }} />
-                      Exceptions &amp; Breaches ({searchResults.exceptions.length})
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3 text-rose-600" />
+                      <span>Exceptions ({searchResults.exceptions.length})</span>
                     </div>
                     {searchResults.exceptions.map((e) => (
                       <div
                         key={e.id}
                         onClick={() => handleSelectResult('exceptions', { id: e.id, entityId: e.entityId })}
-                        style={{
-                          padding: '8px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FFE4E6')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        className="px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-rose-50/70 transition-colors"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#FFE4E6', color: '#9F1239', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <AlertTriangle style={{ width: '14px', height: '14px' }} />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-md bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+                            <AlertTriangle className="w-3.5 h-3.5" />
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-slate-900 truncate">
                               {e.exceptionType} — {e.entityType} ({e.entityId})
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748B', display: 'flex', gap: '6px' }}>
-                              <span>Severity: <strong style={{ color: e.severity === 'Critical' ? '#DC2626' : '#D97706' }}>{e.severity}</strong></span>
-                              <span>• {e.description}</span>
+                            <div className="text-[11px] text-slate-500">
+                              Severity: <strong className="text-rose-700">{e.severity}</strong> • {e.description}
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#FFE4E6', color: '#BE123C', fontWeight: 600 }}>
-                            {e.status}
-                          </span>
-                          <ArrowRight style={{ width: '12px', height: '12px', color: '#94A3B8' }} />
-                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -800,189 +577,114 @@ export const TopBar: React.FC<TopBarProps> = ({
               </div>
             )}
 
-            {/* Footer with hint */}
-            <div
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#F8FAFC',
-                borderTop: '1px solid #E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: '10px',
-                color: '#64748B',
-              }}
-            >
-              <span>Press <strong style={{ color: '#0F172A' }}>Enter</strong> to navigate to first match • <strong style={{ color: '#0F172A' }}>Esc</strong> to dismiss</span>
-              <span style={{ color: '#2563EB', fontWeight: 600 }}>Cross-Entity Search</span>
+            {/* Footer with shortcut hints */}
+            <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 select-none">
+              <span>Press <strong className="text-slate-700">Enter</strong> to open first • <strong className="text-slate-700">Esc</strong> to close</span>
+              <span className="text-blue-700 font-semibold">Dashen Global Index</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Right side: Actions & User Persona */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* Approvals Bell Icon with badge */}
+      {/* Right side: Action Badges & User Profile Menu */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Approvals Quick Access Button */}
         {currentUser.canApprove && (
           <button
             onClick={onOpenApprovals}
-            style={{
-              position: 'relative',
-              background: 'transparent',
-              border: 'none',
-              color: '#B9D3EB',
-              cursor: 'pointer',
-              padding: '6px',
-              borderRadius: '6px',
-            }}
+            className="relative p-2 text-blue-200 hover:text-white hover:bg-[#0E284E] rounded-lg transition-colors"
             title="Approvals Inbox"
+            aria-label="Approvals Inbox"
           >
-            <CheckSquare style={{ width: '18px', height: '18px' }} />
+            <CheckSquare className="w-4 h-4" />
             {pendingApprovalCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '2px',
-                  right: '2px',
-                  backgroundColor: '#C0362C',
-                  color: '#FFFFFF',
-                  fontSize: '9px',
-                  fontWeight: 700,
-                  borderRadius: '9999px',
-                  padding: '1px 4px',
-                  minWidth: '14px',
-                  textAlign: 'center',
-                }}
-              >
+              <span className="absolute top-1 right-1 bg-[#D48806] text-white text-[9px] font-bold rounded-full px-1.5 py-0.2 leading-tight shadow-xs">
                 {pendingApprovalCount}
               </span>
             )}
           </button>
         )}
 
-        {/* Notifications Bell Icon with badge */}
+        {/* Notifications Button */}
         <button
           onClick={onOpenNotifications}
-          style={{
-            position: 'relative',
-            background: 'transparent',
-            border: 'none',
-            color: '#B9D3EB',
-            cursor: 'pointer',
-            padding: '6px',
-            borderRadius: '6px',
-          }}
+          className="relative p-2 text-blue-200 hover:text-white hover:bg-[#0E284E] rounded-lg transition-colors"
           title="Notification Center"
+          aria-label="Notification Center"
         >
-          <Bell style={{ width: '18px', height: '18px' }} />
+          <Bell className="w-4 h-4" />
           {unreadNotificationCount > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: '2px',
-                right: '2px',
-                backgroundColor: '#C0362C',
-                color: '#FFFFFF',
-                fontSize: '9px',
-                fontWeight: 700,
-                borderRadius: '9999px',
-                padding: '1px 4px',
-                minWidth: '14px',
-                textAlign: 'center',
-              }}
-            >
+            <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.2 leading-tight shadow-xs animate-pulse">
               {unreadNotificationCount}
             </span>
           )}
         </button>
 
-        {/* User Profile Avatar Dropdown */}
-        <div style={{ position: 'relative' }}>
+        {/* User Profile Chip & Dropdown */}
+        <div ref={userMenuRef} className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'transparent',
-              border: 'none',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              padding: '4px 6px',
-              borderRadius: '6px',
-            }}
+            className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-[#0E284E] transition-colors text-left"
+            aria-expanded={showUserMenu}
           >
-            <div
-              style={{
-                width: '30px',
-                height: '30px',
-                borderRadius: '50%',
-                backgroundColor: '#2E6FB8',
-                color: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '12px',
-              }}
-            >
-              {currentUser.name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')
-                .substring(0, 2)}
+            {/* Initials Avatar */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1B4580] to-[#25589E] border border-blue-300/40 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              {userInitials}
             </div>
-            <div style={{ textAlign: 'left', display: 'none' }} className="md:block">
-              <div style={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.2 }}>{currentUser.name}</div>
-              <div style={{ fontSize: '10px', color: '#B9D3EB' }}>{currentUser.role}</div>
+
+            <div className="hidden md:block leading-tight">
+              <div className="text-xs font-bold text-white truncate max-w-[120px]">{currentUser.name}</div>
+              <div className="text-[10px] text-[#D48806] font-semibold">{currentUser.role}</div>
             </div>
-            <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.7 }} />
+
+            <ChevronDown className="w-3.5 h-3.5 text-blue-300" />
           </button>
 
+          {/* User Menu Dropdown */}
           {showUserMenu && (
-            <div
-              style={{
-                position: 'absolute',
-                right: 0,
-                marginTop: '6px',
-                width: '200px',
-                backgroundColor: '#FFFFFF',
-                color: '#0F172A',
-                borderRadius: '8px',
-                border: '1px solid #DCE4EE',
-                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                padding: '6px',
-                zIndex: 60,
-              }}
-            >
-              <div style={{ padding: '8px', borderBottom: '1px solid #DCE4EE' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700 }}>{currentUser.name}</div>
-                <div style={{ fontSize: '11px', color: '#5B6B82' }}>{currentUser.role}</div>
-                <div style={{ fontSize: '10px', color: '#5B6B82', marginTop: '2px' }}>{currentUser.branch}</div>
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-slate-200 shadow-xl py-1 text-slate-800 z-50 animate-fadeIn">
+              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/70 rounded-t-xl">
+                <div className="text-xs font-bold text-slate-900">{currentUser.name}</div>
+                <div className="text-[11px] text-blue-700 font-semibold">{currentUser.roleName || currentUser.role}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5 truncate">{currentUser.branch}</div>
               </div>
 
-              <div style={{ padding: '4px 0' }}>
+              {/* Persona Switcher for Testing (if multiple users provided) */}
+              {allUsers && allUsers.length > 1 && (
+                <div className="px-3 py-2 border-b border-slate-100">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Quick Persona Switch:
+                  </label>
+                  <select
+                    value={currentUser.userId}
+                    onChange={(e) => {
+                      const u = allUsers.find((usr) => usr.userId === e.target.value);
+                      if (u) {
+                        onSwitchUser(u);
+                        setShowUserMenu(false);
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md text-xs py-1 px-2 text-slate-800 outline-none focus:ring-1 focus:ring-blue-600"
+                  >
+                    {allUsers.map((u) => (
+                      <option key={u.userId} value={u.userId}>
+                        {u.role} — {u.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="p-1">
                 <button
                   onClick={() => {
                     setShowUserMenu(false);
                     onChangePassword();
                   }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '6px 8px',
-                    fontSize: '12px',
-                    color: '#0F172A',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-colors text-left"
                 >
-                  <Key style={{ width: '14px', height: '14px', color: '#5B6B82' }} />
-                  Change Password
+                  <Key className="w-4 h-4 text-slate-500" />
+                  <span>Change Password</span>
                 </button>
 
                 {currentUser.canApprove && (
@@ -991,48 +693,24 @@ export const TopBar: React.FC<TopBarProps> = ({
                       setShowUserMenu(false);
                       onDelegateAuthority();
                     }}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '6px 8px',
-                      fontSize: '12px',
-                      color: '#0F172A',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-colors text-left"
                   >
-                    <UserCheck style={{ width: '14px', height: '14px', color: '#5B6B82' }} />
-                    Delegate Approval Authority
+                    <UserCheck className="w-4 h-4 text-slate-500" />
+                    <span>Delegate Approval</span>
                   </button>
                 )}
+
+                <div className="border-t border-slate-100 my-1" />
 
                 <button
                   onClick={() => {
                     setShowUserMenu(false);
                     onLogout();
                   }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '6px 8px',
-                    fontSize: '12px',
-                    color: '#C0362C',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    borderTop: '1px solid #DCE4EE',
-                    marginTop: '4px',
-                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left font-semibold"
                 >
-                  <LogOut style={{ width: '14px', height: '14px', color: '#C0362C' }} />
-                  Sign Out
+                  <LogOut className="w-4 h-4 text-red-600" />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>

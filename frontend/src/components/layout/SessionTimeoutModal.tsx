@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, ShieldAlert } from 'lucide-react';
+import { Button } from '../common/Button';
 
 interface SessionTimeoutModalProps {
   isOpen: boolean;
@@ -42,64 +43,49 @@ export const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(11, 37, 69, 0.6)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 200,
-        padding: '20px',
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="session-timeout-title"
     >
-      <div
-        style={{
-          width: '420px',
-          maxWidth: '100%',
-          backgroundColor: '#FFFFFF',
-          borderRadius: '8px',
-          border: '1px solid #DCE4EE',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-          padding: '24px',
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            backgroundColor: '#FFF6DF',
-            color: '#B8860B',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px auto',
-          }}
-        >
-          <Clock style={{ width: '26px', height: '26px' }} />
+      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 text-center transform transition-all duration-200 animate-fadeIn">
+        {/* Warning Icon Badge */}
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-4 shadow-xs">
+          <Clock className="w-7 h-7 stroke-[2.2]" />
         </div>
 
-        <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
+        <h3 id="session-timeout-title" className="text-lg font-bold text-slate-900 tracking-tight mb-2">
           Session Inactivity Warning
         </h3>
 
-        <p style={{ fontSize: '13px', color: '#5B6B82', margin: '0 0 20px 0', lineHeight: 1.5 }}>
+        <p className="text-sm text-slate-600 leading-relaxed mb-6">
           Your active CBAIMS session will automatically terminate in{' '}
-          <strong style={{ color: '#C0362C' }}>
+          <span className="font-mono font-bold text-red-600 text-base px-2 py-0.5 bg-red-50 rounded border border-red-200">
             {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
-          </strong>{' '}
-          due to inactivity per bank security policy.
+          </span>{' '}
+          due to inactivity per Dashen Bank security policy.
         </p>
 
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button onClick={onStayLoggedIn} className="btn-primary" style={{ flex: 1 }}>
-            Stay Logged In
-          </button>
-          <button onClick={onLogout} className="btn-secondary" style={{ flex: 1 }}>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={onLogout}
+          >
             Log Out Now
-          </button>
+          </Button>
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={onStayLoggedIn}
+          >
+            Stay Logged In
+          </Button>
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          <ShieldAlert className="w-3.5 h-3.5" />
+          <span>Automated security protection enabled</span>
         </div>
       </div>
     </div>

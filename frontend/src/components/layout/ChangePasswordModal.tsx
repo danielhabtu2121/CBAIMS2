@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { X, Key, Check, AlertCircle } from 'lucide-react';
+import { X, Key, Check, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -51,140 +53,118 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
     }
   };
 
+  const policyChecklist = [
+    { label: 'Minimum 8 characters', satisfied: hasMinLength },
+    { label: 'At least one uppercase letter (A-Z)', satisfied: hasUpperCase },
+    { label: 'At least one lowercase letter (a-z)', satisfied: hasLowerCase },
+    { label: 'At least one number (0-9)', satisfied: hasNumber },
+    { label: 'At least one special character (!@#$%^&*)', satisfied: hasSpecial },
+    { label: 'Confirm password matches', satisfied: passwordsMatch },
+  ];
+
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(11, 37, 69, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 200,
-        padding: '20px',
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        style={{
-          width: '450px',
-          maxWidth: '100%',
-          backgroundColor: '#FFFFFF',
-          borderRadius: '8px',
-          border: '1px solid #DCE4EE',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden transform transition-all duration-200 animate-fadeIn">
         {/* Header */}
-        <div
-          style={{
-            padding: '16px 20px',
-            backgroundColor: '#08192E',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Key style={{ width: '18px', height: '18px' }} />
-            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>Change User Password</h3>
+        <div className="px-6 py-4 bg-[#00205B] text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+              <Key className="w-4 h-4 text-[#D48806]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white tracking-tight">Change User Password</h3>
+              <p className="text-[11px] text-blue-200">Dashen Bank Security Lifecycle Policy</p>
+            </div>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
-            <X style={{ width: '18px', height: '18px' }} />
+          <button
+            onClick={onClose}
+            className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div style={{ padding: '8px 12px', backgroundColor: '#FCEAE8', border: '1px solid #F5B8B3', color: '#C0362C', borderRadius: '6px', fontSize: '12px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <AlertCircle style={{ width: '14px', height: '14px' }} />
-              {error}
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div style={{ padding: '8px 12px', backgroundColor: '#E5F6ED', border: '1px solid #A6E5C5', color: '#1E8E5A', borderRadius: '6px', fontSize: '12px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Check style={{ width: '14px', height: '14px' }} />
-              Password updated successfully!
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span>Password successfully updated. Session preserved.</span>
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                Current Password (M)
-              </label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #DCE4EE', fontSize: '13px' }}
-              />
-            </div>
+          <Input
+            label="Current Password"
+            type="password"
+            required
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter your current password"
+          />
 
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                New Password (M)
-              </label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #DCE4EE', fontSize: '13px' }}
-              />
-            </div>
+          <Input
+            label="New Password"
+            type="password"
+            required
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter strong new password"
+          />
 
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>
-                Confirm New Password (M)
-              </label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #DCE4EE', fontSize: '13px' }}
-              />
+          <Input
+            label="Confirm New Password"
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-type new password"
+          />
+
+          {/* Password Policy Requirements Checklist */}
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+              Policy Requirements:
+            </span>
+            <div className="grid grid-cols-1 gap-1 text-[11.5px]">
+              {policyChecklist.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div
+                    className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${item.satisfied ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'
+                      }`}
+                  >
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  </div>
+                  <span className={item.satisfied ? 'text-slate-800 font-medium' : 'text-slate-500'}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Password Policy Live Checklist */}
-          <div style={{ backgroundColor: '#F4F8FD', border: '1px solid #DCE4EE', borderRadius: '6px', padding: '12px', marginBottom: '16px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#5B6B82', marginBottom: '6px' }}>
-              Security Policy Requirements:
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '11px' }}>
-              <div style={{ color: hasMinLength ? '#1E8E5A' : '#5B6B82', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {hasMinLength ? '✔' : '⚪'} At least 8 characters
-              </div>
-              <div style={{ color: hasUpperCase ? '#1E8E5A' : '#5B6B82', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {hasUpperCase ? '✔' : '⚪'} 1 Uppercase letter
-              </div>
-              <div style={{ color: hasLowerCase ? '#1E8E5A' : '#5B6B82', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {hasLowerCase ? '✔' : '⚪'} 1 Lowercase letter
-              </div>
-              <div style={{ color: hasNumber ? '#1E8E5A' : '#5B6B82', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {hasNumber ? '✔' : '⚪'} 1 Number
-              </div>
-              <div style={{ color: hasSpecial ? '#1E8E5A' : '#5B6B82', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {hasSpecial ? '✔' : '⚪'} 1 Special character
-              </div>
-              <div style={{ color: passwordsMatch ? '#1E8E5A' : '#5B6B82', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {passwordsMatch ? '✔' : '⚪'} Passwords match
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} className="btn-secondary">
+          <div className="pt-2 flex items-center justify-end gap-2.5">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
               Cancel
-            </button>
-            <button type="submit" disabled={!isPolicySatisfied || loading} className="btn-primary">
-              {loading ? 'Updating...' : 'Update Password'}
-            </button>
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+              disabled={!isPolicySatisfied || loading || success}
+            >
+              Update Password
+            </Button>
           </div>
         </form>
       </div>
