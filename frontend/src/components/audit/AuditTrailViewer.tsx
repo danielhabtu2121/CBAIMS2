@@ -128,7 +128,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
     }
     return {
       bg: 'bg-slate-50 text-slate-700 border-slate-200',
-      badge: 'bg-[#102E4A] text-white',
+      badge: 'bg-[#00205B] text-white',
       category: 'System & Ingestion',
     };
   };
@@ -373,7 +373,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
       sortable: true,
       cell: (r) => (
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#102E4A] text-white flex items-center justify-center font-bold text-xs shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#00205B] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
             {(r.userId || 'U').substring(0, 2).toUpperCase()}
           </div>
           <div>
@@ -420,10 +420,10 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
             setDrawerTab('diff');
             setShowDetailDrawer(true);
           }}
-          className="px-3 py-1 text-xs font-bold text-[#102E4A] bg-[#EFF5FB] hover:bg-[#DCE9F5] active:bg-[#B9D3EB] border border-[#B9D3EB] rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer ml-auto"
+          className="px-3 py-1 text-xs font-bold text-[#00205B] bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-300 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer ml-auto"
           title="Inspect complete event metadata, mutation diff, and cryptographic seal"
         >
-          <Eye className="w-3.5 h-3.5 text-[#1F4E7A]" />
+          <Eye className="w-3.5 h-3.5 text-[#00205B]" />
           <span>Inspect</span>
         </button>
       ),
@@ -438,11 +438,11 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="p-3 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 shrink-0">
+          <div className="p-3 bg-blue-50 text-[#00205B] rounded-xl border border-blue-200 shrink-0">
             <History className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <div className="text-xl sm:text-2xl font-black text-[#102E4A] tabular-nums">
+            <div className="text-xl sm:text-2xl font-black text-[#00205B] tabular-nums">
               {totalAuditCount.toLocaleString()}
             </div>
             <div className="text-xs text-slate-500 font-semibold truncate">Total Audit Records</div>
@@ -474,7 +474,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 shrink-0">
+          <div className="p-3 bg-amber-50 text-[#D48806] rounded-xl border border-amber-200 shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="min-w-0">
@@ -490,7 +490,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-            <Filter className="w-4 h-4 text-[#1F4E7A]" />
+            <Filter className="w-4 h-4 text-[#00205B]" />
             <span>Filter by Entity:</span>
           </div>
 
@@ -501,7 +501,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                 onClick={() => setEntityFilter(cat)}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   entityFilter === cat
-                    ? 'bg-[#102E4A] text-white shadow-2xs'
+                    ? 'bg-[#00205B] text-white shadow-2xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -513,7 +513,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-slate-100 pt-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-            <Tag className="w-4 h-4 text-[#1F4E7A]" />
+            <Tag className="w-4 h-4 text-[#00205B]" />
             <span>Action Category:</span>
           </div>
 
@@ -530,7 +530,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                 onClick={() => setActionCategoryFilter(cat.id)}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   actionCategoryFilter === cat.id
-                    ? 'bg-[#1F4E7A] text-white shadow-2xs'
+                    ? 'bg-[#00205B] text-white shadow-2xs'
                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
@@ -558,7 +558,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
       {/* Enhanced Audit Detail & Mutation Inspection Drawer */}
       {showDetailDrawer && selectedLog && (
         <div
-          className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-2xs flex justify-end z-50 animate-fadeIn"
+          className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-2xs flex justify-end z-50 animate-fadeIn"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowDetailDrawer(false);
@@ -570,7 +570,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div className="p-6 bg-[#102E4A] text-white flex justify-between items-start gap-4">
+            <div className="p-6 bg-[#00205B] text-white flex justify-between items-start gap-4">
               <div className="space-y-2 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`px-2.5 py-1 rounded-md text-xs font-mono font-bold border flex items-center gap-1.5 shadow-2xs ${currentActionStyle?.bg}`}>
@@ -617,17 +617,17 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
             </div>
 
             {/* Quick Context Summary Ribbon */}
-            <div className="px-6 py-3 bg-[#EFF5FB] border-b border-[#DCE9F5] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div>
                 <span className="text-slate-500 text-[11px] block">Operator:</span>
-                <strong className="text-[#102E4A] font-bold">{selectedLog.userId}</strong>
+                <strong className="text-[#00205B] font-bold">{selectedLog.userId}</strong>
                 <span className="text-[10px] text-slate-500 block font-mono">
                   {selectedLog.roleCode || selectedLog.userRole || 'CRO'}
                 </span>
               </div>
               <div>
                 <span className="text-slate-500 text-[11px] block">Target Entity ID:</span>
-                <strong className="text-[#102E4A] font-mono font-bold truncate block" title={selectedLog.entityId}>
+                <strong className="text-[#00205B] font-mono font-bold truncate block" title={selectedLog.entityId}>
                   {selectedLog.entityId}
                 </strong>
                 <span className="text-[10px] text-slate-500 block">{selectedLog.entityType}</span>
@@ -639,7 +639,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
               </div>
               <div>
                 <span className="text-slate-500 text-[11px] block">Field Mutated:</span>
-                <strong className="text-blue-900 font-mono block truncate" title={selectedLog.fieldName || 'Record State'}>
+                <strong className="text-[#00205B] font-mono block truncate" title={selectedLog.fieldName || 'Record State'}>
                   {selectedLog.fieldName || 'RECORD_STATE'}
                 </strong>
                 <span className="text-[10px] text-slate-500 block">Dual Control Verified</span>
@@ -652,26 +652,26 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                 <button
                   onClick={() => setDrawerTab('diff')}
                   className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    drawerTab === 'diff' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
+                    drawerTab === 'diff' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <ArrowRight className="w-3.5 h-3.5" /> State Mutation & Diff
+                  <ArrowRight className="w-3.5 h-3.5 text-[#EAA023]" /> State Mutation & Diff
                 </button>
                 <button
                   onClick={() => setDrawerTab('overview')}
                   className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    drawerTab === 'overview' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
+                    drawerTab === 'overview' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <ShieldCheck className="w-3.5 h-3.5" /> Operational Context
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#EAA023]" /> Operational Context
                 </button>
                 <button
                   onClick={() => setDrawerTab('raw')}
                   className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    drawerTab === 'raw' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
+                    drawerTab === 'raw' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <Code className="w-3.5 h-3.5" /> Raw JSON Payload
+                  <Code className="w-3.5 h-3.5 text-[#EAA023]" /> Raw JSON Payload
                 </button>
               </div>
 
@@ -686,7 +686,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                 <div className="space-y-4">
                   {/* Business Rationale & Officer Comments Banner */}
                   <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#102E4A]">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#00205B]">
                       <AlertCircle className="w-4 h-4 text-blue-600" />
                       <span>Audit Comments & Justification:</span>
                     </div>
@@ -699,7 +699,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                   {parsedDiff?.type === 'scalar' ? (
                     <div className="space-y-3">
                       <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                        <span>Field Changed: <strong className="font-mono text-[#102E4A]">{parsedDiff.fieldName}</strong></span>
+                        <span>Field Changed: <strong className="font-mono text-[#00205B]">{parsedDiff.fieldName}</strong></span>
                         <span className="text-[11px] text-slate-500">Atomic Value Transition</span>
                       </div>
 
@@ -744,9 +744,9 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                   ) : (
                     /* Structured JSON Attribute Comparison Table */
                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs space-y-0">
-                      <div className="px-4 py-3 bg-[#EFF5FB] border-b border-slate-200 flex items-center justify-between">
-                        <div className="font-bold text-xs text-[#102E4A] flex items-center gap-2">
-                          <SlidersHorizontal className="w-4 h-4 text-[#1F4E7A]" />
+                      <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                        <div className="font-bold text-xs text-[#00205B] flex items-center gap-2">
+                          <SlidersHorizontal className="w-4 h-4 text-[#00205B]" />
                           <span>Detailed Attribute Mutation Matrix</span>
                         </div>
                         <span className="text-[11px] font-semibold text-slate-500">
@@ -826,7 +826,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                 <div className="space-y-4">
                   {/* Entity Metadata Card */}
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
-                    <h4 className="font-bold text-sm text-[#102E4A] border-b border-slate-200 pb-2 flex items-center justify-between">
+                    <h4 className="font-bold text-sm text-[#00205B] border-b border-slate-200 pb-2 flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         {getEntityIcon(selectedLog.entityType)}
                         Target Entity Parameters
@@ -867,8 +867,8 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
 
                   {/* Operator & Workstation Card */}
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
-                    <h4 className="font-bold text-sm text-[#102E4A] border-b border-slate-200 pb-2 flex items-center gap-2">
-                      <User className="w-4 h-4 text-[#1F4E7A]" />
+                    <h4 className="font-bold text-sm text-[#00205B] border-b border-slate-200 pb-2 flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#00205B]" />
                       Operator & Terminal Security Profile
                     </h4>
 
@@ -879,7 +879,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                       </div>
                       <div>
                         <span className="text-slate-500">Designated Role Code:</span>
-                        <div className="font-mono font-bold text-[#1F4E7A]">
+                        <div className="font-mono font-bold text-[#00205B]">
                           {selectedLog.roleCode || selectedLog.userRole || 'CRO'}
                         </div>
                       </div>
@@ -904,7 +904,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
 
                   {/* Cryptographic Proof Card */}
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
-                    <h4 className="font-bold text-sm text-[#102E4A] border-b border-slate-200 pb-2 flex items-center justify-between">
+                    <h4 className="font-bold text-sm text-[#00205B] border-b border-slate-200 pb-2 flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         <Lock className="w-4 h-4 text-emerald-600" />
                         Cryptographic Proof & Immutability Guarantee
@@ -947,7 +947,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                     </div>
                     <button
                       onClick={() => copyToClipboard(JSON.stringify(selectedLog, null, 2), setCopiedJson)}
-                      className="px-3 py-1 bg-[#102E4A] hover:bg-[#1F4E7A] text-white rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      className="px-3 py-1 bg-[#00205B] hover:bg-[#0E284E] text-white rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       {copiedJson ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedJson ? 'Copied to Clipboard!' : 'Copy Entire JSON'}</span>
@@ -966,7 +966,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => handleDownloadSingleLog(selectedLog)}
-                  className="px-3 py-1.5 bg-[#EFF5FB] hover:bg-[#DCE9F5] text-[#1F4E7A] font-bold rounded-lg border border-[#B9D3EB] flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-[#00205B] font-bold rounded-lg border border-slate-300 flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   title="Export official JSON audit certification"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -990,7 +990,7 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
 
               <button
                 onClick={() => setShowDetailDrawer(false)}
-                className="px-4 py-2 bg-[#102E4A] hover:bg-[#1F4E7A] text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ml-auto"
+                className="px-4 py-2 bg-[#00205B] hover:bg-[#0E284E] text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ml-auto"
               >
                 Close Inspector
               </button>

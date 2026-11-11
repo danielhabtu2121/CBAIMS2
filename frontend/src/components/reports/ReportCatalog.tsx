@@ -1022,35 +1022,35 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
   return (
     <div className="p-6 space-y-6">
       {/* Navigation Tabs */}
-      <div className="flex border-b border-[#E2E8F0] bg-white px-4 pt-3 rounded-t-lg gap-2 shadow-2xs">
+      <div className="flex border-b border-slate-200 bg-white px-4 pt-3 rounded-t-xl gap-2 shadow-2xs">
         <button
           onClick={() => setActiveTab('catalog')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'catalog'
-            ? 'border-[#102E4A] text-[#102E4A]'
-            : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'catalog'
+            ? 'border-[#00205B] text-[#00205B]'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
         >
-          <BarChart3 className="w-4 h-4" />
+          <BarChart3 className="w-4 h-4 text-[#EAA023]" />
           Standard Report Catalog (10 Standard Reports)
         </button>
         <button
           onClick={() => setActiveTab('preview')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'preview'
-            ? 'border-[#102E4A] text-[#102E4A]'
-            : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'preview'
+            ? 'border-[#00205B] text-[#00205B]'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
         >
-          <FileSpreadsheet className="w-4 h-4" />
+          <FileSpreadsheet className="w-4 h-4 text-[#00205B]" />
           Interactive Report Viewer &amp; Export ({selectedReportCode})
         </button>
         <button
           onClick={() => setActiveTab('schedules')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'schedules'
-            ? 'border-[#102E4A] text-[#102E4A]'
-            : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'schedules'
+            ? 'border-[#00205B] text-[#00205B]'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4 text-slate-500" />
           Automated Report Schedules ({scheduledReports.length})
         </button>
       </div>
@@ -1058,12 +1058,12 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
       {/* Tab 1: Catalog */}
       {activeTab === 'catalog' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+          <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
             <div>
-              <h2 className="font-bold text-sm text-[#101828]">Centralized CBAIMS Audit & Regulatory Catalog</h2>
-              <p className="text-xs text-[#5B6472]">Select any of the 10 standard portfolio reports to view live data, execute multi-dimensional filters, and export to Excel or PDF.</p>
+              <h2 className="font-extrabold text-sm text-[#00205B]">Centralized CBAIMS Audit & Regulatory Catalog</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Select any of the 10 standard portfolio reports to view live data, execute multi-dimensional filters, and export to Excel or PDF.</p>
             </div>
-            <span className="px-3 py-1 bg-[#EFF5FB] text-[#102E4A] text-xs font-bold rounded-lg border border-[#B9D3EB]">
+            <span className="px-3 py-1 bg-amber-50 text-[#00205B] text-xs font-bold rounded-lg border border-amber-200 shadow-2xs">
               10 Ready Reports
             </span>
           </div>
@@ -1078,23 +1078,23 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   setSubFilter('All');
                   setActiveTab('preview');
                 }}
-                className={`cims-card p-5 cursor-pointer hover:border-[#3E7AB0] hover:shadow-md transition-all space-y-2.5 group relative ${selectedReportCode === rpt.code ? 'border-[#102E4A] bg-[#EFF5FB]/30' : ''
+                className={`bg-white rounded-xl border p-5 cursor-pointer hover:border-[#00205B] hover:shadow-md transition-all space-y-2.5 group relative ${selectedReportCode === rpt.code ? 'border-[#00205B] ring-2 ring-[#00205B]/20 bg-slate-50/50' : 'border-slate-200 shadow-xs'
                   }`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded bg-[#DCE9F5] text-[#102E4A] font-bold text-xs">
+                    <span className="px-2.5 py-1 rounded bg-slate-100 text-[#00205B] font-mono font-bold text-xs border border-slate-200">
                       {rpt.code}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       {rpt.category}
                     </span>
                   </div>
-                  <Play className="w-4 h-4 text-[#5B6472] group-hover:text-[#1F4E7A] transition-colors" />
+                  <Play className="w-4 h-4 text-slate-400 group-hover:text-[#00205B] transition-colors" />
                 </div>
-                <h3 className="font-bold text-sm text-[#101828] group-hover:text-[#102E4A]">{rpt.name}</h3>
-                <p className="text-xs text-[#5B6472] leading-relaxed">{rpt.desc}</p>
-                <div className="pt-2 text-[11px] text-[#1F4E7A] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                <h3 className="font-bold text-sm text-slate-900 group-hover:text-[#00205B] transition-colors">{rpt.name}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{rpt.desc}</p>
+                <div className="pt-2 text-[11px] text-[#00205B] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                   <span>Open Interactive Report & Export →</span>
                 </div>
               </div>
@@ -1107,24 +1107,24 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
       {activeTab === 'preview' && activeReportDef && (
         <div className="space-y-4 animate-fadeIn">
           {/* Header Bar */}
-          <div className="cims-card p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200">
+          <div className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 shadow-xs">
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="px-2.5 py-1 rounded bg-[#102E4A] text-white font-extrabold text-xs shadow-2xs">
+                <span className="px-2.5 py-1 rounded-md bg-[#00205B] text-white font-mono font-extrabold text-xs shadow-2xs">
                   {activeReportDef.code}
                 </span>
-                <h2 className="text-base font-extrabold text-[#101828]">{activeReportDef.name}</h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EFF5FB] text-[#1F4E7A] border border-[#B9D3EB]">
+                <h2 className="text-base font-extrabold text-slate-900">{activeReportDef.name}</h2>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-[#00205B] border border-slate-200">
                   {activeReportDef.category}
                 </span>
               </div>
-              <p className="text-xs text-[#5B6472] mt-1">{activeReportDef.desc}</p>
+              <p className="text-xs text-slate-500 mt-1">{activeReportDef.desc}</p>
             </div>
 
             <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
               <button
                 onClick={handleExportCsv}
-                className="py-1.5 px-3 text-xs font-bold bg-slate-50 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors"
+                className="py-1.5 px-3 text-xs font-bold bg-slate-50 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 title="Export raw data to CSV format"
               >
                 <FileText className="w-3.5 h-3.5 text-slate-600" />
@@ -1132,7 +1132,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
               </button>
               <button
                 onClick={handleExportExcel}
-                className="py-1.5 px-3.5 text-xs font-bold bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors"
+                className="py-1.5 px-3.5 text-xs font-bold bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 title="Export complete filtered dataset to Microsoft Excel format"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
@@ -1140,10 +1140,10 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
               </button>
               <button
                 onClick={handleExportPdf}
-                className="btn-primary py-1.5 px-4 text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-2xs bg-[#102E4A] hover:bg-[#1F4E7A]"
+                className="py-1.5 px-4 text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-2xs bg-[#00205B] hover:bg-[#0E284E] text-white transition-colors cursor-pointer"
                 title="Generate landscaped high-resolution PDF document"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 text-[#EAA023]" />
                 Export PDF Document
               </button>
             </div>
@@ -1152,9 +1152,9 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
           {/* Targeted Summary KPIs for this specific Report */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {currentReportResult.kpis.map((kpi, idx) => (
-              <div key={idx} className="cims-card p-4 bg-white border border-slate-200 shadow-2xs space-y-1">
+              <div key={idx} className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs space-y-1">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">{kpi.label}</div>
-                <div className={`text-xl font-extrabold tracking-tight ${kpi.color || 'text-[#102E4A]'}`}>
+                <div className={`text-xl font-extrabold tracking-tight ${kpi.color || 'text-[#00205B]'}`}>
                   {kpi.value}
                 </div>
                 <div className="text-[10px] text-slate-400 font-medium truncate">{kpi.subtext}</div>
@@ -1163,7 +1163,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
           </div>
 
           {/* Filter Toolbar */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3 flex-wrap text-xs">
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3 flex-wrap text-xs">
             <div className="flex items-center gap-2 flex-1 min-w-[240px]">
               <div className="relative w-full max-w-sm">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
@@ -1172,7 +1172,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   placeholder={`Search ${activeReportDef.name}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#1F4E7A] focus:border-[#1F4E7A]"
+                  className="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#00205B] focus:border-[#00205B]"
                 />
               </div>
             </div>
@@ -1184,7 +1184,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                 <select
                   value={filterSegment}
                   onChange={(e) => setFilterSegment(e.target.value)}
-                  className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs"
+                  className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs focus:ring-1 focus:ring-[#00205B]"
                 >
                   <option value="All">All Segments</option>
                   {availableSegments.map((s) => (
@@ -1201,7 +1201,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                 <select
                   value={filterBranch}
                   onChange={(e) => setFilterBranch(e.target.value)}
-                  className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs"
+                  className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs focus:ring-1 focus:ring-[#00205B]"
                 >
                   <option value="All">All Branches</option>
                   {availableBranches.map((b) => (
@@ -1219,7 +1219,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   <select
                     value={subFilter}
                     onChange={(e) => setSubFilter(e.target.value)}
-                    className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs"
+                    className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs focus:ring-1 focus:ring-[#00205B]"
                   >
                     <option value="All">All Windows</option>
                     <option value="Expired">Expired Policies</option>
@@ -1236,7 +1236,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   <select
                     value={subFilter}
                     onChange={(e) => setSubFilter(e.target.value)}
-                    className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs"
+                    className="py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white text-slate-700 shadow-2xs focus:ring-1 focus:ring-[#00205B]"
                   >
                     <option value="All">All Severities</option>
                     <option value="HIGH">High / Critical</option>
@@ -1254,7 +1254,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     setFilterBranch('All');
                     setSubFilter('All');
                   }}
-                  className="px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-100"
+                  className="px-2.5 py-1.5 text-xs text-slate-600 hover:text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer"
                 >
                   Clear Filters
                 </button>
@@ -1263,17 +1263,17 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
           </div>
 
           {/* Dynamic Interactive Data Table */}
-          <div className="cims-card overflow-hidden bg-white border border-slate-200 shadow-xs">
-            <div className="p-3 bg-[#EFF5FB] border-b border-[#E2E8F0] flex items-center justify-between text-xs text-[#5B6472]">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs text-slate-600">
               <span className="font-semibold">
-                Showing <strong className="text-[#102E4A]">{currentReportResult.rows.length}</strong> records in scope
+                Showing <strong className="text-[#00205B]">{currentReportResult.rows.length}</strong> records in scope
               </span>
-              <span className="text-[11px] text-slate-500">Live Database Stream — No Placeholder Data</span>
+              <span className="text-[11px] text-slate-500 font-medium">Live Database Stream — Dashen Bank CBAIMS</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[#5B6472] font-bold uppercase tracking-wider text-[10px]">
+                <thead className="bg-[#00205B] text-white font-bold uppercase tracking-wider text-[10px]">
                   <tr>
                     {currentReportResult.columns.map((col, idx) => (
                       <th
@@ -1286,7 +1286,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E2E8F0]">
+                <tbody className="divide-y divide-slate-200">
                   {currentReportResult.rows.length === 0 ? (
                     <tr>
                       <td colSpan={currentReportResult.columns.length} className="p-12 text-center text-slate-400">
@@ -1299,7 +1299,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     </tr>
                   ) : (
                     currentReportResult.rows.map((row, rowIdx) => (
-                      <tr key={rowIdx} className="hover:bg-[#EFF5FB]/60 transition-colors">
+                      <tr key={rowIdx} className="hover:bg-slate-50/80 transition-colors">
                         {currentReportResult.columns.map((col, colIdx) => {
                           const val = row[col.key];
 
@@ -1334,7 +1334,7 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                           return (
                             <td
                               key={colIdx}
-                              className={`p-3 whitespace-nowrap max-w-xs truncate ${colIdx === 0 ? 'font-bold text-[#102E4A]' : 'text-slate-700'
+                              className={`p-3 whitespace-nowrap max-w-xs truncate ${colIdx === 0 ? 'font-bold text-[#00205B]' : 'text-slate-700'
                                 } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}
                             >
                               {val !== undefined && val !== null ? String(val) : '—'}
@@ -1354,20 +1354,23 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
       {/* Tab 3: Schedules */}
       {activeTab === 'schedules' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-[#E2E8F0]">
+          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
             <div>
-              <h3 className="text-sm font-bold text-[#101828]">Automated Scheduled Reports & Delivery Engine</h3>
-              <p className="text-xs text-[#5B6472]">Configure recurring cron schedules and automated email delivery of portfolio audits</p>
+              <h3 className="text-sm font-extrabold text-[#00205B]">Automated Scheduled Reports & Delivery Engine</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Configure recurring cron schedules and automated email delivery of portfolio audits</p>
             </div>
-            <button onClick={() => setShowScheduleModal(true)} className="btn-primary py-1.5 px-3 text-xs">
-              <Plus className="w-3.5 h-3.5" />
-              + Schedule New Report
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="py-1.5 px-3.5 text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-2xs bg-[#00205B] hover:bg-[#0E284E] text-white transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#EAA023]" />
+              Schedule New Report
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
+              <thead className="bg-[#00205B] text-white font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Report Name</th>
                   <th className="p-3">Cron Cadence</th>
@@ -1377,14 +1380,14 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   <th className="p-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
+              <tbody className="divide-y divide-slate-200">
                 {scheduledReports.map((s) => (
-                  <tr key={s.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-semibold text-[#102E4A]">{s.reportName}</td>
-                    <td className="p-3 font-mono text-[#5B6472]">{s.cronSchedule}</td>
-                    <td className="p-3 max-w-xs truncate">{s.recipientsJson}</td>
-                    <td className="p-3 font-bold text-[#1F4E7A]">{s.format}</td>
-                    <td className="p-3">{s.lastRunAt ? s.lastRunAt.replace('T', ' ').substring(0, 16) : 'Pending first run'}</td>
+                  <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 font-semibold text-[#00205B]">{s.reportName}</td>
+                    <td className="p-3 font-mono text-slate-600">{s.cronSchedule}</td>
+                    <td className="p-3 max-w-xs truncate text-slate-700">{s.recipientsJson}</td>
+                    <td className="p-3 font-bold text-[#00205B]">{s.format}</td>
+                    <td className="p-3 text-slate-600">{s.lastRunAt ? s.lastRunAt.replace('T', ' ').substring(0, 16) : 'Pending first run'}</td>
                     <td className="p-3">
                       <StatusChip label={s.active ? 'Active' : 'Paused'} />
                     </td>
@@ -1398,11 +1401,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
 
       {/* Schedule Modal */}
       {showScheduleModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-2xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-md w-full overflow-hidden text-xs">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <h3 className="text-sm font-bold">Schedule Recurring Report</h3>
-              <button onClick={() => setShowScheduleModal(false)} className="text-white hover:text-gray-300">
+              <button onClick={() => setShowScheduleModal(false)} className="text-white/80 hover:text-white cursor-pointer">
                 ✕
               </button>
             </div>
@@ -1429,11 +1432,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
               className="p-5 space-y-3"
             >
               <div>
-                <label className="block font-semibold text-[#101828] mb-1">Select Report (M)</label>
+                <label className="block font-semibold text-slate-800 mb-1">Select Report (M)</label>
                 <select
                   value={schedReportName}
                   onChange={(e) => setSchedReportName(e.target.value)}
-                  className="w-full p-2 border border-[#E2E8F0] rounded"
+                  className="w-full p-2 border border-slate-300 rounded-lg text-xs"
                 >
                   {reportDefinitions.map((r) => (
                     <option key={r.code} value={r.name}>
@@ -1444,37 +1447,37 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-[#101828] mb-1">Cron Cadence (M)</label>
+                <label className="block font-semibold text-slate-800 mb-1">Cron Cadence (M)</label>
                 <input
                   type="text"
                   required
                   value={schedCron}
                   onChange={(e) => setSchedCron(e.target.value)}
                   placeholder="e.g. 0 8 * * * (Daily at 08:00 AM)"
-                  className="w-full p-2 border border-[#E2E8F0] rounded font-mono"
+                  className="w-full p-2 border border-slate-300 rounded-lg font-mono text-xs"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-[#101828] mb-1">Recipient Email(s) (M)</label>
+                <label className="block font-semibold text-slate-800 mb-1">Recipient Email(s) (M)</label>
                 <input
                   type="text"
                   required
                   value={schedRecipients}
                   onChange={(e) => setSchedRecipients(e.target.value)}
-                  className="w-full p-2 border border-[#E2E8F0] rounded"
+                  className="w-full p-2 border border-slate-300 rounded-lg text-xs"
                 />
               </div>
 
-              <div className="pt-2 border-t border-[#E2E8F0]">
-                <h4 className="font-bold text-[#102E4A] mb-2">Scope / Filter Context (Optional)</h4>
+              <div className="pt-2 border-t border-slate-200">
+                <h4 className="font-bold text-[#00205B] mb-2">Scope / Filter Context (Optional)</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <label className="block text-[#5B6472] font-semibold mb-1">Parent District</label>
+                    <label className="block text-slate-500 font-semibold mb-1">Parent District</label>
                     <select
                       value={schedDistrict}
                       onChange={(e) => setSchedDistrict(e.target.value)}
-                      className="w-full p-1.5 border border-[#E2E8F0] rounded"
+                      className="w-full p-1.5 border border-slate-300 rounded-lg text-xs"
                     >
                       <option value="All">All Districts</option>
                       {Array.from(new Set(branches.map(b => b.parentDistrictId).filter(Boolean))).map((dist: any) => (
@@ -1483,11 +1486,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[#5B6472] font-semibold mb-1">Operating Branch</label>
+                    <label className="block text-slate-500 font-semibold mb-1">Operating Branch</label>
                     <select
                       value={schedBranch}
                       onChange={(e) => setSchedBranch(e.target.value)}
-                      className="w-full p-1.5 border border-[#E2E8F0] rounded"
+                      className="w-full p-1.5 border border-slate-300 rounded-lg text-xs"
                     >
                       <option value="All">All Branches</option>
                       {branches.map((b) => (
@@ -1496,11 +1499,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[#5B6472] font-semibold mb-1">Responsible RM</label>
+                    <label className="block text-slate-500 font-semibold mb-1">Responsible RM</label>
                     <select
                       value={schedRm}
                       onChange={(e) => setSchedRm(e.target.value)}
-                      className="w-full p-1.5 border border-[#E2E8F0] rounded"
+                      className="w-full p-1.5 border border-slate-300 rounded-lg text-xs"
                     >
                       <option value="All">All Relationship Managers</option>
                       {Array.from(new Set(facilities.map(f => f.rmUserId).filter(Boolean))).map((rm: any) => (
@@ -1509,11 +1512,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[#5B6472] font-semibold mb-1">Portfolio Status</label>
+                    <label className="block text-slate-500 font-semibold mb-1">Portfolio Status</label>
                     <select
                       value={schedStatus}
                       onChange={(e) => setSchedStatus(e.target.value)}
-                      className="w-full p-1.5 border border-[#E2E8F0] rounded"
+                      className="w-full p-1.5 border border-slate-300 rounded-lg text-xs"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Active">Active</option>
@@ -1524,11 +1527,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   </div>
                 </div>
                 <div className="mt-2">
-                  <label className="block text-[#5B6472] font-semibold mb-1">Expiry Horizon Window</label>
+                  <label className="block text-slate-500 font-semibold mb-1">Expiry Horizon Window</label>
                   <select
                     value={schedExpiryPeriod}
                     onChange={(e) => setSchedExpiryPeriod(e.target.value)}
-                    className="w-full p-1.5 border border-[#E2E8F0] rounded"
+                    className="w-full p-1.5 border border-slate-300 rounded-lg text-xs"
                   >
                     <option value="All">All Horizons / Non-expiring</option>
                     <option value="Next 15 Days">Within Next 15 Days</option>
@@ -1541,11 +1544,11 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-[#101828] mb-1">Export Format (M)</label>
+                <label className="block font-semibold text-slate-800 mb-1">Export Format (M)</label>
                 <select
                   value={schedFormat}
                   onChange={(e) => setSchedFormat(e.target.value as any)}
-                  className="w-full p-2 border border-[#E2E8F0] rounded"
+                  className="w-full p-2 border border-slate-300 rounded-lg text-xs"
                 >
                   <option value="PDF">PDF Document</option>
                   <option value="Excel">Excel Spreadsheet (XLSX)</option>
@@ -1553,11 +1556,18 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
-                <button type="button" onClick={() => setShowScheduleModal(false)} className="btn-secondary">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#00205B] hover:bg-[#0E284E] text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer"
+                >
                   Save Schedule
                 </button>
               </div>
