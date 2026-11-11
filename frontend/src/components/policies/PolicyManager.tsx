@@ -128,7 +128,7 @@ const DocumentAttachmentZone: React.FC<DocumentAttachmentZoneProps> = ({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="block font-semibold text-[#101828] text-xs flex items-center gap-1.5">
-          <Paperclip className="w-3.5 h-3.5 text-[#1F4E7A]" />
+          <Paperclip className="w-3.5 h-3.5 text-[#00205B]" />
           {title} {required && <span className="text-red-600">*</span>}
         </label>
         <span className="text-[10px] text-[#5B6472]">
@@ -150,8 +150,8 @@ const DocumentAttachmentZone: React.FC<DocumentAttachmentZoneProps> = ({
             handleFiles(e.dataTransfer.files);
           }}
           className={`border-2 border-dashed rounded-xl p-3.5 text-center transition-all cursor-pointer ${isDragging
-            ? 'border-[#1F4E7A] bg-[#EFF5FB]'
-            : 'border-[#CBD5E1] bg-slate-50 hover:bg-[#EFF5FB]/60 hover:border-[#1F4E7A]/60'
+            ? 'border-[#00205B] bg-slate-100'
+            : 'border-slate-300 bg-slate-50 hover:bg-slate-100/70 hover:border-[#00205B]/60'
             }`}
           onClick={() => {
             const el = document.getElementById(inputId);
@@ -167,10 +167,10 @@ const DocumentAttachmentZone: React.FC<DocumentAttachmentZoneProps> = ({
             onChange={(e) => handleFiles(e.target.files)}
           />
           <div className="flex flex-col items-center justify-center gap-1">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1F4E7A] mb-0.5">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#00205B] mb-0.5">
               <UploadCloud className="w-4 h-4" />
             </div>
-            <div className="text-xs font-bold text-[#102E4A]">
+            <div className="text-xs font-bold text-[#00205B]">
               Click to browse or drag &amp; drop document
             </div>
             <div className="text-[10px] text-[#5B6472]">{description}</div>
@@ -1171,8 +1171,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
       header: 'Policy Number',
       accessorKey: 'policyNumber',
       cell: (p) => (
-        <div className="font-semibold text-[#102E4A] flex items-center gap-2">
-          <FileCheck className="w-4 h-4 text-[#1F4E7A]" />
+        <div className="font-semibold text-[#00205B] flex items-center gap-2">
+          <FileCheck className="w-4 h-4 text-[#00205B]" />
           <span>{p.policyNumber}</span>
         </div>
       ),
@@ -1228,7 +1228,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <ArrowUpRight className="w-3 h-3 opacity-60" />
               </button>
             ) : (
-              <div className="font-semibold text-[#102E4A]">—</div>
+              <div className="font-semibold text-[#00205B]">—</div>
             )}
             <div className="text-[11px] text-[#5B6472]">{col?.category || 'Collateral'}</div>
           </div>
@@ -1342,10 +1342,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Policy 360 Detail Modal */}
       {showDetailModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0 min-w-0">
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-start shrink-0 min-w-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold">
@@ -1521,12 +1521,12 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
             </div>
 
             {/* Modal Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-6 gap-2 pt-2 overflow-x-auto shrink-0 scrollbar-thin">
+            <div className="flex border-b border-slate-200 bg-slate-50 px-6 gap-2 pt-2 overflow-x-auto shrink-0 scrollbar-thin">
               <button
                 onClick={() => setActiveDetailTab('financials')}
                 className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === 'financials'
-                  ? 'border-[#102E4A] text-[#102E4A]'
-                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  ? 'border-[#D48806] text-[#00205B] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 Policy Financials & Governance
@@ -1534,8 +1534,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
               <button
                 onClick={() => setActiveDetailTab('endorsements')}
                 className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === 'endorsements'
-                  ? 'border-[#102E4A] text-[#102E4A]'
-                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  ? 'border-[#D48806] text-[#00205B] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 Endorsements ({policyEndorsements.length})
@@ -1543,8 +1543,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
               <button
                 onClick={() => setActiveDetailTab('documents')}
                 className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === 'documents'
-                  ? 'border-[#102E4A] text-[#102E4A]'
-                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  ? 'border-[#D48806] text-[#00205B] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 Attached Documents ({policyDocs.length})
@@ -1555,8 +1555,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   if (selectedPolicy) loadPolicyHistory(selectedPolicy.id);
                 }}
                 className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeDetailTab === 'history'
-                  ? 'border-[#102E4A] text-[#102E4A]'
-                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  ? 'border-[#D48806] text-[#00205B] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
               >
                 <History className="w-3.5 h-3.5" />
@@ -1572,8 +1572,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <div className="cims-card p-4 space-y-3 bg-[#EFF5FB]/70 border border-[#B9D3EB]">
                     <div className="flex justify-between items-center border-b border-[#B9D3EB]/60 pb-2">
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-[#1F4E7A]" />
-                        <h4 className="font-bold text-[#102E4A] text-xs uppercase tracking-wide">
+                        <ShieldCheck className="w-5 h-5 text-[#00205B]" />
+                        <h4 className="font-bold text-[#00205B] text-xs uppercase tracking-wide">
                           Authoritative Insurance Compliance & Exposure Adequacy
                         </h4>
                       </div>
@@ -1602,7 +1602,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div>
                         <span className="text-[#5B6472] block text-[10px] font-semibold">REQUIRED SUM INSURED</span>
-                        <strong className="text-[#102E4A] font-mono text-sm">
+                        <strong className="text-[#00205B] font-mono text-sm">
                           {defaultCurrency} {(detailCompliance?.requiredInsuranceAmount ?? 0).toLocaleString()}
                         </strong>
                       </div>
@@ -1790,7 +1790,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         ) : (
                           policyEndorsements.map((e) => (
                             <tr key={e.id} className="hover:bg-[#EFF5FB]">
-                              <td className="p-2 font-semibold text-[#102E4A]">{e.endorsementNo}</td>
+                              <td className="p-2 font-semibold text-[#00205B]">{e.endorsementNo}</td>
                               <td className="p-2">{e.description}</td>
                               <td className="p-2">{e.effectiveDate}</td>
                               <td className="p-2">{e.makerId}</td>
@@ -1840,7 +1840,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         ) : (
                           policyDocs.map((d) => (
                             <tr key={d.id} className="hover:bg-[#EFF5FB]">
-                              <td className="p-2.5 font-semibold text-[#102E4A] flex items-center gap-1.5">
+                              <td className="p-2.5 font-semibold text-[#00205B] flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-[#2C6295]" />
                                 {d.name}
                               </td>
@@ -1859,7 +1859,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                     setDocPreviewTarget(d);
                                     setShowDocPreviewModal(true);
                                   }}
-                                  className="btn-ghost py-0.5 px-2 text-[11px] text-[#1F4E7A] hover:text-[#102E4A] border border-[#B9D3EB] hover:bg-[#EFF5FB] rounded inline-flex items-center gap-1 font-semibold"
+                                  className="btn-ghost py-0.5 px-2 text-[11px] text-[#00205B] hover:text-[#00205B] border border-[#B9D3EB] hover:bg-[#EFF5FB] rounded inline-flex items-center gap-1 font-semibold"
                                   title="Preview Document File"
                                 >
                                   <Eye className="w-3 h-3" /> Preview
@@ -1879,22 +1879,22 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   {/* Predecessor / Successor Policy Chaining Links */}
                   {(policyHistoryData?.renewedFrom || policyHistoryData?.replaces || (policyHistoryData?.renewedInto && policyHistoryData.renewedInto.length > 0) || (policyHistoryData?.replacedBy && policyHistoryData.replacedBy.length > 0)) && (
                     <div className="p-3 bg-[#EFF5FB] border border-[#B9D3EB] rounded-lg space-y-2">
-                      <div className="font-bold text-[#102E4A] flex items-center gap-1.5 text-xs">
-                        <GitCommit className="w-4 h-4 text-[#1F4E7A]" />
+                      <div className="font-bold text-[#00205B] flex items-center gap-1.5 text-xs">
+                        <GitCommit className="w-4 h-4 text-[#00205B]" />
                         Policy Chaining & Chained Lineage
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-[11px]">
                         {policyHistoryData?.renewedFrom && (
                           <div className="p-2 bg-white rounded border border-[#E2E8F0]">
                             <span className="text-[#5B6472] block text-[10px]">PREDECESSOR (RENEWED FROM)</span>
-                            <span className="font-bold text-[#102E4A]">{policyHistoryData.renewedFrom.policyNumber}</span>
+                            <span className="font-bold text-[#00205B]">{policyHistoryData.renewedFrom.policyNumber}</span>
                             <span className="text-[#5B6472] ml-1">({policyHistoryData.renewedFrom.status})</span>
                           </div>
                         )}
                         {policyHistoryData?.replaces && (
                           <div className="p-2 bg-white rounded border border-[#E2E8F0]">
                             <span className="text-[#5B6472] block text-[10px]">PREDECESSOR (REPLACES)</span>
-                            <span className="font-bold text-[#102E4A]">{policyHistoryData.replaces.policyNumber}</span>
+                            <span className="font-bold text-[#00205B]">{policyHistoryData.replaces.policyNumber}</span>
                             <span className="text-[#5B6472] ml-1">({policyHistoryData.replaces.status})</span>
                           </div>
                         )}
@@ -1926,11 +1926,11 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <div className="grid grid-cols-4 gap-3">
                     <div className="cims-card p-3">
                       <div className="text-[10px] text-[#5B6472] font-semibold">CURRENT VERSION</div>
-                      <div className="text-base font-bold text-[#102E4A]">v{selectedPolicy.version || 1}</div>
+                      <div className="text-base font-bold text-[#00205B]">v{selectedPolicy.version || 1}</div>
                     </div>
                     <div className="cims-card p-3">
                       <div className="text-[10px] text-[#5B6472] font-semibold">ENDORSEMENTS COUNT</div>
-                      <div className="text-base font-bold text-[#102E4A]">{selectedPolicy.endorsementCount || 0}</div>
+                      <div className="text-base font-bold text-[#00205B]">{selectedPolicy.endorsementCount || 0}</div>
                     </div>
                     <div className="cims-card p-3">
                       <div className="text-[10px] text-[#5B6472] font-semibold">LIFECYCLE STATUS</div>
@@ -1950,12 +1950,12 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <div className="cims-card p-4 space-y-3">
                     <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-2">
                       <h4 className="font-bold text-[#101828] text-xs flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#1F4E7A]" />
+                        <Clock className="w-4 h-4 text-[#00205B]" />
                         Chronological Lifecycle Event History
                       </h4>
                       <button
                         onClick={() => loadPolicyHistory(selectedPolicy.id)}
-                        className="btn-ghost py-0.5 px-2 text-[11px] text-[#1F4E7A] flex items-center gap-1"
+                        className="btn-ghost py-0.5 px-2 text-[11px] text-[#00205B] flex items-center gap-1"
                       >
                         <RotateCw className="w-3 h-3" /> Refresh
                       </button>
@@ -2028,13 +2028,13 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                   {item.reason && (
                                     <div className="mt-1">
                                       <span className="font-semibold text-[#5B6472]">Mandatory Reason:</span>{' '}
-                                      <span className="font-medium text-[#102E4A]">"{item.reason}"</span>
+                                      <span className="font-medium text-[#00205B]">"{item.reason}"</span>
                                     </div>
                                   )}
                                   {item.comments && (
                                     <div className="mt-1">
                                       <span className="font-semibold text-[#5B6472]">Checker Comments:</span>{' '}
-                                      <span className="font-medium text-[#102E4A]">"{item.comments}"</span>
+                                      <span className="font-medium text-[#00205B]">"{item.comments}"</span>
                                     </div>
                                   )}
                                   {item.version && (
@@ -2086,38 +2086,38 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
           Guided Insurance Policy Registration Wizard Modal (5 Steps)
           ========================================================================= */}
       {showWizardModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Register Insurance Policy</h3>
-                <p className="text-[11px] text-blue-200">
+                <p className="text-[11px] text-slate-300">
                   Step {wizardStep} of 6: Collateral-Centric Insurance &amp; Four-Eyes Governance
                 </p>
               </div>
-              <button onClick={() => setShowWizardModal(false)} className="text-white hover:text-gray-300 text-lg">
+              <button onClick={() => setShowWizardModal(false)} className="text-slate-300 hover:text-white text-lg">
                 ✕
               </button>
             </div>
 
             {/* Stepper Indicator */}
-            <div className="grid grid-cols-6 bg-[#EFF5FB] border-b border-[#E2E8F0] text-center py-2 text-[10px] font-semibold divide-x divide-[#E2E8F0]/60">
-              <div className={wizardStep === 1 ? 'text-[#102E4A] font-bold bg-white shadow-xs' : 'text-[#5B6472]'}>
+            <div className="grid grid-cols-6 bg-slate-50 border-b border-slate-200 text-center py-2 text-[10px] font-semibold divide-x divide-slate-200">
+              <div className={wizardStep === 1 ? 'text-[#00205B] font-bold bg-white border-b-2 border-[#D48806] shadow-xs' : 'text-slate-500'}>
                 1. Asset &amp; Borrower
               </div>
-              <div className={wizardStep === 2 ? 'text-[#102E4A] font-bold bg-white shadow-xs' : 'text-[#5B6472]'}>
+              <div className={wizardStep === 2 ? 'text-[#00205B] font-bold bg-white border-b-2 border-[#D48806] shadow-xs' : 'text-slate-500'}>
                 2. Collateral Details
               </div>
-              <div className={wizardStep === 3 ? 'text-[#102E4A] font-bold bg-white shadow-xs' : 'text-[#5B6472]'}>
+              <div className={wizardStep === 3 ? 'text-[#00205B] font-bold bg-white border-b-2 border-[#D48806] shadow-xs' : 'text-slate-500'}>
                 3. Facility Exposure
               </div>
-              <div className={wizardStep === 4 ? 'text-[#102E4A] font-bold bg-white shadow-xs' : 'text-[#5B6472]'}>
+              <div className={wizardStep === 4 ? 'text-[#00205B] font-bold bg-white border-b-2 border-[#D48806] shadow-xs' : 'text-slate-500'}>
                 4. Insurance Terms
               </div>
-              <div className={wizardStep === 5 ? 'text-[#102E4A] font-bold bg-white shadow-xs' : 'text-[#5B6472]'}>
+              <div className={wizardStep === 5 ? 'text-[#00205B] font-bold bg-white border-b-2 border-[#D48806] shadow-xs' : 'text-slate-500'}>
                 5. Upload Documents
               </div>
-              <div className={wizardStep === 6 ? 'text-[#102E4A] font-bold bg-white shadow-xs' : 'text-[#5B6472]'}>
+              <div className={wizardStep === 6 ? 'text-[#00205B] font-bold bg-white border-b-2 border-[#D48806] shadow-xs' : 'text-slate-500'}>
                 6. Review &amp; Submit
               </div>
             </div>
@@ -2129,7 +2129,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-bold text-[#101828] text-sm flex items-center gap-1.5">
-                      <User className="w-4 h-4 text-[#1F4E7A]" />
+                      <User className="w-4 h-4 text-[#00205B]" />
                       Step 1: Select Pledged Collateral Asset &amp; Derived Borrower
                     </h4>
                     <p className="text-[#5B6472] text-[11px]">
@@ -2147,7 +2147,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           placeholder="Search by Collateral Code, Category, Type, Location, or Borrower..."
                           value={collateralSearchQuery}
                           onChange={(e) => setCollateralSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-8 py-2 border border-[#E2E8F0] rounded text-xs bg-slate-50 focus:bg-white focus:border-[#1F4E7A] outline-none"
+                          className="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:border-[#D48806] focus:ring-1 focus:ring-[#D48806] outline-none transition-colors"
                         />
                         {collateralSearchQuery && (
                           <button
@@ -2168,7 +2168,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setWizardColId('');
                             setWizardExposure(null);
                           }}
-                          className="w-full p-2 border border-[#E2E8F0] rounded text-xs bg-slate-50 focus:bg-white focus:border-[#1F4E7A] outline-none"
+                          className="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:border-[#D48806] focus:ring-1 focus:ring-[#D48806] outline-none transition-colors"
                         >
                           <option value="">-- All Active Borrowers / Customers --</option>
                           {customers.map((cu) => (
@@ -2186,7 +2186,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         <button
                           type="button"
                           onClick={() => setUninsuredFilterOnly(false)}
-                          className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${!uninsuredFilterOnly ? 'bg-[#102E4A] text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${!uninsuredFilterOnly ? 'bg-[#00205B] text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                             }`}
                         >
                           All Eligible ({collaterals.filter(c => c.status !== 'Released' && c.status !== 'Draft').length})
@@ -2228,13 +2228,13 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                 loadWizardExposure(c.id);
                               }}
                               className={`p-3 rounded-lg border cursor-pointer transition-all ${isSelected
-                                ? 'bg-[#EFF5FB] border-[#1F4E7A] border-l-4 border-l-[#1F4E7A] shadow-md ring-2 ring-[#1F4E7A]/20'
-                                : 'bg-white border-[#E2E8F0] hover:bg-slate-50'
+                                ? 'bg-slate-50 border-[#00205B] border-l-4 border-l-[#D48806] shadow-sm ring-1 ring-[#00205B]/30'
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
                                 }`}
                             >
                               <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2.5">
-                                  <Building2 className={`w-4 h-4 ${isSelected ? 'text-[#1F4E7A]' : 'text-slate-400'}`} />
+                                  <Building2 className={`w-4 h-4 ${isSelected ? 'text-[#00205B]' : 'text-slate-400'}`} />
                                   <div>
                                     <div className="font-bold text-[#101828] text-xs flex items-center gap-2">
                                       <span>{c.code} — {c.category} ({c.type || c.category})</span>
@@ -2245,7 +2245,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                       )}
                                     </div>
                                     <div className="text-[11px] text-[#5B6472] flex gap-3 mt-0.5">
-                                      <span>Borrower: <strong className="text-[#102E4A]">{cust?.name || c.customerId} ({cust?.cif || c.customerId})</strong></span>
+                                      <span>Borrower: <strong className="text-[#00205B]">{cust?.name || c.customerId} ({cust?.cif || c.customerId})</strong></span>
                                       <span>Branch: <strong>{c.branch}</strong></span>
                                       <span>Status: <strong className={c.insuranceStatus === 'Insured' ? 'text-emerald-700' : 'text-amber-700'}>{c.insuranceStatus || 'Uninsured'}</strong></span>
                                     </div>
@@ -2253,7 +2253,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                 </div>
                                 <div className="text-right">
                                   <div className="text-[10px] text-[#5B6472]">Market Valuation</div>
-                                  <div className="text-xs font-bold text-[#102E4A]">
+                                  <div className="text-xs font-bold text-[#00205B]">
                                     ETB {c.valuationAmount?.toLocaleString()}
                                   </div>
                                 </div>
@@ -2274,8 +2274,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   {wizardCol && derivedCustomer && (
                     <div className="p-3.5 bg-[#EFF5FB] border border-[#B9D3EB] rounded-lg space-y-2">
                       <div className="flex justify-between items-center border-b border-[#B9D3EB]/60 pb-1.5">
-                        <div className="font-bold text-[#102E4A] text-xs flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4 text-[#1F4E7A]" />
+                        <div className="font-bold text-[#00205B] text-xs flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-[#00205B]" />
                           Authoritatively Derived Customer Profile (Strict Non-Mismatch Guarantee)
                         </div>
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
@@ -2289,7 +2289,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         </div>
                         <div>
                           <span className="text-[#5B6472] block text-[10px]">CIF NUMBER</span>
-                          <strong className="text-[#102E4A] font-mono">{derivedCustomer.cif || derivedCustomer.id}</strong>
+                          <strong className="text-[#00205B] font-mono">{derivedCustomer.cif || derivedCustomer.id}</strong>
                         </div>
                         <div>
                           <span className="text-[#5B6472] block text-[10px]">BUSINESS SEGMENT &amp; BRANCH</span>
@@ -2309,7 +2309,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-bold text-[#101828] text-sm flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-[#1F4E7A]" />
+                      <Building2 className="w-4 h-4 text-[#00205B]" />
                       Step 2: Pledged Collateral Details &amp; Valuation
                     </h4>
                     <p className="text-[#5B6472] text-[11px]">
@@ -2321,7 +2321,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <div className="cims-card p-4 space-y-3">
                     <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-2">
                       <div>
-                        <span className="text-xs font-bold text-[#102E4A]">{wizardCol.code}</span>
+                        <span className="text-xs font-bold text-[#00205B]">{wizardCol.code}</span>
                         <span className="text-xs text-[#5B6472] ml-2">({wizardCol.category} — {wizardCol.type || wizardCol.category})</span>
                       </div>
                       <StatusChip label={wizardCol.insuranceStatus || 'Uninsured'} />
@@ -2330,7 +2330,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <div className="grid grid-cols-3 gap-3 text-xs">
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">MARKET VALUATION</span>
-                        <strong className="text-base font-bold text-[#102E4A] font-mono">
+                        <strong className="text-base font-bold text-[#00205B] font-mono">
                           ETB {wizardCol.valuationAmount?.toLocaleString()}
                         </strong>
                       </div>
@@ -2363,7 +2363,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   {/* Taxonomy Mandatory Rule Card */}
                   <div className="p-4 bg-[#EFF5FB] border border-[#B9D3EB] rounded-lg space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-[#102E4A] text-xs uppercase tracking-wide">
+                      <span className="font-bold text-[#00205B] text-xs uppercase tracking-wide">
                         Collateral Taxonomy Insurance Mandate
                       </span>
                       <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${isInsuranceMandatoryForCategory(wizardCol.category)
@@ -2377,7 +2377,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <div className="p-2.5 bg-white border border-[#DCE9F5] rounded text-xs space-y-1">
                       <div>
                         <span className="text-[#5B6472]">Mandatory Coverage Type:</span>{' '}
-                        <strong className="text-[#102E4A]">{getStandardCoverageForCategory(wizardCol.category)}</strong>
+                        <strong className="text-[#00205B]">{getStandardCoverageForCategory(wizardCol.category)}</strong>
                       </div>
                       <div className="text-[11px] text-[#5B6472]">
                         {isInsuranceMandatoryForCategory(wizardCol.category)
@@ -2394,7 +2394,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-bold text-[#101828] text-sm flex items-center gap-1.5">
-                      <CreditCard className="w-4 h-4 text-[#1F4E7A]" />
+                      <CreditCard className="w-4 h-4 text-[#00205B]" />
                       Step 3: Secured Credit Facilities &amp; Exposure Allocation
                     </h4>
                     <p className="text-[#5B6472] text-[11px]">
@@ -2420,7 +2420,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             {wizardExposure.facilityBreakdowns.map((fac: any, idx: number) => (
                               <div key={idx} className="p-2.5 flex justify-between items-center hover:bg-slate-50">
                                 <div>
-                                  <strong className="text-[#102E4A]">{fac.loanReference || fac.facilityId}</strong>
+                                  <strong className="text-[#00205B]">{fac.loanReference || fac.facilityId}</strong>
                                   <span className="text-[#5B6472] ml-2">({fac.facilityType || 'Term Loan'})</span>
                                 </div>
                                 <div className="flex gap-4">
@@ -2440,7 +2440,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       {/* Required Insurance Formula Box */}
                       <div className="p-4 bg-[#EFF5FB] border border-[#B9D3EB] rounded-lg space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-[#102E4A] text-xs uppercase tracking-wide">
+                          <span className="font-bold text-[#00205B] text-xs uppercase tracking-wide">
                             Insurance Requirement Calculation
                           </span>
                           <span className="px-2 py-0.5 rounded bg-blue-200 text-blue-900 font-bold text-[10px]">
@@ -2451,7 +2451,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         <div className="grid grid-cols-4 gap-3 text-xs pt-1">
                           <div>
                             <span className="text-[#5B6472] block text-[10px]">BANK-ASSESSED INSURABLE VALUE</span>
-                            <strong className="font-mono text-[#102E4A] text-sm">ETB {insurableStructureVal.toLocaleString()}</strong>
+                            <strong className="font-mono text-[#00205B] text-sm">ETB {insurableStructureVal.toLocaleString()}</strong>
                           </div>
                           <div>
                             <span className="text-[#5B6472] block text-[10px]">REQUIRED PRIMARY COVERAGE</span>
@@ -2467,7 +2467,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           </div>
                         </div>
 
-                        <div className="p-2.5 bg-white border border-[#DCE9F5] rounded text-[11px] text-[#102E4A] space-y-1">
+                        <div className="p-2.5 bg-white border border-[#DCE9F5] rounded text-[11px] text-[#00205B] space-y-1">
                           <div>
                             <strong>Primary Adequacy Test:</strong> Bank-assessed Insurable Value (excluding land for buildings) × Required Coverage % = <strong>ETB {requiredInsuranceAmount.toLocaleString()}</strong>
                           </div>
@@ -2494,7 +2494,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-bold text-[#101828] text-sm flex items-center gap-1.5">
-                      <FileCheck className="w-4 h-4 text-[#1F4E7A]" />
+                      <FileCheck className="w-4 h-4 text-[#00205B]" />
                       Step 4: Insurance Policy Terms &amp; Approved Insurer Selection
                     </h4>
                     <p className="text-[#5B6472] text-[11px]">
@@ -2525,7 +2525,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         placeholder="e.g. POL-2026-9901"
                         value={wizardPolicy.policyNumber || ''}
                         onChange={(e) => setWizardPolicy({ ...wizardPolicy, policyNumber: e.target.value })}
-                        className="w-full p-2 border border-[#E2E8F0] rounded font-mono font-bold text-[#102E4A]"
+                        className="w-full p-2 border border-[#E2E8F0] rounded font-mono font-bold text-[#00205B]"
                       />
                       {isDuplicatePolicy(wizardPolicy.policyNumber) && (
                         <div className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
@@ -2675,7 +2675,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-lg flex items-center justify-between">
                     <div>
                       <div className="text-[10px] font-bold text-[#5B6472] uppercase">Coverage Adequacy Percentage</div>
-                      <div className="text-base font-extrabold text-[#102E4A] tabular-nums">
+                      <div className="text-base font-extrabold text-[#00205B] tabular-nums">
                         {wizardCoveragePct.toFixed(1)}% (Required Threshold: {coverageThreshold}%)
                       </div>
                       {isUnderinsured && (
@@ -2694,7 +2694,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-bold text-[#101828] text-sm flex items-center gap-1.5">
-                      <FileBadge className="w-4 h-4 text-[#1F4E7A]" />
+                      <FileBadge className="w-4 h-4 text-[#00205B]" />
                       Step 5: Mandatory &amp; Supporting Policy Documents Ingestion
                     </h4>
                     <p className="text-[#5B6472] text-[11px]">
@@ -2728,7 +2728,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                       <div>
                         <h5 className="font-bold text-[#101828] text-xs flex items-center gap-1.5">
-                          <FileBadge className="w-4 h-4 text-[#1F4E7A]" />
+                          <FileBadge className="w-4 h-4 text-[#00205B]" />
                           Mandatory &amp; Supporting Policy Documents ({wizardDocuments.length})
                         </h5>
                         <p className="text-[#5B6472] text-[11px]">
@@ -2775,13 +2775,13 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         }
                       }}
                       className={`p-4 border-2 border-dashed rounded-xl text-center transition-all ${batchDragOver
-                        ? 'border-[#1F4E7A] bg-blue-50/80 scale-[1.01]'
-                        : 'border-slate-300 bg-slate-50/70 hover:bg-slate-50 hover:border-[#1F4E7A]/50'
+                        ? 'border-[#00205B] bg-slate-100 scale-[1.01]'
+                        : 'border-slate-300 bg-slate-50/70 hover:bg-slate-50 hover:border-[#00205B]/50'
                         }`}
                     >
                       <div className="flex flex-col items-center justify-center gap-1.5">
-                        <UploadCloud className={`w-7 h-7 ${batchDragOver ? 'text-[#1F4E7A] animate-bounce' : 'text-slate-400'}`} />
-                        <div className="text-xs font-bold text-[#102E4A]">
+                        <UploadCloud className={`w-7 h-7 ${batchDragOver ? 'text-[#00205B] animate-bounce' : 'text-slate-400'}`} />
+                        <div className="text-xs font-bold text-[#00205B]">
                           Drag &amp; drop policy documents here, or{' '}
                           <label htmlFor="batch-policy-file-input" className="text-blue-700 underline cursor-pointer hover:text-blue-900">
                             browse files
@@ -2830,7 +2830,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                               }
                             }}
                             className={`p-3 rounded-lg border space-y-2 transition-all ${isSlotDragging
-                              ? 'bg-blue-50/80 border-[#1F4E7A] ring-2 ring-[#1F4E7A]/40'
+                              ? 'bg-slate-50 border-[#00205B] ring-2 ring-[#00205B]/30'
                               : hasFile
                                 ? 'bg-white border-emerald-300 shadow-2xs'
                                 : doc.isMandatory
@@ -2935,7 +2935,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                   className={`cursor-pointer py-1 px-3 rounded font-semibold flex items-center gap-1.5 text-xs shadow-2xs transition-colors ${hasFile
                                     ? 'bg-white border border-emerald-400 text-emerald-900 hover:bg-emerald-50'
                                     : doc.isMandatory
-                                      ? 'bg-[#102E4A] text-white hover:bg-[#173F63]'
+                                      ? 'bg-[#00205B] text-white hover:bg-[#173F63]'
                                       : 'bg-slate-700 text-white hover:bg-slate-800'
                                     }`}
                                 >
@@ -3004,7 +3004,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <div className="space-y-3">
                     {isValidating && (
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 text-xs text-blue-900">
-                        <RefreshCw className="w-5 h-5 animate-spin text-[#1F4E7A] flex-shrink-0" />
+                        <RefreshCw className="w-5 h-5 animate-spin text-[#00205B] flex-shrink-0" />
                         <div>
                           <strong>Evaluating Enterprise Pre-Validation Rules...</strong>
                           <div className="text-[11px] text-blue-700">
@@ -3061,7 +3061,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                               {preValidationResult.checks.filter(c => !c.passed).map((c, i) => (
                                 <div key={i} className="flex items-start justify-between gap-2 p-2.5 bg-white/90 border border-slate-200 rounded text-xs shadow-2xs">
                                   <div className="space-y-0.5">
-                                    <div className="font-bold text-[#102E4A] flex items-center gap-1.5">
+                                    <div className="font-bold text-[#00205B] flex items-center gap-1.5">
                                       <span className="text-red-600">•</span>
                                       <span>{c.ruleName}</span>
                                       <span className="text-[10px] text-slate-500 font-normal">({c.category})</span>
@@ -3084,7 +3084,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                   onClick={() => setWizardStep(5)}
                                   className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 rounded font-semibold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
                                 >
-                                  <Upload className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                                  <Upload className="w-3.5 h-3.5 text-[#00205B]" />
                                   Upload Missing Document
                                 </button>
 
@@ -3120,7 +3120,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       <div className="grid grid-cols-3 gap-3 text-xs">
                         <div>
                           <span className="text-[#5B6472] block text-[10px] font-semibold">REQUIRED SUM INSURED</span>
-                          <strong className="text-[#102E4A] font-mono text-sm">
+                          <strong className="text-[#00205B] font-mono text-sm">
                             ETB {requiredInsuranceAmount.toLocaleString()}
                           </strong>
                         </div>
@@ -3147,8 +3147,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     {/* Summary of attached documents */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-[#102E4A] flex items-center gap-1.5">
-                          <FileBadge className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                        <span className="font-bold text-[#00205B] flex items-center gap-1.5">
+                          <FileBadge className="w-3.5 h-3.5 text-[#00205B]" />
                           Attached Documents ({wizardDocuments.filter(d => Boolean(d.fileContent || d.fileName)).length} / {wizardDocuments.length} files attached)
                         </span>
                         <button
@@ -3278,10 +3278,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Exception Request Submission Modal */}
       {showExceptionModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
             {/* Header */}
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-amber-400" />
                 <div>
@@ -3379,7 +3379,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     htmlFor="exception-evidence-file"
                     className="cursor-pointer py-1.5 px-3 bg-white border border-slate-300 hover:bg-slate-50 rounded text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
                   >
-                    <UploadCloud className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                    <UploadCloud className="w-3.5 h-3.5 text-[#00205B]" />
                     {exceptionForm.evidenceDocument ? 'Replace Evidence File' : 'Attach Supporting Memo'}
                   </label>
                   {exceptionForm.evidenceDocument && (
@@ -3440,9 +3440,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Upload Policy Document Modal */}
       {showUploadDocModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Upload Policy Document (DMS)</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber} — Direct File Attachment</p>
@@ -3532,8 +3532,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-1">
-                      <UploadCloud className="w-5 h-5 text-[#1F4E7A]" />
-                      <div className="font-bold text-[#102E4A]">Click to select PDF or image file</div>
+                      <UploadCloud className="w-5 h-5 text-[#00205B]" />
+                      <div className="font-bold text-[#00205B]">Click to select PDF or image file</div>
                       <div className="text-[10px] text-slate-500">PDF, JPG, PNG up to 25MB</div>
                     </div>
                   )}
@@ -3610,9 +3610,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Amend Policy Modal */}
       {showAmendModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Amend Insurance Policy</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber} — Modify Terms &amp; Attach Proof</p>
@@ -3785,9 +3785,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Renew Policy Modal */}
       {showRenewModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Renew Insurance Policy</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber} — Annual Extension &amp; Lifecycle Record</p>
@@ -3799,7 +3799,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
             <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
               {/* Previous Policy Lifecycle Summary */}
               <div className="bg-[#EFF5FB] p-3 rounded-lg border border-[#B9D5F0] space-y-1.5">
-                <div className="text-[11px] font-bold text-[#102E4A] uppercase tracking-wider mb-1">
+                <div className="text-[11px] font-bold text-[#00205B] uppercase tracking-wider mb-1">
                   Master Policy Being Renewed (Renewed From)
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -3895,9 +3895,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Endorse Policy Modal */}
       {showEndorseModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Issue Policy Endorsement</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber} — Schedule Addition &amp; Document Evidence</p>
@@ -3995,9 +3995,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Replace Policy Modal */}
       {showReplaceModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Replace Insurance Policy (Novation)</h3>
                 <p className="text-[11px] text-blue-200">Replaces {selectedPolicy.policyNumber}</p>
@@ -4008,7 +4008,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
             </div>
             <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="bg-[#EFF5FB] p-3 rounded-lg border border-[#B9D5F0] space-y-1">
-                <div className="text-[11px] font-bold text-[#102E4A] uppercase tracking-wider">
+                <div className="text-[11px] font-bold text-[#00205B] uppercase tracking-wider">
                   Replaced Policy (Will be linked via replacesPolicyId)
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -4184,9 +4184,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Cancel Policy Modal */}
       {showCancelModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Cancel Policy Cover</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber}</p>
@@ -4256,9 +4256,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Close Policy Modal */}
       {showCloseModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Close Policy (Matured / Settled)</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber}</p>
@@ -4328,9 +4328,9 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
       {/* Reopen Policy Modal */}
       {showReopenModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Reopen Closed Policy</h3>
                 <p className="text-[11px] text-blue-200">{selectedPolicy.policyNumber} — Request Reactivation</p>
