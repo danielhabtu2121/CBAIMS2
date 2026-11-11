@@ -285,32 +285,35 @@ export const DashboardContainer: React.FC<DashboardContainerProps> = ({
   return (
     <div style={{ padding: '24px 20px', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Authoritative Dashboard Shell Navigation */}
-      <div className="flex items-center justify-between mb-4 border-b border-[#E2E8F0] pb-2 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-3 flex-wrap gap-3">
+        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
           <button
             onClick={() => setActiveTab('hierarchy')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all select-none ${
               activeTab === 'hierarchy'
-                ? 'bg-[#2C6295] text-white shadow-xs'
-                : 'bg-white text-[#5B6472] hover:text-[#101828] border border-[#E2E8F0]'
+                ? 'bg-[#00205B] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             Management Dashboard
           </button>
           <button
             onClick={() => setActiveTab('portfolio')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all select-none ${
               activeTab === 'portfolio'
-                ? 'bg-[#2C6295] text-white shadow-xs'
-                : 'bg-white text-[#5B6472] hover:text-[#101828] border border-[#E2E8F0]'
+                ? 'bg-[#00205B] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             Universal Portfolio Table
           </button>
         </div>
 
-        <div className="text-xs text-[#5B6472] font-medium">
-          Authorized Scope: <strong className="text-[#101828]">{currentUser.name}</strong> ({currentUser.roleName})
+        <div className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+          <Shield className="w-3.5 h-3.5 text-[#00205B]" />
+          <span>Authorized Scope:</span>
+          <strong className="text-slate-900 font-bold">{currentUser.name}</strong>
+          <span className="text-[#D48806] font-semibold">({currentUser.roleName || currentUser.role})</span>
         </div>
       </div>
 

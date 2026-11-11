@@ -90,87 +90,43 @@ export const UniversalPortfolioTable: React.FC<UniversalPortfolioTableProps> = (
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
-        border: '1px solid #DCE4EE',
-        boxShadow: '0 2px 8px rgba(14, 40, 78, 0.04)',
-        overflow: 'hidden',
-        marginTop: '24px',
-      }}
-    >
+    <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden mt-6">
       {/* Header Bar */}
-      <div
-        style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid #EEF2F7',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          backgroundColor: '#FAFCFF',
-        }}
-      >
+      <div className="p-4 sm:px-6 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70">
         <div>
-          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0E284E', margin: 0 }}>
+          <h3 className="text-sm sm:text-base font-bold text-[#00205B] m-0 tracking-tight">
             {title}
           </h3>
-          <p style={{ fontSize: '12px', color: '#64748B', margin: '3px 0 0 0' }}>
+          <p className="text-xs text-slate-500 mt-0.5">
             {subtitle} ({rows.length} total records)
           </p>
         </div>
 
         {/* Search & Column Toggle Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', width: '260px' }}>
-            <Search
-              style={{
-                position: 'absolute',
-                left: '10px',
-                top: '8px',
-                width: '14px',
-                height: '14px',
-                color: '#94A3B8',
-              }}
-            />
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search Customer, CIF, Collateral, Policy..."
+              placeholder="Search Customer, CIF, Collateral..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              style={{
-                width: '100%',
-                padding: '6px 12px 6px 30px',
-                fontSize: '12px',
-                border: '1px solid #CBD5E1',
-                borderRadius: '6px',
-                outline: 'none',
-              }}
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-[#00205B]/20 focus:border-[#00205B] transition-all"
             />
           </div>
 
           <button
             onClick={() => setShowExtendedCols(!showExtendedCols)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: showExtendedCols ? '#0E284E' : '#F1F5F9',
-              color: showExtendedCols ? '#FFFFFF' : '#0F172A',
-              border: '1px solid #CBD5E1',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+              showExtendedCols
+                ? 'bg-[#00205B] text-white border-[#00205B] shadow-xs'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
           >
-            <SlidersHorizontal style={{ width: '13px', height: '13px' }} />
+            <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>{showExtendedCols ? 'Standard Columns' : 'All 24 Columns'}</span>
           </button>
         </div>
@@ -180,7 +136,7 @@ export const UniversalPortfolioTable: React.FC<UniversalPortfolioTableProps> = (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
           <thead>
-            <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #DCE4EE', color: '#0E284E' }}>
+            <tr className="bg-slate-50/90 border-b border-slate-200 text-[#00205B] text-xs font-bold uppercase tracking-wider select-none">
               <th onClick={() => handleSort('customerName')} style={{ padding: '12px 14px', cursor: 'pointer', fontWeight: 700 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span>Customer / CIF</span>

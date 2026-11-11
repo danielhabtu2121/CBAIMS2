@@ -61,9 +61,9 @@ export const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* 12 Primary KPI Cards (§5 Primary KPI cards) */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <h2 style={{ fontSize: '15px', fontWeight: 800, color: '#0E284E', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Activity style={{ width: '18px', height: '18px', color: '#2C6295' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#00205B', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Activity style={{ width: '18px', height: '18px', color: '#D48806' }} />
             <span>Executive Portfolio KPIs &amp; Risk Metrics</span>
           </h2>
           <span style={{ fontSize: '12px', color: '#64748B' }}>Real-time aggregated backend telemetry</span>
@@ -428,10 +428,10 @@ export const ExecutiveDashboardView: React.FC<ExecutiveDashboardViewProps> = ({
 
 const kpiCardStyle: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
-  borderRadius: '8px',
-  border: '1px solid #DCE4EE',
-  padding: '14px 16px',
-  boxShadow: '0 1px 4px rgba(14, 40, 78, 0.04)',
+  borderRadius: '12px',
+  border: '1px solid #E2E8F0',
+  padding: '16px 18px',
+  boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.06)',
 };
 
 const kpiLabelStyle: React.CSSProperties = {
@@ -444,10 +444,10 @@ const kpiLabelStyle: React.CSSProperties = {
 
 const chartCardStyle: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
-  borderRadius: '10px',
-  border: '1px solid #DCE4EE',
-  padding: '18px 20px',
-  boxShadow: '0 2px 8px rgba(14, 40, 78, 0.04)',
+  borderRadius: '14px',
+  border: '1px solid #E2E8F0',
+  padding: '20px 22px',
+  boxShadow: '0 2px 6px 0 rgba(15, 23, 42, 0.06)',
 };
 
 const chartHeaderStyle: React.CSSProperties = {

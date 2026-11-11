@@ -42,35 +42,39 @@ export const AuditorDashboardView: React.FC<AuditorDashboardViewProps> = ({
       {/* Header */}
       <div
         style={{
-          backgroundColor: '#0E284E',
-          borderRadius: '10px',
-          padding: '20px 24px',
+          backgroundColor: '#00205B',
+          borderRadius: '14px',
+          padding: '22px 26px',
           color: '#FFFFFF',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '16px',
+          border: '1px solid #143666',
+          boxShadow: '0 4px 6px -1px rgba(0, 32, 91, 0.1)',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span
               style={{
-                backgroundColor: '#2C6295',
-                color: '#FFFFFF',
+                backgroundColor: '#1F4E7A',
+                color: '#D48806',
+                border: '1px solid rgba(212, 136, 6, 0.3)',
                 fontSize: '11px',
                 fontWeight: 700,
                 padding: '2px 8px',
-                borderRadius: '4px',
+                borderRadius: '6px',
                 textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Independent Audit &amp; Control (§15)
             </span>
             <span style={{ fontSize: '11px', color: '#B9D3EB' }}>Read-Only Reconstruction of System Activity</span>
           </div>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, letterSpacing: '0.3px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, letterSpacing: '0.3px', color: '#FFFFFF' }}>
             Dual-Control Audit Trail &amp; Transaction Integrity Log
           </h1>
         </div>
@@ -189,10 +193,10 @@ const kpiLabelStyle: React.CSSProperties = {
 
 const chartCardStyle: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
-  borderRadius: '10px',
-  border: '1px solid #DCE4EE',
-  padding: '18px 20px',
-  boxShadow: '0 2px 8px rgba(14, 40, 78, 0.04)',
+  borderRadius: '14px',
+  border: '1px solid #E2E8F0',
+  padding: '20px 22px',
+  boxShadow: '0 2px 6px 0 rgba(15, 23, 42, 0.06)',
 };
 
 const chartHeaderStyle: React.CSSProperties = {
@@ -205,7 +209,7 @@ const chartHeaderStyle: React.CSSProperties = {
 const chartTitleStyle: React.CSSProperties = {
   fontSize: '14px',
   fontWeight: 800,
-  color: '#0E284E',
+  color: '#00205B',
   margin: 0,
 };
 

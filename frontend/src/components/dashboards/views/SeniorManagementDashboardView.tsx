@@ -53,238 +53,158 @@ export const SeniorManagementDashboardView: React.FC<SeniorManagementDashboardVi
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="flex flex-col gap-6">
       {/* Header Banner with Reporting Shortcuts */}
-      <div
-        style={{
-          backgroundColor: '#0E284E',
-          borderRadius: '10px',
-          padding: '20px 24px',
-          color: '#FFFFFF',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-        }}
-      >
+      <div className="bg-gradient-to-r from-[#00205B] to-[#0E284E] rounded-xl p-6 text-white flex flex-wrap items-center justify-between gap-4 shadow-sm border border-[#00205B]">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span
-              style={{
-                backgroundColor: '#2C6295',
-                color: '#FFFFFF',
-                fontSize: '11px',
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: '4px',
-                textTransform: 'uppercase',
-              }}
-            >
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="bg-[#D48806]/20 text-[#D48806] border border-[#D48806]/40 text-[11px] font-bold px-2 py-0.5 rounded tracking-wide uppercase">
               Senior Management Review (§6)
             </span>
-            <span style={{ fontSize: '11px', color: '#B9D3EB' }}>Operational &amp; Analytical Command</span>
+            <span className="text-[11px] text-slate-300 font-medium">Operational &amp; Analytical Command</span>
           </div>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, letterSpacing: '0.3px' }}>
+          <h1 className="text-xl font-bold tracking-tight text-white">
             Bank-Wide Portfolio Health &amp; Branch Comparison
           </h1>
         </div>
 
         {/* Reporting Shortcuts (§6) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => onNavigate('reports')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#143666',
-              border: '1px solid #1B4580',
-              color: '#FFFFFF',
-              borderRadius: '6px',
-              padding: '8px 14px',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors shadow-sm"
           >
-            <FileSpreadsheet style={{ width: '14px', height: '14px', color: '#2C6295' }} />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#D48806]" />
             <span>Generate Regulatory Report</span>
           </button>
 
           <button
             onClick={onExport}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#2C6295',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '8px 14px',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className="flex items-center gap-1.5 bg-[#D48806] hover:bg-[#b87405] text-white rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors shadow-sm"
           >
-            <Download style={{ width: '14px', height: '14px' }} />
+            <Download className="w-3.5 h-3.5" />
             <span>Export Management CSV</span>
           </button>
         </div>
       </div>
 
       {/* KPI Cards Grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '14px',
-        }}
-      >
-        <div style={kpiCardStyle}>
-          <div style={kpiLabelStyle}>Total Exposure</div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: '#0E284E', marginTop: '4px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Exposure</div>
+          <div className="text-lg font-bold text-[#00205B] mt-1">
             {formatCurrency(summary.totalOutstandingExposure)}
           </div>
-          <div style={{ fontSize: '11px', color: '#64748B' }}>{summary.totalFacilitiesCount} facility accounts</div>
+          <div className="text-xs text-slate-500 mt-0.5">{summary.totalFacilitiesCount} facility accounts</div>
         </div>
 
-        <div style={kpiCardStyle}>
-          <div style={kpiLabelStyle}>Collateral Market Value</div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: '#0E284E', marginTop: '4px' }}>
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Collateral Market Value</div>
+          <div className="text-lg font-bold text-[#00205B] mt-1">
             {formatCurrency(summary.totalCollateralMarketValue)}
           </div>
-          <div style={{ fontSize: '11px', color: '#64748B' }}>{summary.activeCollateralsCount} collaterals</div>
+          <div className="text-xs text-slate-500 mt-0.5">{summary.activeCollateralsCount} collaterals</div>
         </div>
 
-        <div style={kpiCardStyle}>
-          <div style={kpiLabelStyle}>Total Net Security</div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: '#0E284E', marginTop: '4px' }}>
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Net Security</div>
+          <div className="text-lg font-bold text-[#00205B] mt-1">
             {formatCurrency(summary.totalNetSecurityValue)}
           </div>
-          <div style={{ fontSize: '11px', color: '#64748B' }}>Post-haircut security sum</div>
+          <div className="text-xs text-slate-500 mt-0.5">Post-haircut security sum</div>
         </div>
 
-        <div style={kpiCardStyle}>
-          <div style={kpiLabelStyle}>Insurance Compliance Rate</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: (summary.insuranceComplianceRate ?? summary.insuranceCoveragePct) >= 100 ? '#15803D' : '#D97706', marginTop: '4px' }}>
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Insurance Compliance</div>
+          <div className={`text-xl font-extrabold mt-1 ${(summary.insuranceComplianceRate ?? summary.insuranceCoveragePct) >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
             {(summary.insuranceComplianceRate ?? summary.insuranceCoveragePct)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#64748B' }}>(Adequate ÷ Required) × 100</div>
+          <div className="text-xs text-slate-500 mt-0.5">(Adequate ÷ Required) × 100</div>
         </div>
 
-        <div style={{ ...kpiCardStyle, borderLeft: '4px solid #DC2626' }}>
-          <div style={{ ...kpiLabelStyle, color: '#DC2626' }}>Net Insurance Gap</div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: '#DC2626', marginTop: '4px' }}>
+        <div className="bg-white rounded-xl border-l-4 border-l-rose-500 border-slate-200 border p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Net Insurance Gap</div>
+          <div className="text-lg font-bold text-rose-600 mt-1">
             {formatCurrency(summary.totalInsuranceGap)}
           </div>
-          <div style={{ fontSize: '11px', color: '#DC2626' }}>Uncovered collateral risk</div>
+          <div className="text-xs text-rose-500 mt-0.5">Uncovered collateral risk</div>
         </div>
 
-        <div style={{ ...kpiCardStyle, borderLeft: summary.expiredPoliciesCount > 0 ? '4px solid #DC2626' : '1px solid #DCE4EE' }}>
-          <div style={{ ...kpiLabelStyle, color: summary.expiredPoliciesCount > 0 ? '#DC2626' : '#64748B' }}>Expired Policies</div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: summary.expiredPoliciesCount > 0 ? '#DC2626' : '#0E284E', marginTop: '4px' }}>
+        <div className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow ${summary.expiredPoliciesCount > 0 ? 'border-l-4 border-l-rose-500 border-slate-200' : 'border-slate-200'}`}>
+          <div className={`text-[11px] font-bold uppercase tracking-wider ${summary.expiredPoliciesCount > 0 ? 'text-rose-600' : 'text-slate-500'}`}>Expired Policies</div>
+          <div className={`text-lg font-bold mt-1 ${summary.expiredPoliciesCount > 0 ? 'text-rose-600' : 'text-[#00205B]'}`}>
             {summary.expiredPoliciesCount}
           </div>
-          <div style={{ fontSize: '11px', color: '#DC2626' }}>Overdue policies</div>
+          <div className="text-xs text-rose-500 mt-0.5">Overdue policies</div>
         </div>
       </div>
 
       {/* Senior Management Operational Table (§6 Required management table) */}
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '10px',
-          border: '1px solid #DCE4EE',
-          boxShadow: '0 2px 8px rgba(14, 40, 78, 0.04)',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            padding: '16px 20px',
-            backgroundColor: '#FAFCFF',
-            borderBottom: '1px solid #EEF2F7',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0E284E', margin: 0 }}>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
+          <h3 className="text-sm font-bold text-[#00205B]">
             Branch &amp; District Comparative Risk Table (§6)
           </h3>
-          <p style={{ fontSize: '12px', color: '#64748B', margin: '3px 0 0 0' }}>
+          <p className="text-xs text-slate-500 mt-0.5">
             Comparative exposure, collateral security, insurance required, and compliance rates across branches
           </p>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
             <thead>
-              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #DCE4EE', color: '#0E284E' }}>
-                <th style={{ padding: '10px 14px', fontWeight: 700 }}>Branch / Corporate Center</th>
-                <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>Collateral Value</th>
-                <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>Required Insurance</th>
-                <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>Active Cover</th>
-                <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700 }}>Insurance Gap</th>
-                <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700 }}>Coverage %</th>
-                <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700 }}>Status</th>
+              <tr className="bg-slate-50/70 border-b border-slate-200 text-[#00205B]">
+                <th className="px-4 py-3 font-bold">Branch / Corporate Center</th>
+                <th className="px-4 py-3 text-right font-bold">Collateral Value</th>
+                <th className="px-4 py-3 text-right font-bold">Required Insurance</th>
+                <th className="px-4 py-3 text-right font-bold">Active Cover</th>
+                <th className="px-4 py-3 text-right font-bold">Insurance Gap</th>
+                <th className="px-4 py-3 text-center font-bold">Coverage %</th>
+                <th className="px-4 py-3 text-center font-bold">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {(charts.branchRanking || []).map((b, idx) => (
                 <tr
                   key={idx}
-                  style={{
-                    borderBottom: '1px solid #EEF2F7',
-                    backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FBFDFF',
-                    cursor: 'pointer',
-                  }}
+                  className="hover:bg-slate-50/80 transition-colors cursor-pointer"
                   onClick={() => onNavigate('collateral', { branch: b.branch })}
                 >
-                  <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0E284E' }}>
+                  <td className="px-4 py-3 font-semibold text-[#00205B]">
                     {b.branch}
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                  <td className="px-4 py-3 text-right font-medium text-slate-700">
                     {formatCurrency(b.collateralValue)}
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                  <td className="px-4 py-3 text-right font-medium text-slate-700">
                     {formatCurrency(b.insuranceRequired)}
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right', color: '#15803D', fontWeight: 600 }}>
+                  <td className="px-4 py-3 text-right font-semibold text-emerald-600">
                     {formatCurrency(b.insuredAmount)}
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right', color: b.insuranceGap > 0 ? '#DC2626' : '#15803D', fontWeight: 700 }}>
+                  <td className={`px-4 py-3 text-right font-bold ${b.insuranceGap > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                     {formatCurrency(b.insuranceGap)}
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                  <td className="px-4 py-3 text-center">
                     <span
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: '9999px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        backgroundColor: b.compliancePct >= 100 ? '#DCFCE7' : b.compliancePct > 0 ? '#FEF3C7' : '#FEE2E2',
-                        color: b.compliancePct >= 100 ? '#15803D' : b.compliancePct > 0 ? '#B45309' : '#DC2626',
-                      }}
+                      className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                        b.compliancePct >= 100
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : b.compliancePct > 0
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      }`}
                     >
                       {b.compliancePct}%
                     </span>
                   </td>
-                  <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                  <td className="px-4 py-3 text-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onNavigate('collateral', { branch: b.branch });
                       }}
-                      style={{
-                        backgroundColor: '#F1F5F9',
-                        border: '1px solid #CBD5E1',
-                        borderRadius: '4px',
-                        padding: '3px 8px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        color: '#0E284E',
-                        cursor: 'pointer',
-                      }}
+                      className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded px-2.5 py-1 text-[11px] font-semibold text-[#00205B] transition-colors"
                     >
                       Drill-down
                     </button>

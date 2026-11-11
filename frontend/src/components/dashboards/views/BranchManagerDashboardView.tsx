@@ -67,28 +67,32 @@ export const BranchManagerDashboardView: React.FC<BranchManagerDashboardViewProp
       {/* Branch Header Banner */}
       <div
         style={{
-          backgroundColor: '#0E284E',
-          borderRadius: '10px',
-          padding: '20px 24px',
+          backgroundColor: '#00205B',
+          borderRadius: '14px',
+          padding: '22px 26px',
           color: '#FFFFFF',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '16px',
+          border: '1px solid #143666',
+          boxShadow: '0 4px 6px -1px rgba(0, 32, 91, 0.1)',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span
               style={{
-                backgroundColor: '#2C6295',
-                color: '#FFFFFF',
+                backgroundColor: '#1F4E7A',
+                color: '#D48806',
+                border: '1px solid rgba(212, 136, 6, 0.3)',
                 fontSize: '11px',
                 fontWeight: 700,
                 padding: '2px 8px',
-                borderRadius: '4px',
+                borderRadius: '6px',
                 textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Branch Operational Command
@@ -97,7 +101,7 @@ export const BranchManagerDashboardView: React.FC<BranchManagerDashboardViewProp
               Corporate Center / Branch Scope Enforced (§9)
             </span>
           </div>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, letterSpacing: '0.3px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, letterSpacing: '0.3px', color: '#FFFFFF' }}>
             {summary.scopeBanner?.displayScope || 'Bole Special Branch Portfolio'}
           </h1>
         </div>
@@ -109,18 +113,19 @@ export const BranchManagerDashboardView: React.FC<BranchManagerDashboardViewProp
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: '#2C6295',
+              backgroundColor: '#D48806',
               color: '#FFFFFF',
               border: 'none',
-              borderRadius: '6px',
-              padding: '8px 16px',
+              borderRadius: '8px',
+              padding: '9px 16px',
               fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
             }}
           >
             <CheckSquare style={{ width: '14px', height: '14px' }} />
-            <span>Open Approvals Inbox ({summary.pendingApprovalsCount})</span>
+            <span>Workflow Queue ({summary.pendingApprovalsCount})</span>
           </button>
         </div>
       </div>
@@ -388,10 +393,10 @@ const tabBtnStyle: React.CSSProperties = {
 
 const kpiCardStyle: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
-  borderRadius: '8px',
-  border: '1px solid #DCE4EE',
-  padding: '12px 14px',
-  boxShadow: '0 1px 4px rgba(14, 40, 78, 0.04)',
+  borderRadius: '12px',
+  border: '1px solid #E2E8F0',
+  padding: '14px 16px',
+  boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.06)',
 };
 
 const kpiLabelStyle: React.CSSProperties = {
