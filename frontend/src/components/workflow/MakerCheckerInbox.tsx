@@ -880,7 +880,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-[#102E4A]">Active Approval Authority Delegation</div>
+              <div className="font-bold text-[#00205B]">Active Approval Authority Delegation</div>
               <p className="text-slate-600 mt-0.5">
                 {activeDelegation.delegatorId === currentUser.userId
                   ? `You have delegated dual-control approval authority to ${activeDelegation.delegateId} until ${activeDelegation.endDate}.`
@@ -903,11 +903,11 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#102E4A] flex items-center justify-center text-white shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-[#00205B] flex items-center justify-center text-white shadow-sm">
               <CheckSquare className="w-5 h-5 text-blue-200" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#102E4A]">Checker Approval Work Queue</h1>
+              <h1 className="text-xl font-bold text-[#00205B]">Checker Approval Work Queue</h1>
               <p className="text-xs text-slate-500">
                 Four-Eyes Dual Control: Independent verification, automated rule checks, and audit trails
               </p>
@@ -943,9 +943,9 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
+            className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
               activeTab === 'pending'
-                ? 'border-[#102E4A] text-[#102E4A]'
+                ? 'border-[#D48806] text-[#00205B] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -954,9 +954,9 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('my-submissions')}
-            className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
+            className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
               activeTab === 'my-submissions'
-                ? 'border-[#102E4A] text-[#102E4A]'
+                ? 'border-[#D48806] text-[#00205B] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -965,9 +965,9 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('delegations')}
-            className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
+            className={`pb-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
               activeTab === 'delegations'
-                ? 'border-[#102E4A] text-[#102E4A]'
+                ? 'border-[#D48806] text-[#00205B] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -1016,7 +1016,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                   placeholder="Search Ref, Customer, CIF, Loan, Collateral, Maker..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#102E4A]"
+                  className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806]"
                 />
               </div>
 
@@ -1025,7 +1025,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#102E4A] bg-white"
+                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806] bg-white"
                 >
                   <option value="ALL">All Request Types</option>
                   <option value="Policy Renewal">Policy Renewal</option>
@@ -1045,7 +1045,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#102E4A] bg-white"
+                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806] bg-white"
                 >
                   <option value="Pending">Pending My Approval</option>
                   <option value="Returned">Returned to Maker</option>
@@ -1060,7 +1060,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 <select
                   value={branchFilter}
                   onChange={(e) => setBranchFilter(e.target.value)}
-                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#102E4A] bg-white"
+                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806] bg-white"
                 >
                   <option value="ALL">All Branches</option>
                   {branches.map((b) => (
@@ -1076,7 +1076,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#102E4A] bg-white"
+                  className="w-full p-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806] bg-white"
                 >
                   <option value="ALL">All Priorities</option>
                   <option value="High">High Priority</option>
@@ -1119,7 +1119,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold border-b border-slate-200">
+                <thead className="bg-[#EFF5FB] text-[#00205B] font-bold border-b border-slate-200">
                   <tr>
                     <th className="p-3 w-10 text-center">
                       <input
@@ -1129,7 +1129,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                           if (e.target.checked) setSelectedTaskIds(filteredTasks.map((t) => t.id));
                           else setSelectedTaskIds([]);
                         }}
-                        className="rounded text-[#102E4A] focus:ring-[#3E7AB0]"
+                        className="rounded text-[#00205B] focus:ring-[#3E7AB0]"
                       />
                     </th>
                     <th className="p-3">Request Number</th>
@@ -1188,10 +1188,10 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                                 if (e.target.checked) setSelectedTaskIds([...selectedTaskIds, t.id]);
                                 else setSelectedTaskIds(selectedTaskIds.filter((id) => id !== t.id));
                               }}
-                              className="rounded text-[#102E4A] focus:ring-[#3E7AB0]"
+                              className="rounded text-[#00205B] focus:ring-[#3E7AB0]"
                             />
                           </td>
-                          <td className="p-3 font-mono font-bold text-[#102E4A]">
+                          <td className="p-3 font-mono font-bold text-[#00205B]">
                             <div className="flex items-center gap-1.5">
                               {t.priority === 'High' && (
                                 <span className="w-2 h-2 rounded-full bg-rose-500" title="High Priority" />
@@ -1206,7 +1206,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <div className="text-[10px] text-slate-500">{t.entityType}</div>
                           </td>
                           <td className="p-3">
-                            <div className="font-semibold text-[#102E4A]">
+                            <div className="font-semibold text-[#00205B]">
                               {ctx.customer?.name || ctx.payload?.customerName || 'N/A'}
                             </div>
                             <div className="text-[10px] text-slate-500 font-mono">
@@ -1216,7 +1216,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                           <td className="p-3">
                             {ctx.taskFacilities.length > 0 ? (
                               <div>
-                                <div className="font-mono text-[#102E4A] font-semibold">
+                                <div className="font-mono text-[#00205B] font-semibold">
                                   {ctx.taskFacilities[0].loanReference || ctx.taskFacilities[0].lineCode || ctx.taskFacilities[0].id}
                                 </div>
                                 <div className="text-[10px] text-slate-500">
@@ -1230,7 +1230,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                           <td className="p-3">
                             {ctx.collateral ? (
                               <div>
-                                <div className="font-mono text-[#102E4A] font-semibold">
+                                <div className="font-mono text-[#00205B] font-semibold">
                                   {ctx.collateral.id}
                                 </div>
                                 <div className="text-[10px] text-slate-500">
@@ -1286,7 +1286,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                                 setPersistedOutcome(null);
                                 setShowDetailScreen(true);
                               }}
-                              className="btn-primary py-1 px-2.5 text-xs bg-[#102E4A] hover:bg-[#1a446c] text-white flex items-center gap-1.5 ml-auto"
+                              className="btn-primary py-1 px-2.5 text-xs bg-[#00205B] hover:bg-[#1a446c] text-white flex items-center gap-1.5 ml-auto"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>Review & Decide</span>
@@ -1308,7 +1308,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-sm font-bold text-[#102E4A]">My Submitted Transactions</h2>
+              <h2 className="text-sm font-bold text-[#00205B]">My Submitted Transactions</h2>
               <p className="text-xs text-slate-500">
                 Track dual-control review progress, checker feedback notes, and resubmit returned requests.
               </p>
@@ -1316,7 +1316,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold border-b border-slate-200">
+              <thead className="bg-[#EFF5FB] text-[#00205B] font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Task ID</th>
                   <th className="p-3">Request Type</th>
@@ -1337,7 +1337,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 ) : (
                   mySubmissions.map((t) => (
                     <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-mono font-bold text-[#102E4A]">{t.id}</td>
+                      <td className="p-3 font-mono font-bold text-[#00205B]">{t.id}</td>
                       <td className="p-3 font-semibold">{formatActionType(t.actionType)}</td>
                       <td className="p-3 font-mono text-slate-600">
                         {t.entityType}: {t.entityId}
@@ -1376,14 +1376,14 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
         <div className="space-y-4">
           <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200">
             <div>
-              <h2 className="text-sm font-bold text-[#102E4A]">Approval Authority Delegations</h2>
+              <h2 className="text-sm font-bold text-[#00205B]">Approval Authority Delegations</h2>
               <p className="text-xs text-slate-500">
                 Temporarily assign dual-control approval rights to another branch/department officer
               </p>
             </div>
             <button
               onClick={() => setShowDelegateModal(true)}
-              className="btn-primary py-1.5 px-3 text-xs bg-[#102E4A] text-white"
+              className="btn-primary py-1.5 px-3 text-xs bg-[#00205B] text-white"
             >
               + Delegate Approval Authority
             </button>
@@ -1391,7 +1391,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
           <div className="cims-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold border-b border-slate-200">
+              <thead className="bg-[#EFF5FB] text-[#00205B] font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Delegator</th>
                   <th className="p-3">Delegate Officer</th>
@@ -1405,7 +1405,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
               <tbody className="divide-y divide-slate-200">
                 {delegations.map((d) => (
                   <tr key={d.id}>
-                    <td className="p-3 font-semibold text-[#102E4A]">{d.delegatorId}</td>
+                    <td className="p-3 font-semibold text-[#00205B]">{d.delegatorId}</td>
                     <td className="p-3 font-semibold">{d.delegateId}</td>
                     <td className="p-3 text-slate-600">{d.startDate}</td>
                     <td className="p-3 text-slate-600">{d.endDate}</td>
@@ -1435,10 +1435,10 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
       {/* APPROVAL DETAIL SCREEN (§Requirement 1, 3, 4, 5, 6)           */}
       {/* ============================================================== */}
       {showDetailScreen && selectedTask && selectedContext && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 sm:p-6 overflow-y-auto">
           <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-slate-200 text-xs my-auto animate-in fade-in zoom-in duration-150">
             {/* Top Detail Header Bar (§Requirement 1) */}
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0 border-b border-blue-900">
+            <div className="p-5 bg-[#00205B] text-white flex justify-between items-start shrink-0 border-b border-blue-900">
               <div className="flex items-start gap-4">
                 <div className="w-11 h-11 rounded-xl bg-blue-900/60 border border-blue-400/30 flex items-center justify-center text-white shrink-0">
                   <ShieldCheck className="w-6 h-6 text-blue-300" />
@@ -1544,7 +1544,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Customer Details Card */}
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
-                  <div className="flex items-center gap-2 text-[#102E4A] font-bold pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-2 text-[#00205B] font-bold pb-2 border-b border-slate-100">
                     <Building className="w-4 h-4 text-blue-700" />
                     <span>Customer Details</span>
                   </div>
@@ -1589,7 +1589,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 {/* Loan & Facility Card */}
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-[#102E4A] font-bold">
+                    <div className="flex items-center gap-2 text-[#00205B] font-bold">
                       <DollarSign className="w-4 h-4 text-emerald-700" />
                       <span>Linked Credit Facility</span>
                     </div>
@@ -1639,7 +1639,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 {/* Collateral Asset Card */}
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-[#102E4A] font-bold">
+                    <div className="flex items-center gap-2 text-[#00205B] font-bold">
                       <Layers className="w-4 h-4 text-indigo-700" />
                       <span>Collateral Security</span>
                     </div>
@@ -1671,7 +1671,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                       </div>
                       <div>
                         <span className="text-slate-500">Market Value / NSV:</span>{' '}
-                        <span className="font-bold text-[#102E4A]">
+                        <span className="font-bold text-[#00205B]">
                           ETB {Number(selectedContext.collateral.valuationAmount || (selectedContext.collateral as any).marketValue || 0).toLocaleString()}
                         </span>
                         <span className="text-slate-500 text-[11px] block">
@@ -1696,7 +1696,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
               {/* SECTION 2: Dynamic Information According to Request Type (§Requirement 4) */}
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-[#102E4A] border-b border-slate-100 pb-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#00205B] border-b border-slate-100 pb-2">
                   <FileSpreadsheet className="w-4 h-4 text-blue-700" />
                   <span>Request Specific Information & Changes</span>
                 </div>
@@ -1713,7 +1713,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
-                        <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold">
+                        <thead className="bg-[#EFF5FB] text-[#00205B] font-bold">
                           <tr>
                             <th className="p-2.5">Attribute</th>
                             <th className="p-2.5">Expiring / Preceding Policy</th>
@@ -1741,7 +1741,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <td className="p-2.5 font-semibold text-slate-700">
                               ETB {Number(selectedContext.payload?.previousSumInsured || selectedContext.previousPolicy?.insuredAmount || selectedContext.policy?.insuredAmount || 0).toLocaleString()}
                             </td>
-                            <td className="p-2.5 font-bold text-[#102E4A]">
+                            <td className="p-2.5 font-bold text-[#00205B]">
                               ETB {Number(selectedContext.payload?.newSumInsured || selectedContext.payload?.sumInsured || selectedContext.policy?.insuredAmount || 0).toLocaleString()}
                             </td>
                             <td className="p-2.5 text-slate-700">
@@ -1756,7 +1756,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <td className="p-2.5 text-slate-700">
                               ETB {Number(selectedContext.payload?.previousPremium || selectedContext.previousPolicy?.premium || 0).toLocaleString()}
                             </td>
-                            <td className="p-2.5 font-bold text-[#102E4A]">
+                            <td className="p-2.5 font-bold text-[#00205B]">
                               ETB {Number(selectedContext.payload?.newPremium || selectedContext.payload?.premium || selectedContext.policy?.premium || 0).toLocaleString()}
                             </td>
                             <td className="p-2.5 text-slate-700">Standard Scheduled</td>
@@ -1795,7 +1795,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
-                        <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold">
+                        <thead className="bg-[#EFF5FB] text-[#00205B] font-bold">
                           <tr>
                             <th className="p-2.5">Policy Attribute</th>
                             <th className="p-2.5">Preceding Baseline (Authorized)</th>
@@ -1821,7 +1821,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <td className="p-2.5 text-slate-700">
                               {selectedContext.payload?.oldInsurer || selectedContext.policy?.insurerName || 'N/A'}
                             </td>
-                            <td className="p-2.5 font-bold text-[#102E4A]">
+                            <td className="p-2.5 font-bold text-[#00205B]">
                               {selectedContext.payload?.newInsurer || selectedContext.policy?.insurerName || 'N/A'}
                             </td>
                             <td className="p-2.5 text-slate-700">
@@ -1833,7 +1833,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <td className="p-2.5 text-slate-700">
                               {selectedContext.payload?.oldCoverageType || selectedContext.policy?.coverageType || 'N/A'}
                             </td>
-                            <td className="p-2.5 font-bold text-[#102E4A]">
+                            <td className="p-2.5 font-bold text-[#00205B]">
                               {selectedContext.payload?.newCoverageType || selectedContext.policy?.coverageType || 'N/A'}
                             </td>
                             <td className="p-2.5 text-slate-700">
@@ -1889,7 +1889,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                     </div>
 
                     <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-                      <div className="font-bold text-[#102E4A]">Maker RO Justification & Mitigating Factors:</div>
+                      <div className="font-bold text-[#00205B]">Maker RO Justification & Mitigating Factors:</div>
                       <div className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-800 italic">
                         "{selectedContext.exception?.reason || selectedContext.payload?.reason || selectedTask.remarks || 'No justification provided.'}"
                       </div>
@@ -1924,7 +1924,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <div className="text-slate-500">Proposed Allocation</div>
-                        <div className="font-bold text-[#102E4A] mt-1 text-sm">
+                        <div className="font-bold text-[#00205B] mt-1 text-sm">
                           ETB {Number(selectedContext.activeLink?.allocatedAmount || selectedContext.payload?.allocatedAmount || selectedContext.payload?.amount || 0).toLocaleString()}
                         </div>
                       </div>
@@ -1990,7 +1990,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                         <span>Collateral Legal Release & Lien Discharge Request</span>
                       </div>
                       <div className="text-slate-800">
-                        Collateral Asset: <strong className="text-[#102E4A]">{selectedContext.collateral?.code || selectedContext.collateral?.id}</strong> ({selectedContext.collateral?.type}) | Valuation: ETB {Number(selectedContext.collateral?.valuationAmount || 0).toLocaleString()}
+                        Collateral Asset: <strong className="text-[#00205B]">{selectedContext.collateral?.code || selectedContext.collateral?.id}</strong> ({selectedContext.collateral?.type}) | Valuation: ETB {Number(selectedContext.collateral?.valuationAmount || 0).toLocaleString()}
                       </div>
                       <div className="text-slate-700 italic bg-white p-2.5 rounded-lg border border-amber-200">
                         Maker Release Reason: "{selectedContext.payload?.reason || selectedTask.remarks || 'Full liquidation of facilities'}"
@@ -2015,7 +2015,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                       </div>
                       <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <div className="text-slate-500">Market Valuation</div>
-                        <div className="font-bold text-[#102E4A] mt-1 text-sm">
+                        <div className="font-bold text-[#00205B] mt-1 text-sm">
                           ETB {Number(selectedContext.collateral?.valuationAmount || 0).toLocaleString()}
                         </div>
                       </div>
@@ -2036,7 +2036,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                     {/* Legal Ownership Structure */}
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
                       <div className="flex items-center justify-between pb-1 border-b border-slate-200">
-                        <span className="font-bold text-[#102E4A]">Legal Ownership Structure</span>
+                        <span className="font-bold text-[#00205B]">Legal Ownership Structure</span>
                         <span className="px-2 py-0.5 rounded font-semibold text-[10px] bg-blue-100 text-blue-800">
                           {selectedContext.collateral?.ownerType || 'Borrower-owned'}
                         </span>
@@ -2092,7 +2092,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                         </span>
                       </div>
                       <div className="text-slate-800">
-                        Policy: <strong className="text-[#102E4A]">{selectedContext.policy?.policyNumber || selectedTask.entityId}</strong> ({selectedContext.policy?.coverageType}) | Insurer: {selectedContext.policy?.insurerName}
+                        Policy: <strong className="text-[#00205B]">{selectedContext.policy?.policyNumber || selectedTask.entityId}</strong> ({selectedContext.policy?.coverageType}) | Insurer: {selectedContext.policy?.insurerName}
                       </div>
                       <div className={`text-slate-700 italic bg-white p-2.5 rounded-lg border ${
                         selectedTask.actionType?.includes('REOPEN') ? 'border-emerald-200' : 'border-rose-200'
@@ -2112,7 +2112,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                         <span>Policy Endorsement Schedule</span>
                       </div>
                       <div className="text-slate-800">
-                        Endorsement Ref: <strong className="font-mono text-[#102E4A]">{selectedContext.payload?.endorsementNo || 'END-Pending'}</strong> | Effective: {selectedContext.payload?.effectiveDate || selectedContext.policy?.effectiveDate || 'Immediate'}
+                        Endorsement Ref: <strong className="font-mono text-[#00205B]">{selectedContext.payload?.endorsementNo || 'END-Pending'}</strong> | Effective: {selectedContext.payload?.effectiveDate || selectedContext.policy?.effectiveDate || 'Immediate'}
                       </div>
                       <div className="p-2.5 bg-white rounded-lg border border-blue-200 text-slate-800">
                         Clauses & Modifications: {selectedContext.payload?.description || selectedTask.remarks || 'Endorsement clauses schedule updated.'}
@@ -2133,7 +2133,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
-                        <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold">
+                        <thead className="bg-[#EFF5FB] text-[#00205B] font-bold">
                           <tr>
                             <th className="p-2.5">Attribute</th>
                             <th className="p-2.5">Predecessor Policy (Replaced)</th>
@@ -2147,7 +2147,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <td className="p-2.5 font-mono text-slate-700">
                               {selectedContext.previousPolicy?.policyNumber || selectedContext.payload?.previousPolicyNumber || 'Predecessor'}
                             </td>
-                            <td className="p-2.5 font-mono font-bold text-[#102E4A]">
+                            <td className="p-2.5 font-mono font-bold text-[#00205B]">
                               {selectedContext.policy?.policyNumber || selectedContext.payload?.policyNumber || selectedTask.entityId}
                             </td>
                             <td className="p-2.5 text-blue-700 font-semibold">Active Chain</td>
@@ -2157,7 +2157,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                             <td className="p-2.5 text-slate-700">
                               {selectedContext.previousPolicy?.insurerName || 'N/A'}
                             </td>
-                            <td className="p-2.5 font-bold text-[#102E4A]">
+                            <td className="p-2.5 font-bold text-[#00205B]">
                               {selectedContext.policy?.insurerName || selectedContext.payload?.insurerName || 'N/A'}
                             </td>
                             <td className="p-2.5 text-slate-700">
@@ -2219,7 +2219,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                       </div>
                       <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <div className="text-slate-500">Sum Insured</div>
-                        <div className="font-bold text-[#102E4A] mt-1 text-sm">
+                        <div className="font-bold text-[#00205B] mt-1 text-sm">
                           ETB {Number(selectedContext.policy?.insuredAmount || selectedContext.payload?.sumInsured || selectedContext.payload?.insuredAmount || 0).toLocaleString()}
                         </div>
                       </div>
@@ -2234,7 +2234,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
                 {/* Maker Business Remarks */}
                 <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-lg space-y-1">
-                  <span className="text-[11px] font-bold uppercase text-[#102E4A] tracking-wider">
+                  <span className="text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                     Maker Remarks / Submission Rationale
                   </span>
                   <p className="text-slate-700 text-xs">
@@ -2246,7 +2246,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
               {/* SECTION 3: Understandable 4-Part Validation Results (§Requirement 5) */}
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <div className="flex items-center gap-2 text-sm font-bold text-[#102E4A]">
+                  <div className="flex items-center gap-2 text-sm font-bold text-[#00205B]">
                     <ShieldCheck className="w-4 h-4 text-emerald-700" />
                     <span>Underwriting & Dual-Control Rule Validations</span>
                   </div>
@@ -2342,7 +2342,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
               {/* SECTION 4: Attached Documents & Document Review Integration (§Requirement 1 & 3) */}
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <div className="flex items-center gap-2 text-sm font-bold text-[#102E4A]">
+                  <div className="flex items-center gap-2 text-sm font-bold text-[#00205B]">
                     <Paperclip className="w-4 h-4 text-blue-700" />
                     <span>Supporting Verification Documents ({selectedContext.relevantDocs.length})</span>
                   </div>
@@ -2397,7 +2397,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
               {/* SECTION 5: Approval Audit Trail & Decision History (§Requirement 1 & 6) */}
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                <div className="flex items-center gap-2 text-sm font-bold text-[#102E4A] border-b border-slate-100 pb-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#00205B] border-b border-slate-100 pb-2">
                   <History className="w-4 h-4 text-purple-700" />
                   <span>Dual-Control Audit Trail & Prior Decision Timeline</span>
                 </div>
@@ -2435,7 +2435,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                           </div>
                           <div>
                             <div className="font-semibold text-slate-800">
-                              {hist.decision} by <strong className="text-[#102E4A]">{hist.actorId}</strong>{' '}
+                              {hist.decision} by <strong className="text-[#00205B]">{hist.actorId}</strong>{' '}
                               ({hist.actorRole})
                             </div>
                             <div className="text-slate-600 mt-1 italic bg-white p-2 rounded border border-slate-100">
@@ -2479,7 +2479,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                     setCheckerRemarks(e.target.value);
                     if (e.target.value.trim()) setDecisionError(null);
                   }}
-                  className={`w-full p-3 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#102E4A] ${
+                  className={`w-full p-3 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806] ${
                     isSelectedTaskMakerSelf || selectedTask.status !== 'Pending'
                       ? 'bg-slate-100 cursor-not-allowed border-slate-200'
                       : 'border-slate-300'
@@ -2523,7 +2523,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                       setSelectedTask(null);
                       setPersistedOutcome(null);
                     }}
-                    className="btn-primary py-2 px-4 text-xs bg-[#102E4A] hover:bg-[#102E4A]/90 text-white rounded-lg font-semibold"
+                    className="btn-primary py-2 px-4 text-xs bg-[#00205B] hover:bg-[#00205B]/90 text-white rounded-lg font-semibold"
                   >
                     Return to Queue
                   </button>
@@ -2619,7 +2619,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 )}
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#102E4A]">
+                <h3 className="text-sm font-bold text-[#00205B]">
                   Confirm {confirmationAction} Decision
                 </h3>
                 <p className="text-slate-500 text-[11px]">
@@ -2679,10 +2679,10 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
       {/* Bulk Approval Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs space-y-4 p-5">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#102E4A]">
+              <h3 className="text-sm font-bold text-[#00205B]">
                 Authorize {selectedTaskIds.length} Selected Tasks
               </h3>
               <button onClick={() => setShowBulkModal(false)} className="text-slate-400 hover:text-slate-700">
@@ -2708,7 +2708,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                   if (e.target.value.trim()) setBulkError(null);
                 }}
                 placeholder="Enter mandatory dual-control verification comments covering all selected tasks..."
-                className="w-full p-2.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-[#102E4A]"
+                className="w-full p-2.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806]"
               />
               <p className="text-[10px] text-slate-500 mt-1">
                 Comments are recorded immutably in each transaction's dual-control audit trail.
@@ -2738,9 +2738,9 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
       {/* Delegate Authority Modal */}
       {showDelegateModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <h3 className="text-sm font-bold">Delegate Approval Authority</h3>
               <button onClick={() => setShowDelegateModal(false)} className="text-white hover:text-slate-300">
                 ✕
@@ -2815,7 +2815,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                 <button type="button" onClick={() => setShowDelegateModal(false)} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary bg-[#102E4A] text-white">
+                <button type="submit" className="btn-primary bg-[#00205B] text-white">
                   Confirm Delegation
                 </button>
               </div>
