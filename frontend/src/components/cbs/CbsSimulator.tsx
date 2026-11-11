@@ -310,9 +310,9 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
       cell: (r) => (
         <button
           onClick={() => setInspectedLog(r)}
-          className="btn-ghost py-1 px-2 text-xs flex items-center gap-1 text-[#102E4A] hover:bg-blue-50"
+          className="btn-ghost py-1 px-2 text-xs flex items-center gap-1 text-[#00205B] hover:bg-slate-100"
         >
-          <Eye className="w-3.5 h-3.5" />
+          <Eye className="w-3.5 h-3.5 text-[#00205B]" />
           Inspect
         </button>
       ),
@@ -467,41 +467,41 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#E2E8F0] gap-2 bg-white px-4 pt-3 rounded-t-lg">
+      <div className="flex border-b border-slate-200 gap-2 bg-white px-4 pt-3 rounded-t-xl shadow-2xs">
         <button
           onClick={() => setActiveTab('customers')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'customers' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'customers' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4 text-[#EAA023]" />
           Customer Master ({customers.length})
         </button>
         <button
           onClick={() => setActiveTab('facilities')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'facilities' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'facilities' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <CreditCard className="w-4 h-4" />
+          <CreditCard className="w-4 h-4 text-[#00205B]" />
           Facility Master ({facilities.length})
         </button>
         <button
           onClick={() => setActiveTab('collaterals')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'collaterals' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'collaterals' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Building2 className="w-4 h-4" />
+          <Building2 className="w-4 h-4 text-[#00205B]" />
           Collateral Master ({collaterals.length})
         </button>
         <button
           onClick={() => setActiveTab('logs')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'logs' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'logs' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4 text-slate-500" />
           Sync Log ({syncLogs.length})
         </button>
       </div>
@@ -699,14 +699,14 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
 
       {/* Customer Create/Edit Modal */}
       {showCustModal && selectedCust && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-xl w-full overflow-hidden">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-2xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-xl w-full overflow-hidden">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Create/Edit Simulated CBS Customer Master</h3>
                 <p className="text-[11px] text-blue-200">CBS Source-System Customer Records</p>
               </div>
-              <button onClick={() => setShowCustModal(false)} className="text-white hover:text-gray-300">✕</button>
+              <button onClick={() => setShowCustModal(false)} className="text-white/80 hover:text-white cursor-pointer">✕</button>
             </div>
             <form
               onSubmit={async (e) => {
@@ -927,14 +927,14 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
 
       {/* Facility Create/Edit Modal */}
       {showFacModal && selectedFac && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-xl w-full overflow-hidden">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-2xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-xl w-full overflow-hidden">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Create/Edit Simulated Facility (GETM_FACILITY)</h3>
                 <p className="text-[11px] text-blue-200">Core Banking Facility Master Data</p>
               </div>
-              <button onClick={() => setShowFacModal(false)} className="text-white hover:text-gray-300">✕</button>
+              <button onClick={() => setShowFacModal(false)} className="text-white/80 hover:text-white cursor-pointer">✕</button>
             </div>
             <form
               onSubmit={async (e) => {
@@ -1217,14 +1217,14 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
 
       {/* Collateral Create/Edit Modal */}
       {showColModal && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-xl w-full overflow-hidden">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-2xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-xl w-full overflow-hidden">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Create/Edit Simulated Collateral (GETM_COLLAT)</h3>
                 <p className="text-[11px] text-blue-200">Core Banking Collateral Master Data</p>
               </div>
-              <button onClick={() => setShowColModal(false)} className="text-white hover:text-gray-300">✕</button>
+              <button onClick={() => setShowColModal(false)} className="text-white/80 hover:text-white cursor-pointer">✕</button>
             </div>
             <form
               onSubmit={async (e) => {
@@ -1519,17 +1519,17 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
 
       {/* Log Inspection & Payload Modal */}
       {inspectedLog && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-2xl w-full overflow-hidden">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-2xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-2xl w-full overflow-hidden">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-blue-300" />
+                <Info className="w-4 h-4 text-[#EAA023]" />
                 <div>
                   <h3 className="text-sm font-bold">Sync Operation Diagnostic Details</h3>
                   <p className="text-[11px] text-blue-200">Sync ID: {inspectedLog.id}</p>
                 </div>
               </div>
-              <button onClick={() => setInspectedLog(null)} className="text-white hover:text-gray-300">✕</button>
+              <button onClick={() => setInspectedLog(null)} className="text-white/80 hover:text-white cursor-pointer">✕</button>
             </div>
             <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
               <div className="grid grid-cols-2 gap-3">

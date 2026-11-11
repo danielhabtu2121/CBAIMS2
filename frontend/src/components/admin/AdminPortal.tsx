@@ -412,8 +412,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-extrabold text-[#102E4A] flex items-center gap-2">
-            <Settings className="w-5 h-5 text-[#1F4E7A]" />
+          <h1 className="text-xl font-extrabold text-[#00205B] flex items-center gap-2">
+            <Settings className="w-5 h-5 text-[#00205B]" />
             System Administration & Governance
           </h1>
           <p className="text-xs text-[#5B6472] mt-0.5">
@@ -426,98 +426,98 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="flex border-b border-[#E2E8F0] bg-white px-4 pt-3 rounded-t-lg gap-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           ⚡ Control Center
         </button>
         <button
           onClick={() => setActiveTab('runtime')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'runtime' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'runtime' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           Runtime Configuration
         </button>
         <button
           onClick={() => setActiveTab('segments')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'segments' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'segments' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           1. Business Segments ({segments.length})
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'users' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'users' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           2. Users ({allUsers.length})
         </button>
         <button
           onClick={() => setActiveTab('permissions')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'permissions' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'permissions' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           3. Role Permissions Matrix ({localPermissions.length})
         </button>
         <button
           onClick={() => setActiveTab('branches')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'branches' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'branches' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           4. Branch Hierarchy ({branches.length})
         </button>
         <button
           onClick={() => setActiveTab('approval-configs')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'approval-configs' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'approval-configs' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           5. Approval Workflows ({approvalConfigs.length})
         </button>
         <button
           onClick={() => setActiveTab('reminders')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'reminders' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'reminders' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           6. Reminder Schedules ({reminderSchedules.length})
         </button>
         <button
           onClick={() => setActiveTab('insurers')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'insurers' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'insurers' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           7. Approved Insurers ({insurers.length})
         </button>
         <button
           onClick={() => setActiveTab('taxonomy')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'taxonomy' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'taxonomy' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           8. Collateral Taxonomy ({taxonomies.length})
         </button>
         <button
           onClick={() => setActiveTab('doc-rules')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'doc-rules' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'doc-rules' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           9. Document Rules ({mandatoryDocRules.length})
         </button>
         <button
           onClick={() => setActiveTab('templates')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'templates' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'templates' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           Notification Templates ({templates.length})
         </button>
         <button
           onClick={() => setActiveTab('parameters')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'parameters' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'parameters' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           10. System Parameters ({systemParameters.length})
         </button>
         <button
           onClick={() => setActiveTab('holidays')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'holidays' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'holidays' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           11. Holiday Calendar ({holidayCalendars.length})
@@ -527,7 +527,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             setActiveTab('coverage-rules');
             loadCoverageRules();
           }}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'coverage-rules' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'coverage-rules' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
             }`}
         >
           12. Insurance Coverage Rules (BR-18) ({coverageRules.length})
@@ -538,7 +538,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeTab === 'overview' && (
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2 justify-end">
-            <button onClick={handleRunRemindersNow} disabled={runningReminders} className="px-3 py-2 rounded-lg bg-[#102E4A] text-white text-xs font-bold disabled:opacity-50">{runningReminders ? 'Running reminders…' : 'Run reminders now'}</button>
+            <button onClick={handleRunRemindersNow} disabled={runningReminders} className="px-3 py-2 rounded-lg bg-[#00205B] text-white text-xs font-bold disabled:opacity-50">{runningReminders ? 'Running reminders…' : 'Run reminders now'}</button>
             <button onClick={handleRunEscalations} disabled={runningEscalations} className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-xs font-bold disabled:opacity-50">{runningEscalations ? 'Escalating…' : 'Run renewal escalations'}</button>
             <button onClick={handleScanExceptions} disabled={scanningExceptions} className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-xs font-bold disabled:opacity-50">{scanningExceptions ? 'Scanning…' : 'Scan exceptions now'}</button>
           </div>
@@ -561,7 +561,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <button
                 onClick={handleRunRemindersNow}
                 disabled={runningReminders}
-                className="px-4 py-2 bg-[#102E4A] hover:bg-[#173F63] text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-2"
+                className="px-4 py-2 bg-[#00205B] hover:bg-[#173F63] text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-2"
               >
                 <Clock className="w-4 h-4" />
                 {runningReminders ? 'Evaluating Schedules...' : '⚡ Trigger Expiry Reminders'}
@@ -575,12 +575,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#5B6472] uppercase">System Parameters</span>
-                  <Sliders className="w-4 h-4 text-[#1F4E7A]" />
+                  <Sliders className="w-4 h-4 text-[#00205B]" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{systemParameters.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{systemParameters.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Live runtime thresholds & rules</p>
               </div>
-              <button onClick={() => setActiveTab('parameters')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('parameters')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Configure Parameters →
               </button>
             </div>
@@ -591,10 +591,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Approved Insurers</span>
                   <Shield className="w-4 h-4 text-blue-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{insurers.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{insurers.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Underwriters & concentration caps</p>
               </div>
-              <button onClick={() => setActiveTab('insurers')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('insurers')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Manage Insurers →
               </button>
             </div>
@@ -605,10 +605,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Approval Workflows</span>
                   <GitMerge className="w-4 h-4 text-purple-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{approvalConfigs.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{approvalConfigs.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Maker-Checker SLA hierarchies</p>
               </div>
-              <button onClick={() => setActiveTab('approval-configs')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('approval-configs')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Configure Workflows →
               </button>
             </div>
@@ -619,10 +619,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Reminder Schedules</span>
                   <Bell className="w-4 h-4 text-amber-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{reminderSchedules.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{reminderSchedules.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Working-day pre-expiry alerts</p>
               </div>
-              <button onClick={() => setActiveTab('reminders')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('reminders')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Configure Reminders →
               </button>
             </div>
@@ -633,10 +633,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Taxonomies & Haircuts</span>
                   <FileText className="w-4 h-4 text-emerald-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{taxonomies.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{taxonomies.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Asset categories & valuation rules</p>
               </div>
-              <button onClick={() => setActiveTab('taxonomy')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('taxonomy')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Configure Taxonomy →
               </button>
             </div>
@@ -647,10 +647,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Holiday Calendar</span>
                   <Calendar className="w-4 h-4 text-rose-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{holidayCalendars.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{holidayCalendars.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Bank holidays & working days</p>
               </div>
-              <button onClick={() => setActiveTab('holidays')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('holidays')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Configure Holidays →
               </button>
             </div>
@@ -661,10 +661,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Mandatory Doc Rules</span>
                   <FileCheck className="w-4 h-4 text-indigo-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{mandatoryDocRules.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{mandatoryDocRules.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Required compliance documents</p>
               </div>
-              <button onClick={() => setActiveTab('doc-rules')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('doc-rules')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Configure Rules →
               </button>
             </div>
@@ -675,10 +675,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-xs font-bold text-[#5B6472] uppercase">Users & RBAC</span>
                   <Users className="w-4 h-4 text-teal-700" />
                 </div>
-                <div className="text-2xl font-black text-[#102E4A] mt-2">{allUsers.length}</div>
+                <div className="text-2xl font-black text-[#00205B] mt-2">{allUsers.length}</div>
                 <p className="text-[11px] text-[#5B6472] mt-1">Bank personnel & matrix permissions</p>
               </div>
-              <button onClick={() => setActiveTab('users')} className="mt-3 text-xs font-bold text-[#1F4E7A] hover:underline text-left">
+              <button onClick={() => setActiveTab('users')} className="mt-3 text-xs font-bold text-[#00205B] hover:underline text-left">
                 Manage Users →
               </button>
             </div>
@@ -691,7 +691,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         <div className="space-y-5">
           <div className="flex items-center justify-between bg-white p-5 rounded-lg border border-[#E2E8F0]">
             <div>
-              <h3 className="text-sm font-bold text-[#102E4A]">Effective Runtime Configuration</h3>
+              <h3 className="text-sm font-bold text-[#00205B]">Effective Runtime Configuration</h3>
               <p className="text-xs text-[#5B6472] mt-1">These are the values currently consumed by the backend business services, not merely values stored in Admin.</p>
             </div>
             <button onClick={loadRuntimeData} disabled={runtimeLoading} className="btn-secondary text-xs">
@@ -717,7 +717,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             ].map(([label, value, hint]) => (
               <div key={label} className="cims-card p-4">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[#5B6472]">{label}</div>
-                <div className="text-xl font-black text-[#102E4A] mt-2">{value}</div>
+                <div className="text-xl font-black text-[#00205B] mt-2">{value}</div>
                 <div className="text-[11px] text-[#5B6472] mt-1">{hint}</div>
               </div>
             ))}
@@ -725,7 +725,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             <div className="cims-card p-5">
-              <h4 className="font-bold text-sm text-[#102E4A]">Business-Day Calculator</h4>
+              <h4 className="font-bold text-sm text-[#00205B]">Business-Day Calculator</h4>
               <p className="text-xs text-[#5B6472] mt-1">Verify that Admin holiday configuration is being consumed by runtime calendar logic.</p>
               <div className="flex gap-2 mt-4">
                 <input type="date" value={calendarDate} onChange={e => setCalendarDate(e.target.value)} className="input-field flex-1" />
@@ -741,7 +741,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               )}
             </div>
             <div className="cims-card p-5">
-              <h4 className="font-bold text-sm text-[#102E4A]">Configuration Health</h4>
+              <h4 className="font-bold text-sm text-[#00205B]">Configuration Health</h4>
               <div className="mt-3 flex items-center gap-2">
                 <span className={`px-2 py-1 rounded text-xs font-bold ${runtimeData?.health?.status === 'HEALTHY' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{runtimeData?.health?.status || 'CHECKING'}</span>
                 <span className="text-xs text-[#5B6472]">{runtimeData?.health?.healthyCount ?? 0} healthy checks · {runtimeData?.health?.warningCount ?? 0} warnings</span>
@@ -776,22 +776,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeTab === 'templates' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E2E8F0]">
-            <div><h3 className="text-sm font-bold text-[#102E4A]">Notification Templates</h3><p className="text-xs text-[#5B6472]">Templates are validated and consumed when CIMS generates notifications.</p></div>
+            <div><h3 className="text-sm font-bold text-[#00205B]">Notification Templates</h3><p className="text-xs text-[#5B6472]">Templates are validated and consumed when CIMS generates notifications.</p></div>
             <button onClick={() => setTemplateDraft({ id: '', name: '', type: 'Email', channel: 'Email', triggerDaysBefore: 30, subject: '', body: '', active: true })} className="btn-primary text-xs"><Plus className="w-3.5 h-3.5" /> New Template</button>
           </div>
           <div className="cims-card overflow-hidden">
             <table className="w-full text-left text-xs"><thead className="bg-[#EFF5FB] border-b border-[#E2E8F0]"><tr><th className="p-3">Name</th><th className="p-3">Channel</th><th className="p-3">Trigger</th><th className="p-3">Status</th><th className="p-3 text-right">Action</th></tr></thead>
-              <tbody className="divide-y divide-[#E2E8F0]">{templates.map(t => <tr key={t.id} className="hover:bg-[#EFF5FB]"><td className="p-3 font-semibold">{t.name}</td><td className="p-3">{t.type || t.channel}</td><td className="p-3">{t.triggerDaysBefore || 0} working days</td><td className="p-3"><StatusChip label={t.active === false ? 'Inactive' : 'Active'} /></td><td className="p-3 text-right"><button onClick={() => setTemplateDraft(t)} className="text-[#1F4E7A] font-semibold hover:underline">Edit</button></td></tr>)}</tbody></table>
+              <tbody className="divide-y divide-[#E2E8F0]">{templates.map(t => <tr key={t.id} className="hover:bg-[#EFF5FB]"><td className="p-3 font-semibold">{t.name}</td><td className="p-3">{t.type || t.channel}</td><td className="p-3">{t.triggerDaysBefore || 0} working days</td><td className="p-3"><StatusChip label={t.active === false ? 'Inactive' : 'Active'} /></td><td className="p-3 text-right"><button onClick={() => setTemplateDraft(t)} className="text-[#00205B] font-semibold hover:underline">Edit</button></td></tr>)}</tbody></table>
           </div>
           {templateDraft && (
             <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
               <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-4">
                 <div className="flex justify-between">
                   <div>
-                    <h3 className="font-bold text-[#102E4A]">{templateDraft.id ? 'Edit' : 'Create'} Notification Template</h3>
+                    <h3 className="font-bold text-[#00205B]">{templateDraft.id ? 'Edit' : 'Create'} Notification Template</h3>
                     <p className="text-xs text-[#5B6472]">Production templates are strictly validated and dispatched by the automated notification engine.</p>
                   </div>
-                  <button onClick={() => { setTemplateDraft(null); setModalError(null); }}><X className="w-5 h-5 text-[#5B6472] hover:text-[#102E4A]" /></button>
+                  <button onClick={() => { setTemplateDraft(null); setModalError(null); }}><X className="w-5 h-5 text-[#5B6472] hover:text-[#00205B]" /></button>
                 </div>
 
                 {modalError && (
@@ -809,7 +809,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div>
                     <label className="block text-[11px] font-semibold text-[#5B6472] mb-1">Event Type *</label>
                     <select
-                      className="input-field w-full font-semibold text-[#102E4A]"
+                      className="input-field w-full font-semibold text-[#00205B]"
                       value={templateDraft.eventType || 'Expiry Reminder'}
                       onChange={e => setTemplateDraft({ ...templateDraft, eventType: e.target.value })}
                     >
@@ -874,7 +874,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         key={ph}
                         type="button"
                         onClick={() => setTemplateDraft({ ...templateDraft, body: (templateDraft.body || '') + ph })}
-                        className="px-2 py-0.5 text-[11px] font-mono bg-white border border-[#CBD5E1] rounded hover:border-[#1F4E7A] hover:bg-[#EFF5FB] text-[#1F4E7A] transition-colors"
+                        className="px-2 py-0.5 text-[11px] font-mono bg-white border border-[#CBD5E1] rounded hover:border-[#00205B] hover:bg-[#EFF5FB] text-[#00205B] transition-colors"
                         title={`Insert ${ph}`}
                       >
                         + {ph}
@@ -891,7 +891,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <label className="text-xs flex items-center gap-2 cursor-pointer font-medium text-[#102E4A]">
+                  <label className="text-xs flex items-center gap-2 cursor-pointer font-medium text-[#00205B]">
                     <input type="checkbox" checked={templateDraft.active !== false} onChange={e => setTemplateDraft({ ...templateDraft, active: e.target.checked })} />
                     Template Active (Participates in automated schedule dispatch)
                   </label>
@@ -1006,7 +1006,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {segments.map((seg) => (
                   <tr key={seg.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-semibold text-[#102E4A]">{seg.name}</td>
+                    <td className="p-3 font-semibold text-[#00205B]">{seg.name}</td>
                     <td className="p-3 text-[#5B6472]">{seg.description}</td>
                     <td className="p-3"><StatusChip label={seg.riskProfile || 'Medium'} /></td>
                     <td className="p-3"><StatusChip label={seg.active ? 'Active' : 'Inactive'} /></td>
@@ -1016,7 +1016,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingSegment(seg);
                           setShowSegmentModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit
                       </button>
@@ -1114,9 +1114,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   })
                   .map((u) => (
                     <tr key={u.id || u.userId} className="hover:bg-[#EFF5FB]">
-                      <td className="p-3 font-semibold text-[#102E4A]">{u.username}</td>
+                      <td className="p-3 font-semibold text-[#00205B]">{u.username}</td>
                       <td className="p-3">{u.name || u.fullName}</td>
-                      <td className="p-3 font-bold text-[#1F4E7A]">{u.role}</td>
+                      <td className="p-3 font-bold text-[#00205B]">{u.role}</td>
                       <td className="p-3">{u.branch}</td>
                       <td className="p-3">{u.segment}</td>
                       <td className="p-3"><StatusChip label={u.active !== false ? 'Active' : 'Locked'} /></td>
@@ -1126,7 +1126,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             setEditingUser(u);
                             setShowUserModal(true);
                           }}
-                          className="text-[#1F4E7A] hover:underline font-semibold"
+                          className="text-[#00205B] hover:underline font-semibold"
                         >
                           Edit
                         </button>
@@ -1162,7 +1162,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <select
                   value={selectedRoleFilter}
                   onChange={(e) => setSelectedRoleFilter(e.target.value)}
-                  className="input-field text-xs py-1 px-2 font-semibold text-[#102E4A]"
+                  className="input-field text-xs py-1 px-2 font-semibold text-[#00205B]"
                 >
                   <option value="ALL">All Roles (16)</option>
                   {ALL_ROLES.map((r) => (
@@ -1206,7 +1206,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         type="checkbox"
                         checked={p.canView}
                         onChange={() => handleTogglePerm(p.id, 'canView')}
-                        className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0] focus:ring-[#3E7AB0] cursor-pointer"
+                        className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0] focus:ring-[#3E7AB0] cursor-pointer"
                       />
                     </td>
 
@@ -1216,7 +1216,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         type="checkbox"
                         checked={p.canCreate}
                         onChange={() => handleTogglePerm(p.id, 'canCreate')}
-                        className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0] focus:ring-[#3E7AB0] cursor-pointer"
+                        className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0] focus:ring-[#3E7AB0] cursor-pointer"
                       />
                     </td>
 
@@ -1226,7 +1226,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         type="checkbox"
                         checked={p.canEdit}
                         onChange={() => handleTogglePerm(p.id, 'canEdit')}
-                        className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0] focus:ring-[#3E7AB0] cursor-pointer"
+                        className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0] focus:ring-[#3E7AB0] cursor-pointer"
                       />
                     </td>
 
@@ -1292,9 +1292,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {branches.map((b) => (
                   <tr key={b.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-semibold text-[#102E4A]">{b.code}</td>
+                    <td className="p-3 font-semibold text-[#00205B]">{b.code}</td>
                     <td className="p-3">{b.name}</td>
-                    <td className="p-3 font-medium text-[#1F4E7A]">{b.type}</td>
+                    <td className="p-3 font-medium text-[#00205B]">{b.type}</td>
                     <td className="p-3">{b.parentDistrictId || 'Head Office'}</td>
                     <td className="p-3"><StatusChip label={b.active !== false ? 'Active' : 'Inactive'} /></td>
                     <td className="p-3 text-right space-x-3">
@@ -1303,7 +1303,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingBranch(b);
                           setShowBranchModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit
                       </button>
@@ -1373,21 +1373,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {approvalConfigs.map((cfg) => (
                   <tr key={cfg.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-semibold text-[#102E4A]">
+                    <td className="p-3 font-semibold text-[#00205B]">
                       <div>{cfg.transactionType}</div>
                       {cfg.exceptionType && cfg.exceptionType !== 'All' && (
                         <div className="text-[10px] text-amber-700 font-medium">{cfg.exceptionType}</div>
                       )}
                     </td>
                     <td className="p-3">
-                      <span className="font-semibold text-[#1F4E7A]">{cfg.hierarchyLevel || 'Branch'}</span>
+                      <span className="font-semibold text-[#00205B]">{cfg.hierarchyLevel || 'Branch'}</span>
                       {(cfg.branchCode || cfg.districtName || cfg.hoDepartment) && (
                         <div className="text-[10px] text-[#5B6472]">{cfg.branchCode || cfg.districtName || cfg.hoDepartment}</div>
                       )}
                     </td>
                     <td className="p-3 font-mono">{cfg.makerRole || 'Any'}</td>
                     <td className="p-3">{cfg.approvalLevels} Stage(s)</td>
-                    <td className="p-3 font-bold text-[#1F4E7A]">{cfg.level1Role}</td>
+                    <td className="p-3 font-bold text-[#00205B]">{cfg.level1Role}</td>
                     <td className="p-3">{cfg.level2Role || '—'}</td>
                     <td className="p-3 text-center">{cfg.bulkApproveAllowed ? 'Yes' : 'No'}</td>
                     <td className="p-3 text-right tabular-nums font-semibold">{cfg.slaHours} hrs</td>
@@ -1399,7 +1399,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingApproval(cfg);
                           setShowApprovalModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit SLA / Roles
                       </button>
@@ -1464,7 +1464,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         {r.audience || 'Staff'}
                       </span>
                     </td>
-                    <td className="p-3 font-bold text-[#102E4A] tabular-nums">
+                    <td className="p-3 font-bold text-[#00205B] tabular-nums">
                       {r.triggerBasis === 'After Expiry' ? `T + ${r.daysBeforeExpiry}` : `T - ${r.daysBeforeExpiry}`} Days ({r.dayType || 'Working Day'})
                     </td>
                     <td className="p-3">
@@ -1480,7 +1480,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingReminder(r);
                           setShowReminderModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Configure
                       </button>
@@ -1526,8 +1526,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {insurers.map((ins) => (
                   <tr key={ins.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-mono text-[#1F4E7A]">{ins.id}</td>
-                    <td className="p-3 font-bold text-[#102E4A]">{ins.name}</td>
+                    <td className="p-3 font-mono text-[#00205B]">{ins.id}</td>
+                    <td className="p-3 font-bold text-[#00205B]">{ins.name}</td>
                     <td className="p-3"><StatusChip label={ins.active ? 'Approved' : 'Suspended'} /></td>
                     <td className="p-3 text-right space-x-3">
                       <button
@@ -1535,7 +1535,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingInsurer(ins);
                           setShowInsurerModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit
                       </button>
@@ -1597,12 +1597,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {taxonomies.map((tax) => (
                   <tr key={tax.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-bold text-[#102E4A]">{tax.category}</td>
+                    <td className="p-3 font-bold text-[#00205B]">{tax.category}</td>
                     <td className="p-3">{tax.subCategory}</td>
                     <td className="p-3">
                       <StatusChip label={tax.insuranceMandatory ? 'Mandatory' : 'Optional'} />
                     </td>
-                    <td className="p-3 font-semibold text-[#1F4E7A]">{tax.mandatoryCoverageType}</td>
+                    <td className="p-3 font-semibold text-[#00205B]">{tax.mandatoryCoverageType}</td>
                     <td className="p-3 text-right">
                       <button
                         onClick={() => {
@@ -1610,7 +1610,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingTaxonomy(tax);
                           setShowTaxonomyModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit Rule
                       </button>
@@ -1661,8 +1661,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {mandatoryDocRules.map((rule) => (
                   <tr key={rule.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-bold text-[#102E4A]">{rule.collateralCategory}</td>
-                    <td className="p-3 font-medium text-[#1F4E7A]">{rule.collateralType || 'All Sub-Types'}</td>
+                    <td className="p-3 font-bold text-[#00205B]">{rule.collateralCategory}</td>
+                    <td className="p-3 font-medium text-[#00205B]">{rule.collateralType || 'All Sub-Types'}</td>
                     <td className="p-3 font-semibold">{rule.documentType}</td>
                     <td className="p-3">{rule.ownershipCondition || 'Any'}</td>
                     <td className="p-3">{rule.applicabilityCondition || 'Standard'}</td>
@@ -1679,7 +1679,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingDocRule(rule);
                           setShowDocRuleModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit
                       </button>
@@ -1732,7 +1732,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   })
                   .map((param) => (
                     <tr key={param.paramKey} className="hover:bg-[#EFF5FB]">
-                      <td className="p-3 font-mono font-bold text-[#102E4A]">{param.paramKey}</td>
+                      <td className="p-3 font-mono font-bold text-[#00205B]">{param.paramKey}</td>
                       <td className="p-3 font-semibold text-emerald-800">{param.paramValue}</td>
                       <td className="p-3"><StatusChip label={['min_coverage_adequacy_pct', 'max_insurer_concentration_pct', 'policy_expiry_grace_period_days', 'dual_control_strict_mode', 'default_currency', 'cbs_sync_mode', 'cbs_sync_interval_minutes'].includes(param.paramKey) ? 'Runtime' : 'Configured'} /></td>
                       <td className="p-3 text-[#5B6472]">{param.description}</td>
@@ -1743,7 +1743,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             setEditingParam(param);
                             setShowParamModal(true);
                           }}
-                          className="text-[#1F4E7A] hover:underline font-semibold"
+                          className="text-[#00205B] hover:underline font-semibold"
                         >
                           Edit Value
                         </button>
@@ -1789,7 +1789,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-[#E2E8F0]">
                 {holidayCalendars.map((h) => (
                   <tr key={h.id} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-mono font-bold text-[#102E4A]">{h.holidayDate}</td>
+                    <td className="p-3 font-mono font-bold text-[#00205B]">{h.holidayDate}</td>
                     <td className="p-3 font-semibold">{h.description}</td>
                     <td className="p-3 text-right space-x-3">
                       <button
@@ -1798,7 +1798,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingHoliday(h);
                           setShowHolidayModal(true);
                         }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
+                        className="text-[#00205B] hover:underline font-semibold"
                       >
                         Edit
                       </button>
@@ -1834,7 +1834,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-[#E2E8F0]">
             <div>
               <h3 className="text-sm font-bold text-[#101828] flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#1F4E7A]" />
+                <Shield className="w-4 h-4 text-[#00205B]" />
                 Credit Policy Insurance Coverage Rules (BR-18)
               </h3>
               <p className="text-xs text-[#5B6472]">
@@ -1906,8 +1906,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <tbody className="divide-y divide-[#E2E8F0]">
                   {coverageRules.map((rule) => (
                     <tr key={rule.id} className="hover:bg-[#EFF5FB]">
-                      <td className="p-3 font-mono font-bold text-[#102E4A]">{rule.ruleCode}</td>
-                      <td className="p-3 font-semibold text-[#1F4E7A]">{rule.collateralType}</td>
+                      <td className="p-3 font-mono font-bold text-[#00205B]">{rule.ruleCode}</td>
+                      <td className="p-3 font-semibold text-[#00205B]">{rule.collateralType}</td>
                       <td className="p-3">{rule.customerSegment || 'ALL'}</td>
                       <td className="p-3 font-bold text-slate-800">
                         {rule.requiredCoveragePct != null ? `${rule.requiredCoveragePct}%` : 'Unconfigured'}
@@ -1932,7 +1932,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             setEditingCoverageRule(rule);
                             setShowCoverageRuleModal(true);
                           }}
-                          className="text-[#1F4E7A] hover:underline font-semibold"
+                          className="text-[#00205B] hover:underline font-semibold"
                         >
                           Edit
                         </button>
@@ -1960,7 +1960,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showSegmentModal && editingSegment && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingSegment.id ? 'Edit Business Segment' : 'Add New Business Segment'}
             </h3>
             {modalError && (
@@ -2029,7 +2029,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showUserModal && editingUser && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingUser.id ? `Edit User — ${editingUser.username}` : 'Create Staff User Account'}
             </h3>
             {modalError && (
@@ -2064,7 +2064,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <select
                   value={editingUser.role || 'CRO'}
                   onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
-                  className="input-field w-full font-bold text-[#1F4E7A]"
+                  className="input-field w-full font-bold text-[#00205B]"
                 >
                   {ALL_ROLES.map((r) => (
                     <option key={r} value={r}>{r}</option>
@@ -2142,7 +2142,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     const currentSegs: string[] = Array.isArray(editingUser.segmentIds) ? editingUser.segmentIds : [editingUser.segment || 'Corporate Banking'];
                     const checked = currentSegs.includes(s.name);
                     return (
-                      <label key={s.id} className="flex items-center gap-1.5 text-xs text-[#102E4A] cursor-pointer bg-white px-2 py-1 rounded border border-[#CBD5E1]">
+                      <label key={s.id} className="flex items-center gap-1.5 text-xs text-[#00205B] cursor-pointer bg-white px-2 py-1 rounded border border-[#CBD5E1]">
                         <input
                           type="checkbox"
                           checked={checked}
@@ -2152,7 +2152,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               : currentSegs.filter(x => x !== s.name);
                             setEditingUser({ ...editingUser, segmentIds: next });
                           }}
-                          className="rounded text-[#1F4E7A]"
+                          className="rounded text-[#00205B]"
                         />
                         <span className="font-medium">{s.name}</span>
                       </label>
@@ -2166,7 +2166,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="userActiveCheck"
                   checked={editingUser.active !== false}
                   onChange={(e) => setEditingUser({ ...editingUser, active: e.target.checked })}
-                  className="w-4 h-4 rounded text-[#102E4A] focus:ring-[#3E7AB0] cursor-pointer"
+                  className="w-4 h-4 rounded text-[#00205B] focus:ring-[#3E7AB0] cursor-pointer"
                 />
                 <label htmlFor="userActiveCheck" className="font-semibold text-[#101828] cursor-pointer">
                   Active Account (Login Allowed)
@@ -2213,7 +2213,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showBranchModal && editingBranch && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingBranch.id ? 'Edit Operating Branch' : 'Add New Operating Branch'}
             </h3>
             {modalError && (
@@ -2307,7 +2307,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           setEditingBranch({ ...editingBranch, segmentIds: JSON.stringify(next) });
                         }}
                         className={`px-2 py-1 rounded text-xs font-semibold border transition-all ${isSelected
-                          ? 'bg-[#102E4A] text-white border-[#102E4A] shadow-xs'
+                          ? 'bg-[#00205B] text-white border-[#00205B] shadow-xs'
                           : 'bg-white text-[#5B6472] border-[#E2E8F0] hover:bg-slate-100'
                           }`}
                       >
@@ -2348,7 +2348,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showApprovalModal && editingApproval && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingApproval.id ? `Configure Workflow: ${editingApproval.transactionType}` : 'Add New Approval Workflow Configuration'}
             </h3>
             {modalError && (
@@ -2363,7 +2363,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <select
                   value={editingApproval.transactionType || 'Register Collateral'}
                   onChange={(e) => setEditingApproval({ ...editingApproval, transactionType: e.target.value })}
-                  className="input-field w-full font-bold text-[#102E4A]"
+                  className="input-field w-full font-bold text-[#00205B]"
                   disabled={Boolean(editingApproval.id)}
                 >
                   <option value="Register Collateral">Register Collateral</option>
@@ -2480,7 +2480,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <select
                   value={editingApproval.level1Role || 'BRMGR'}
                   onChange={(e) => setEditingApproval({ ...editingApproval, level1Role: e.target.value })}
-                  className="input-field w-full font-bold text-[#1F4E7A]"
+                  className="input-field w-full font-bold text-[#00205B]"
                 >
                   {ALL_ROLES.filter(r => r !== 'SYSADMIN' && r !== 'RDONLY' && r !== 'AUDITOR').map((r) => (
                     <option key={r} value={r}>{r}</option>
@@ -2518,7 +2518,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="bulkApprove"
                   checked={editingApproval.bulkApproveAllowed || false}
                   onChange={(e) => setEditingApproval({ ...editingApproval, bulkApproveAllowed: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="bulkApprove" className="font-semibold text-[#101828]">Allow 1-Click Dual-Control Bulk Approval</label>
               </div>
@@ -2528,7 +2528,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="activeConfig"
                   checked={editingApproval.active !== false}
                   onChange={(e) => setEditingApproval({ ...editingApproval, active: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="activeConfig" className="font-semibold text-[#101828]">Active Workflow Routing Rule</label>
               </div>
@@ -2563,7 +2563,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showReminderModal && editingReminder && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingReminder.id ? `Configure Expiry Reminder (T - ${editingReminder.daysBeforeExpiry} Days)` : 'Add New Expiry Reminder Schedule'}
             </h3>
             {modalError && (
@@ -2606,7 +2606,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     max="365"
                     value={editingReminder.daysBeforeExpiry ?? ''}
                     onChange={(e) => setEditingReminder({ ...editingReminder, daysBeforeExpiry: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
-                    className="input-field w-full font-bold text-[#102E4A]"
+                    className="input-field w-full font-bold text-[#00205B]"
                     disabled={Boolean(editingReminder.id)}
                   />
                 </div>
@@ -2664,7 +2664,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           const next = active ? current.filter(x => x.toLowerCase() !== ch.toLowerCase()) : [...current, ch];
                           setEditingReminder({ ...editingReminder, channelsJson: JSON.stringify(next) });
                         }}
-                        className={`py-1.5 px-3 rounded text-xs font-semibold border transition-all ${active ? 'bg-[#102E4A] text-white border-[#102E4A] shadow-sm' : 'bg-white text-[#5B6472] border-[#E2E8F0]'}`}
+                        className={`py-1.5 px-3 rounded text-xs font-semibold border transition-all ${active ? 'bg-[#00205B] text-white border-[#00205B] shadow-sm' : 'bg-white text-[#5B6472] border-[#E2E8F0]'}`}
                       >
                         {active ? '✓ ' : '+ '}{ch}
                       </button>
@@ -2689,7 +2689,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             const next = active ? current.filter(x => x !== role) : [...current, role];
                             setEditingReminder({ ...editingReminder, recipientRolesJson: JSON.stringify(next) });
                           }}
-                          className={`py-1 px-2.5 rounded text-xs font-semibold border transition-all ${active ? 'bg-[#1F4E7A] text-white border-[#1F4E7A] shadow-sm' : 'bg-slate-50 text-[#5B6472] border-[#E2E8F0]'}`}
+                          className={`py-1 px-2.5 rounded text-xs font-semibold border transition-all ${active ? 'bg-[#00205B] text-white border-[#00205B] shadow-sm' : 'bg-slate-50 text-[#5B6472] border-[#E2E8F0]'}`}
                         >
                           {active ? '✓ ' : '+ '}{role}
                         </button>
@@ -2709,7 +2709,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="activeRem"
                   checked={editingReminder.active !== false}
                   onChange={(e) => setEditingReminder({ ...editingReminder, active: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="activeRem" className="font-semibold text-[#101828]">Enable Automated Alert Dispatch Engine</label>
               </div>
@@ -2740,7 +2740,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showInsurerModal && editingInsurer && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingInsurer.id ? 'Edit Approved Underwriter' : 'Add NBE Approved Insurer'}
             </h3>
             {modalError && (
@@ -2757,7 +2757,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   value={editingInsurer.name || ''}
                   onChange={(e) => setEditingInsurer({ ...editingInsurer, name: e.target.value })}
                   placeholder="e.g. Ethiopian Insurance Corporation, Nyala Insurance S.C."
-                  className="input-field w-full font-bold text-[#102E4A]"
+                  className="input-field w-full font-bold text-[#00205B]"
                 />
               </div>
               <div className="flex items-center gap-2 pt-2">
@@ -2766,7 +2766,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="activeIns"
                   checked={editingInsurer.active !== false}
                   onChange={(e) => setEditingInsurer({ ...editingInsurer, active: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="activeIns" className="font-semibold text-[#101828]">NBE Approved Underwriter (Active for Pledging)</label>
               </div>
@@ -2797,7 +2797,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showTaxonomyModal && editingTaxonomy && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingTaxonomy.id ? 'Edit Collateral Asset Taxonomy Rule' : 'Add New Collateral Taxonomy Rule'}
             </h3>
             {modalError && (
@@ -2840,7 +2840,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   value={editingTaxonomy.mandatoryCoverageType || ''}
                   onChange={(e) => setEditingTaxonomy({ ...editingTaxonomy, mandatoryCoverageType: e.target.value })}
                   placeholder="e.g. Fire & Lightning, Comprehensive Motor, All Risks"
-                  className="input-field w-full font-semibold text-[#1F4E7A]"
+                  className="input-field w-full font-semibold text-[#00205B]"
                 />
               </div>
               <div className="flex items-center gap-2 pt-1">
@@ -2849,7 +2849,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="taxMandatory"
                   checked={editingTaxonomy.insuranceMandatory !== false}
                   onChange={(e) => setEditingTaxonomy({ ...editingTaxonomy, insuranceMandatory: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="taxMandatory" className="font-semibold text-[#101828]">Insurance Coverage is Strictly Mandatory for Pledging</label>
               </div>
@@ -2859,7 +2859,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="taxActive"
                   checked={editingTaxonomy.active !== false}
                   onChange={(e) => setEditingTaxonomy({ ...editingTaxonomy, active: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="taxActive" className="font-semibold text-[#101828]">Active Asset Classification for Collateral Intake</label>
               </div>
@@ -2894,7 +2894,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showDocRuleModal && editingDocRule && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingDocRule.id ? 'Edit Mandatory Document Rule' : 'Add Mandatory Document Rule'}
             </h3>
             {modalError && (
@@ -2973,7 +2973,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="docMandatory"
                   checked={editingDocRule.mandatory !== false}
                   onChange={(e) => setEditingDocRule({ ...editingDocRule, mandatory: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="docMandatory" className="font-semibold text-[#101828]">Mandatory Gatekeeper for Collateral Release & Verification</label>
               </div>
@@ -2983,7 +2983,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   id="docRuleActive"
                   checked={editingDocRule.active !== false}
                   onChange={(e) => setEditingDocRule({ ...editingDocRule, active: e.target.checked })}
-                  className="w-4 h-4 text-[#102E4A] rounded border-[#E2E8F0]"
+                  className="w-4 h-4 text-[#00205B] rounded border-[#E2E8F0]"
                 />
                 <label htmlFor="docRuleActive" className="font-semibold text-[#101828]">Active Compliance Validation Rule</label>
               </div>
@@ -3014,8 +3014,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showParamModal && editingParam && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
-              Configure Parameter: <span className="font-mono text-[#1F4E7A]">{editingParam.paramKey}</span>
+            <h3 className="text-base font-bold text-[#00205B]">
+              Configure Parameter: <span className="font-mono text-[#00205B]">{editingParam.paramKey}</span>
             </h3>
             {modalError && (
               <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded flex items-start gap-1.5">
@@ -3042,7 +3042,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <select
                         value={(editingParam.paramValue || 'true').toLowerCase()}
                         onChange={(e) => setEditingParam({ ...editingParam, paramValue: e.target.value })}
-                        className="input-field w-full font-bold text-[#102E4A]"
+                        className="input-field w-full font-bold text-[#00205B]"
                       >
                         <option value="true">true (Active / Enabled)</option>
                         <option value="false">false (Inactive / Disabled)</option>
@@ -3056,7 +3056,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           step="0.01"
                           value={editingParam.paramValue || ''}
                           onChange={(e) => setEditingParam({ ...editingParam, paramValue: e.target.value })}
-                          className="input-field w-full pr-8 font-bold text-[#102E4A]"
+                          className="input-field w-full pr-8 font-bold text-[#00205B]"
                           placeholder="0.00"
                         />
                         <span className="absolute right-3 top-2 text-[#5B6472] font-bold">%</span>
@@ -3067,14 +3067,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         value={editingParam.paramValue || ''}
                         onChange={(e) => setEditingParam({ ...editingParam, paramValue: e.target.value })}
                         placeholder="e.g. 30"
-                        className="input-field w-full font-bold text-[#102E4A]"
+                        className="input-field w-full font-bold text-[#00205B]"
                       />
                     ) : (
                       <input
                         type="text"
                         value={editingParam.paramValue || ''}
                         onChange={(e) => setEditingParam({ ...editingParam, paramValue: e.target.value })}
-                        className="input-field w-full font-bold text-[#102E4A]"
+                        className="input-field w-full font-bold text-[#00205B]"
                       />
                     )}
                   </div>
@@ -3089,7 +3089,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </div>
                   {editingParam.paramKey && usageMap[editingParam.paramKey] && (
                     <div className="p-2.5 bg-sky-50 border border-sky-200 text-sky-900 rounded text-xs space-y-1">
-                      <div className="font-bold flex items-center gap-1 text-[#1F4E7A]">
+                      <div className="font-bold flex items-center gap-1 text-[#00205B]">
                         <Info className="w-3.5 h-3.5" />
                         <span>Real Runtime System Impact</span>
                       </div>
@@ -3143,7 +3143,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {showHolidayModal && editingHoliday && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-[#102E4A]">
+            <h3 className="text-base font-bold text-[#00205B]">
               {editingHoliday.id ? 'Edit Bank Holiday' : 'Add Bank Holiday to Business Calendar'}
             </h3>
             {modalError && (
@@ -3159,7 +3159,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   type="date"
                   value={editingHoliday.holidayDate || ''}
                   onChange={(e) => setEditingHoliday({ ...editingHoliday, holidayDate: e.target.value })}
-                  className="input-field w-full font-mono font-bold text-[#102E4A]"
+                  className="input-field w-full font-mono font-bold text-[#00205B]"
                 />
               </div>
               <div>
@@ -3204,8 +3204,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <h3 className="text-base font-bold text-[#102E4A] flex items-center gap-2">
-                <Shield className="w-5 h-5 text-[#1F4E7A]" />
+              <h3 className="text-base font-bold text-[#00205B] flex items-center gap-2">
+                <Shield className="w-5 h-5 text-[#00205B]" />
                 {editingCoverageRule.id ? 'Edit Insurance Coverage Rule (BR-18)' : 'Add Insurance Coverage Rule (BR-18)'}
               </h3>
               <button
@@ -3347,7 +3347,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, active: e.target.checked })}
                     className="rounded text-indigo-600"
                   />
-                  <span className="font-semibold text-[#102E4A]">Active Rule in Insurance Adequacy Engine</span>
+                  <span className="font-semibold text-[#00205B]">Active Rule in Insurance Adequacy Engine</span>
                 </label>
               </div>
             </div>
