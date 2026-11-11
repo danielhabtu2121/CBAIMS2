@@ -90,7 +90,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
       accessorKey: 'recipient',
       cell: (r) => (
         <div>
-          <div className="font-semibold text-[#102E4A]">{r.recipientName || 'Officer / Customer'}</div>
+          <div className="font-semibold text-[#00205B]">{r.recipientName || 'Officer / Customer'}</div>
           <div className="text-[11px] text-[#5B6472] font-mono">{r.recipient}</div>
         </div>
       ),
@@ -109,7 +109,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
       header: 'Entity Ref',
       accessorKey: 'entityId',
       cell: (r) => (
-        <span className="text-xs font-mono text-[#1F4E7A] bg-[#EFF5FB] px-2 py-0.5 rounded border border-[#B9D3EB]">
+        <span className="text-xs font-mono text-[#00205B] bg-[#EFF5FB] px-2 py-0.5 rounded border border-[#B9D3EB]">
           {r.entityType ? `${r.entityType}: ` : ''}{r.entityId || 'N/A'}
         </span>
       ),
@@ -164,9 +164,9 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
         <div className="cims-card p-4">
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-[#5B6472] uppercase">Total Dispatched</span>
-            <Bell className="w-4 h-4 text-[#1F4E7A]" />
+            <Bell className="w-4 h-4 text-[#00205B]" />
           </div>
-          <p className="text-2xl font-extrabold text-[#102E4A] mt-2">{totalCount}</p>
+          <p className="text-2xl font-extrabold text-[#00205B] mt-2">{totalCount}</p>
           <span className="text-xs text-[#5B6472] mt-1 block">Live outbound messages</span>
         </div>
 
@@ -206,7 +206,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
             <button
               onClick={() => setChannelFilter('ALL')}
               className={`px-3 py-1.5 font-medium ${
-                channelFilter === 'ALL' ? 'bg-[#102E4A] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
+                channelFilter === 'ALL' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
               }`}
             >
               All Channels
@@ -214,7 +214,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
             <button
               onClick={() => setChannelFilter('Email')}
               className={`px-3 py-1.5 font-medium ${
-                channelFilter === 'Email' ? 'bg-[#102E4A] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
+                channelFilter === 'Email' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
               }`}
             >
               Email ({emailCount})
@@ -222,7 +222,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
             <button
               onClick={() => setChannelFilter('SMS')}
               className={`px-3 py-1.5 font-medium ${
-                channelFilter === 'SMS' ? 'bg-[#102E4A] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
+                channelFilter === 'SMS' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
               }`}
             >
               SMS ({smsCount})
@@ -270,10 +270,10 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
 
       {/* Preview Payload Drawer */}
       {showDrawer && selectedNotif && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex justify-end z-50">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex justify-end z-50">
           <div className="bg-white w-full max-w-lg h-full shadow-2xl flex flex-col overflow-hidden text-xs">
             {/* Header */}
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start">
+            <div className="p-5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2.5">
                   <span
@@ -301,7 +301,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
                   </div>
                   <div>
                     <span className="text-[#5B6472] block">Target Destination:</span>
-                    <span className="font-mono text-[#102E4A] font-bold">{selectedNotif.recipient}</span>
+                    <span className="font-mono text-[#00205B] font-bold">{selectedNotif.recipient}</span>
                   </div>
                   <div>
                     <span className="text-[#5B6472] block">Template Code:</span>

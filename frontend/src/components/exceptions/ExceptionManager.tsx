@@ -498,7 +498,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
     {
       header: 'Exception Type',
       accessorKey: 'exceptionType',
-      cell: (r) => <span className="font-semibold text-xs text-[#102E4A]">{r.exceptionType}</span>,
+      cell: (r) => <span className="font-semibold text-xs text-[#00205B]">{r.exceptionType}</span>,
       sortable: true,
     },
     {
@@ -506,7 +506,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
       accessorKey: 'entityId',
       cell: (r) => (
         <div className="text-xs">
-          <div className="font-mono font-medium text-[#1F4E7A]">{r.entityId}</div>
+          <div className="font-mono font-medium text-[#00205B]">{r.entityId}</div>
           <div className="text-[10.5px] text-[#5B6472]">{r.entityType}</div>
           {r.customerCif && (
             <div className="text-[10px] text-slate-500">CIF: {r.customerCif}</div>
@@ -538,7 +538,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
       accessorKey: 'assignedToRole',
       cell: (r) => (
         <div className="text-xs">
-          <span className="inline-block px-1.5 py-0.5 rounded text-[10.5px] font-bold bg-[#EAF2F9] text-[#1F4E7A]">
+          <span className="inline-block px-1.5 py-0.5 rounded text-[10.5px] font-bold bg-[#EAF2F9] text-[#00205B]">
             {r.assignedToRole || 'RO'}
           </span>
           <div className="text-[10.5px] text-[#101828] font-medium mt-0.5">
@@ -569,7 +569,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
             e.stopPropagation();
             openExceptionDetail(r);
           }}
-          className="btn-ghost py-1 px-2.5 text-xs text-[#1F4E7A] hover:bg-[#EAF2F9] font-semibold flex items-center gap-1"
+          className="btn-ghost py-1 px-2.5 text-xs text-[#00205B] hover:bg-[#EAF2F9] font-semibold flex items-center gap-1"
         >
           <Eye className="w-3.5 h-3.5" />
           Investigate
@@ -584,8 +584,8 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
       <div className="cims-card p-4 bg-white border-[#E2E8F0] space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[#1F4E7A]" />
-            <span className="font-bold text-xs text-[#102E4A] uppercase tracking-wider">Work Queue Filters</span>
+            <Filter className="w-4 h-4 text-[#00205B]" />
+            <span className="font-bold text-xs text-[#00205B] uppercase tracking-wider">Work Queue Filters</span>
             {(filterStatus !== 'ALL' || filterSeverity !== 'ALL' || filterType !== 'ALL' || filterSlaStatus !== 'ALL' || filterRole !== 'ALL') && (
               <button
                 onClick={() => {
@@ -595,7 +595,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                   setFilterSlaStatus('ALL');
                   setFilterRole('ALL');
                 }}
-                className="text-[11px] text-[#1F4E7A] hover:underline font-semibold ml-2"
+                className="text-[11px] text-[#00205B] hover:underline font-semibold ml-2"
               >
                 Reset All Filters
               </button>
@@ -731,9 +731,9 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
       {/* 4. MEANINGFUL SCAN RESULT MODAL (Requirement §40) */}
       {showScanResultModal && scanResult && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full overflow-hidden border border-[#B9D5F0]">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-center">
               <div className="flex items-center gap-2 font-bold text-sm">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
                 Portfolio Exception Scan Complete
@@ -749,15 +749,15 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="p-2.5 bg-blue-50 border border-blue-100 rounded">
                   <div className="text-[10px] text-[#5B6472] uppercase font-bold">Policies Scanned</div>
-                  <div className="text-xl font-bold text-[#1F4E7A]">{scanResult.policiesEvaluated}</div>
+                  <div className="text-xl font-bold text-[#00205B]">{scanResult.policiesEvaluated}</div>
                 </div>
                 <div className="p-2.5 bg-blue-50 border border-blue-100 rounded">
                   <div className="text-[10px] text-[#5B6472] uppercase font-bold">Collaterals Scanned</div>
-                  <div className="text-xl font-bold text-[#1F4E7A]">{scanResult.collateralsEvaluated}</div>
+                  <div className="text-xl font-bold text-[#00205B]">{scanResult.collateralsEvaluated}</div>
                 </div>
                 <div className="p-2.5 bg-blue-50 border border-blue-100 rounded">
                   <div className="text-[10px] text-[#5B6472] uppercase font-bold">Documents Scanned</div>
-                  <div className="text-xl font-bold text-[#1F4E7A]">{scanResult.documentsEvaluated}</div>
+                  <div className="text-xl font-bold text-[#00205B]">{scanResult.documentsEvaluated}</div>
                 </div>
               </div>
 
@@ -810,10 +810,10 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
       {/* 5. 9-SECTION EXCEPTION INVESTIGATION DRAWER (Requirement §46) */}
       {showDetailDrawer && selectedExc && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 flex justify-end z-50">
+        <div className="fixed inset-0 bg-[#00205B]/60 flex justify-end z-50">
           <div className="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col overflow-hidden text-xs">
             {/* Header */}
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-start">
+            <div className="p-4 bg-[#00205B] text-white flex justify-between items-start">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-bold tracking-tight">{selectedExc.exceptionType}</h2>
@@ -853,7 +853,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
               {/* SECTION 1: EXCEPTION SUMMARY */}
               <div className="cims-card p-4 bg-[#EFF5FB] border-[#DCE9F5] space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   <span>Section 1: Exception Summary</span>
                   <span className="font-mono text-[10px] text-[#5B6472]">Source: {selectedExc.detectionSource || 'AUTOMATED_SCANNER'}</span>
                 </div>
@@ -863,28 +863,28 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2 border-t border-[#DCE9F5] text-[11px]">
                   <div>
                     <span className="text-[#5B6472] block">Entity Type</span>
-                    <strong className="text-[#102E4A]">{selectedExc.entityType}</strong>
+                    <strong className="text-[#00205B]">{selectedExc.entityType}</strong>
                   </div>
                   <div>
                     <span className="text-[#5B6472] block">Severity Level</span>
-                    <strong className="text-[#102E4A]">{selectedExc.severity}</strong>
+                    <strong className="text-[#00205B]">{selectedExc.severity}</strong>
                   </div>
                   <div>
                     <span className="text-[#5B6472] block">Days Open</span>
-                    <strong className="text-[#102E4A]">{selectedExc.daysOpen || 0} days</strong>
+                    <strong className="text-[#00205B]">{selectedExc.daysOpen || 0} days</strong>
                   </div>
                   <div>
                     <span className="text-[#5B6472] block">Current Status</span>
-                    <strong className="text-[#102E4A]">{selectedExc.status}</strong>
+                    <strong className="text-[#00205B]">{selectedExc.status}</strong>
                   </div>
                 </div>
               </div>
 
               {/* SECTION 1B: WHY THIS EXCEPTION EXISTS (DIAGNOSTIC ANALYSIS - Requirement §18 & §46) */}
               <div className="cims-card p-4 border-[#B9D5F0] bg-white space-y-3 shadow-sm">
-                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4 text-[#1F4E7A]" />
+                    <AlertCircle className="w-4 h-4 text-[#00205B]" />
                     Section 1B: Why This Exception Exists (Live System Diagnosis)
                   </span>
                   <span className="text-[10px] text-[#5B6472] font-semibold">Rule: {selectedExc.exceptionType}</span>
@@ -894,7 +894,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Underinsured Collateral' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded text-amber-900 leading-relaxed font-medium">
-                      Collateral <strong className="text-[#102E4A]">{matchedCollateral?.code || selectedExc.collateralId}</strong> requires insurance coverage of{' '}
+                      Collateral <strong className="text-[#00205B]">{matchedCollateral?.code || selectedExc.collateralId}</strong> requires insurance coverage of{' '}
                       <strong>ETB {(matchedCollateral?.valuationAmount || 0).toLocaleString()}</strong> based on central adequacy policy. Currently recognized active insurance coverage is{' '}
                       <strong>ETB {(matchedCollateral?.insuredAmount || 0).toLocaleString()}</strong> (<strong>{(matchedCollateral?.netInsuranceCoveragePct || 0).toFixed(1)}%</strong> of valuation), resulting in an active insurance shortfall of{' '}
                       <strong className="text-red-700 font-bold">ETB {Math.max(0, (matchedCollateral?.valuationAmount || 0) - (matchedCollateral?.insuredAmount || 0)).toLocaleString()}</strong>.
@@ -902,11 +902,11 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-slate-50 border border-slate-200 rounded text-[11px]">
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Valuation Amount</span>
-                        <strong className="text-[#102E4A]">ETB {(matchedCollateral?.valuationAmount || 0).toLocaleString()}</strong>
+                        <strong className="text-[#00205B]">ETB {(matchedCollateral?.valuationAmount || 0).toLocaleString()}</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Haircut / NSV</span>
-                        <strong className="text-[#102E4A]">{matchedCollateral?.haircut || 0}% / ETB {(matchedCollateral?.nsv || 0).toLocaleString()}</strong>
+                        <strong className="text-[#00205B]">{matchedCollateral?.haircut || 0}% / ETB {(matchedCollateral?.nsv || 0).toLocaleString()}</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Sum Insured</span>
@@ -923,22 +923,22 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Expired Policy' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-rose-50/80 border border-rose-200 rounded text-rose-900 leading-relaxed font-medium">
-                      Insurance Policy <strong className="text-[#102E4A]">{matchedPolicy?.policyNumber || selectedExc.policyId}</strong> expired on{' '}
+                      Insurance Policy <strong className="text-[#00205B]">{matchedPolicy?.policyNumber || selectedExc.policyId}</strong> expired on{' '}
                       <strong>{matchedPolicy?.expiryDate?.substring(0, 10) || 'N/A'}</strong> and is currently{' '}
                       <strong className="text-rose-700 font-bold">{selectedExc.daysOverdue || 0} days overdue</strong>. No valid active renewal endorsement or replacement policy has been registered.
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-slate-50 border border-slate-200 rounded text-[11px]">
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Insurer</span>
-                        <strong className="text-[#102E4A]">{matchedPolicy?.insurerName || 'N/A'}</strong>
+                        <strong className="text-[#00205B]">{matchedPolicy?.insurerName || 'N/A'}</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Coverage Type</span>
-                        <strong className="text-[#102E4A]">{matchedPolicy?.coverageType || 'Comprehensive'}</strong>
+                        <strong className="text-[#00205B]">{matchedPolicy?.coverageType || 'Comprehensive'}</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Insured Amount</span>
-                        <strong className="text-[#102E4A]">ETB {(matchedPolicy?.insuredAmount || 0).toLocaleString()}</strong>
+                        <strong className="text-[#00205B]">ETB {(matchedPolicy?.insuredAmount || 0).toLocaleString()}</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Expiry Date</span>
@@ -951,16 +951,16 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Missing Insurance' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-red-50/80 border border-red-200 rounded text-red-900 leading-relaxed font-medium">
-                      Collateral <strong className="text-[#102E4A]">{matchedCollateral?.code || selectedExc.collateralId}</strong> ({matchedCollateral?.category}) has a mandatory insurance requirement under central credit policy, but has no valid active insurance policy registered.
+                      Collateral <strong className="text-[#00205B]">{matchedCollateral?.code || selectedExc.collateralId}</strong> ({matchedCollateral?.category}) has a mandatory insurance requirement under central credit policy, but has no valid active insurance policy registered.
                     </div>
                     <div className="grid grid-cols-3 gap-2 p-2 bg-slate-50 border border-slate-200 rounded text-[11px]">
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Mandatory Rule</span>
-                        <strong className="text-[#102E4A]">Tangible Security Policy</strong>
+                        <strong className="text-[#00205B]">Tangible Security Policy</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Collateral Category</span>
-                        <strong className="text-[#102E4A]">{matchedCollateral?.category || 'Tangible Asset'}</strong>
+                        <strong className="text-[#00205B]">{matchedCollateral?.category || 'Tangible Asset'}</strong>
                       </div>
                       <div>
                         <span className="text-[#5B6472] block text-[10px]">Active Policy Status</span>
@@ -973,10 +973,10 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Missing Mandatory Document' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded text-amber-900 leading-relaxed font-medium">
-                      Collateral <strong className="text-[#102E4A]">{matchedCollateral?.code || selectedExc.collateralId}</strong> requires mandatory verified ownership/legal documentation per credit policy.
+                      Collateral <strong className="text-[#00205B]">{matchedCollateral?.code || selectedExc.collateralId}</strong> requires mandatory verified ownership/legal documentation per credit policy.
                     </div>
                     <div className="p-2 bg-slate-50 border border-slate-200 rounded space-y-1 text-[11px]">
-                      <div className="font-bold text-[#102E4A]">Attached Repository Documents for this Collateral:</div>
+                      <div className="font-bold text-[#00205B]">Attached Repository Documents for this Collateral:</div>
                       {documents.filter(d => d.collateralId === selectedExc.collateralId || d.entityId === selectedExc.collateralId).length === 0 ? (
                         <div className="text-slate-500 italic text-[10px]">No documents attached to this collateral record in DMS.</div>
                       ) : (
@@ -996,7 +996,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Unapproved Insurer' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded text-amber-900 leading-relaxed font-medium">
-                      Policy <strong className="text-[#102E4A]">{matchedPolicy?.policyNumber || selectedExc.policyId}</strong> was placed with underwriter{' '}
+                      Policy <strong className="text-[#00205B]">{matchedPolicy?.policyNumber || selectedExc.policyId}</strong> was placed with underwriter{' '}
                       <strong className="text-rose-700 font-bold">{matchedPolicy?.insurerName || 'Unapproved Carrier'}</strong>, which is not an active approved insurer in the bank master register. Replacement or formal sanction waiver is required.
                     </div>
                   </div>
@@ -1005,7 +1005,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Renewal Delay' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-purple-50/80 border border-purple-200 rounded text-purple-900 leading-relaxed font-medium">
-                      Renewal Delay Breach: Policy <strong className="text-[#102E4A]">{matchedPolicy?.policyNumber || selectedExc.policyId}</strong> expired on{' '}
+                      Renewal Delay Breach: Policy <strong className="text-[#00205B]">{matchedPolicy?.policyNumber || selectedExc.policyId}</strong> expired on{' '}
                       <strong>{matchedPolicy?.expiryDate?.substring(0, 10)}</strong> and is now{' '}
                       <strong className="text-purple-950 font-bold">{selectedExc.daysOverdue || 0} days past expiry</strong>, exceeding the bank renewal grace window without a registered renewal or replacement policy.
                     </div>
@@ -1018,7 +1018,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                       Data Inconsistency Detected: {selectedExc.description}
                     </div>
                     <div className="p-2 bg-slate-50 border border-slate-200 rounded text-[11px] space-y-1">
-                      <div className="font-bold text-[#102E4A]">Inconsistency Diagnosis Breakdown:</div>
+                      <div className="font-bold text-[#00205B]">Inconsistency Diagnosis Breakdown:</div>
                       <div className="grid grid-cols-4 gap-1 text-[10px] font-semibold text-[#5B6472] border-b pb-1">
                         <div>Field</div>
                         <div>Current Value</div>
@@ -1038,7 +1038,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Duplicate Insurance Policy' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-amber-50 border border-amber-200 rounded text-amber-900 leading-relaxed font-medium">
-                      Duplicate Policy Alert: Active policy number <strong className="text-[#102E4A] font-mono">{selectedExc.entityId}</strong> is registered multiple times across collateral assets in the policy register.
+                      Duplicate Policy Alert: Active policy number <strong className="text-[#00205B] font-mono">{selectedExc.entityId}</strong> is registered multiple times across collateral assets in the policy register.
                     </div>
                   </div>
                 )}
@@ -1046,7 +1046,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 {selectedExc.exceptionType === 'Insurer Concentration Breach' && (
                   <div className="space-y-2 text-xs">
                     <div className="p-2.5 bg-rose-50 border border-rose-200 rounded text-rose-900 leading-relaxed font-medium">
-                      Insurer Concentration Breach: Insurer <strong className="text-[#102E4A]">{selectedExc.entityId}</strong> exceeds the regulatory single-insurer exposure limit cap across the bank portfolio.
+                      Insurer Concentration Breach: Insurer <strong className="text-[#00205B]">{selectedExc.entityId}</strong> exceeds the regulatory single-insurer exposure limit cap across the bank portfolio.
                     </div>
                   </div>
                 )}
@@ -1062,7 +1062,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
               {/* SECTION 2: AFFECTED BUSINESS CONTEXT & NAVIGATION (Requirement §25 & §41) */}
               <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                <div className="text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider flex items-center justify-between">
+                <div className="text-[11px] font-bold uppercase text-[#00205B] tracking-wider flex items-center justify-between">
                   <span>Section 2: Affected Business Context</span>
                   <span className="text-[10px] text-[#5B6472] font-normal">Click links to navigate to authoritative CIMS records</span>
                 </div>
@@ -1071,12 +1071,12 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                     <div className="p-2 bg-slate-50 border border-slate-200 rounded flex justify-between items-center">
                       <div>
                         <div className="text-[10px] text-[#5B6472]">Customer CIF</div>
-                        <div className="font-mono font-bold text-[#102E4A]">{selectedExc.customerCif}</div>
+                        <div className="font-mono font-bold text-[#00205B]">{selectedExc.customerCif}</div>
                       </div>
                       {onNavigate && (
                         <button
                           onClick={() => onNavigate('customers', { customerId: selectedExc.customerId, cif: selectedExc.customerCif })}
-                          className="btn-ghost p-1 text-[#1F4E7A] hover:bg-white text-[11px] flex items-center gap-1"
+                          className="btn-ghost p-1 text-[#00205B] hover:bg-white text-[11px] flex items-center gap-1"
                           title="Open Customer 360"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -1089,12 +1089,12 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                     <div className="p-2 bg-slate-50 border border-slate-200 rounded flex justify-between items-center">
                       <div>
                         <div className="text-[10px] text-[#5B6472]">Collateral ID</div>
-                        <div className="font-mono font-bold text-[#102E4A]">{selectedExc.collateralId}</div>
+                        <div className="font-mono font-bold text-[#00205B]">{selectedExc.collateralId}</div>
                       </div>
                       {onNavigate && (
                         <button
                           onClick={() => onNavigate('collateral', { collateralId: selectedExc.collateralId })}
-                          className="btn-ghost p-1 text-[#1F4E7A] hover:bg-white text-[11px] flex items-center gap-1"
+                          className="btn-ghost p-1 text-[#00205B] hover:bg-white text-[11px] flex items-center gap-1"
                           title="Open Collateral Record"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -1107,12 +1107,12 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                     <div className="p-2 bg-slate-50 border border-slate-200 rounded flex justify-between items-center">
                       <div>
                         <div className="text-[10px] text-[#5B6472]">Insurance Policy</div>
-                        <div className="font-mono font-bold text-[#102E4A]">{selectedExc.policyId}</div>
+                        <div className="font-mono font-bold text-[#00205B]">{selectedExc.policyId}</div>
                       </div>
                       {onNavigate && (
                         <button
                           onClick={() => onNavigate('insurance', { policyId: selectedExc.policyId })}
-                          className="btn-ghost p-1 text-[#1F4E7A] hover:bg-white text-[11px] flex items-center gap-1"
+                          className="btn-ghost p-1 text-[#00205B] hover:bg-white text-[11px] flex items-center gap-1"
                           title="Open Policy Record"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -1125,12 +1125,12 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                     <div className="p-2 bg-slate-50 border border-slate-200 rounded flex justify-between items-center">
                       <div>
                         <div className="text-[10px] text-[#5B6472]">Facility / Loan Ref</div>
-                        <div className="font-mono font-bold text-[#102E4A]">{selectedExc.loanReference}</div>
+                        <div className="font-mono font-bold text-[#00205B]">{selectedExc.loanReference}</div>
                       </div>
                       {onNavigate && (
                         <button
                           onClick={() => onNavigate('facilities', { facilityId: selectedExc.facilityId, loanReference: selectedExc.loanReference })}
-                          className="btn-ghost p-1 text-[#1F4E7A] hover:bg-white text-[11px] flex items-center gap-1"
+                          className="btn-ghost p-1 text-[#00205B] hover:bg-white text-[11px] flex items-center gap-1"
                           title="Open Facility Record"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -1141,17 +1141,17 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 text-[#5B6472]">
-                  <div>Branch: <strong className="text-[#102E4A]">{selectedExc.branch || 'Head Office'}</strong></div>
-                  <div>District: <strong className="text-[#102E4A]">{selectedExc.district || 'Central District'}</strong></div>
-                  <div>Segment: <strong className="text-[#102E4A]">{selectedExc.businessSegment || 'Corporate Banking'}</strong></div>
+                  <div>Branch: <strong className="text-[#00205B]">{selectedExc.branch || 'Head Office'}</strong></div>
+                  <div>District: <strong className="text-[#00205B]">{selectedExc.district || 'Central District'}</strong></div>
+                  <div>Segment: <strong className="text-[#00205B]">{selectedExc.businessSegment || 'Corporate Banking'}</strong></div>
                 </div>
               </div>
 
               {/* SECTION 3: OWNERSHIP & CONTROLLED REASSIGNMENT (Requirements §8, §9, §12) */}
               <div className="cims-card p-4 border-[#B9D5F0] bg-slate-50/60 space-y-3">
-                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <UserCheck className="w-4 h-4 text-[#1F4E7A]" />
+                    <UserCheck className="w-4 h-4 text-[#00205B]" />
                     Section 3: Ownership & Controlled Assignment
                   </span>
                   <span className="font-mono text-[10px] text-[#5B6472]">
@@ -1162,7 +1162,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                 <div className="p-2.5 bg-white border border-[#DCE9F5] rounded grid grid-cols-2 gap-2 text-xs">
                   <div>
                     <span className="text-[#5B6472] block text-[10px]">Current Assigned Role</span>
-                    <strong className="text-[#1F4E7A]">{selectedExc.assignedToRole || 'RO'}</strong>
+                    <strong className="text-[#00205B]">{selectedExc.assignedToRole || 'RO'}</strong>
                   </div>
                   <div>
                     <span className="text-[#5B6472] block text-[10px]">Current Assigned User</span>
@@ -1227,7 +1227,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                         type="button"
                         disabled={assigningLoading || (!assignedUser && !assignedRole)}
                         onClick={handleAssignUser}
-                        className="btn-secondary py-1 px-3 text-xs flex items-center gap-1 font-bold text-[#102E4A]"
+                        className="btn-secondary py-1 px-3 text-xs flex items-center gap-1 font-bold text-[#00205B]"
                       >
                         {assigningLoading ? 'Reassigning...' : 'Save Reassignment'}
                       </button>
@@ -1238,20 +1238,20 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
               {/* SECTION 4: SLA MONITORING & HIERARCHICAL ESCALATION (Requirements §15, §16, §17) */}
               <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <Hourglass className="w-4 h-4 text-[#1F4E7A]" />
+                    <Hourglass className="w-4 h-4 text-[#00205B]" />
                     Section 4: SLA & Escalation Hierarchy
                   </span>
                   <span className="font-bold text-[11px]">
-                    Status: <span className={selectedExc.slaStatus === 'Overdue' ? 'text-rose-600 font-bold' : 'text-[#1F4E7A]'}>{selectedExc.slaStatus || 'Within SLA'}</span>
+                    Status: <span className={selectedExc.slaStatus === 'Overdue' ? 'text-rose-600 font-bold' : 'text-[#00205B]'}>{selectedExc.slaStatus || 'Within SLA'}</span>
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded">
                   <div>
                     <span className="text-[#5B6472] text-[10px] block">SLA Target Due Date</span>
-                    <strong className="font-mono text-[#102E4A]">{selectedExc.slaDueDate?.substring(0, 10) || 'Unconfigured'}</strong>
+                    <strong className="font-mono text-[#00205B]">{selectedExc.slaDueDate?.substring(0, 10) || 'Unconfigured'}</strong>
                   </div>
                   <div>
                     <span className="text-[#5B6472] text-[10px] block">Days Overdue</span>
@@ -1315,9 +1315,9 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
               {/* SECTION 5: INVESTIGATION HISTORY (Requirements §7 & §20 - MULTI-RECORD) */}
               <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4 text-[#1F4E7A]" />
+                    <MessageSquare className="w-4 h-4 text-[#00205B]" />
                     Section 5: Investigation History ({investigationNotes.length} Notes)
                   </span>
                   {historyLoading && <span className="text-[10px] text-[#5B6472]">Refreshing notes...</span>}
@@ -1332,7 +1332,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                     investigationNotes.map((note) => (
                       <div key={note.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded text-xs space-y-1">
                         <div className="flex items-center justify-between text-[10.5px]">
-                          <span className="font-bold text-[#1F4E7A]">{note.authorName} ({note.authorId})</span>
+                          <span className="font-bold text-[#00205B]">{note.authorName} ({note.authorId})</span>
                           <span className="text-[#5B6472] font-mono text-[10px]">{note.createdAt?.substring(0, 16)}</span>
                         </div>
                         <div className="text-[#101828] text-xs leading-relaxed">{note.noteText}</div>
@@ -1351,14 +1351,14 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                       placeholder="Add investigation updates, inspection findings, borrower contact logs..."
                       value={newInvestigationNote}
                       onChange={(e) => setNewInvestigationNote(e.target.value)}
-                      className="w-full p-2 border border-[#E2E8F0] rounded text-xs focus:ring-1 focus:ring-[#1F4E7A]"
+                      className="w-full p-2 border border-[#E2E8F0] rounded text-xs focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806]"
                     />
                     <div className="flex justify-end">
                       <button
                         type="button"
                         disabled={addingNoteLoading || !newInvestigationNote.trim()}
                         onClick={handleAddInvestigationNote}
-                        className="btn-secondary py-1 px-3 text-xs font-semibold text-[#1F4E7A]"
+                        className="btn-secondary py-1 px-3 text-xs font-semibold text-[#00205B]"
                       >
                         {addingNoteLoading ? 'Saving...' : 'Add Note to History'}
                       </button>
@@ -1370,7 +1370,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
               {/* SECTION 6: CORRECTIVE ACTION SELECTION (Requirement §20 & §21 & §30) */}
               {selectedExc.status !== 'Resolved' && !isReadOnly ? (
                 <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                  <div className="text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider flex items-center justify-between">
+                  <div className="text-[11px] font-bold uppercase text-[#00205B] tracking-wider flex items-center justify-between">
                     <span>Section 6: Type-Specific Corrective Action Selection <span className="text-red-600">*</span></span>
                     <span className="text-[10px] text-[#5B6472] font-normal">Filtered by exception category</span>
                   </div>
@@ -1445,8 +1445,8 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
               {/* SECTION 7: SUPPORTING EVIDENCE (Requirement §20) */}
               {selectedExc.status !== 'Resolved' && !isReadOnly ? (
                 <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
-                    <Paperclip className="w-4 h-4 text-[#1F4E7A]" />
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
+                    <Paperclip className="w-4 h-4 text-[#00205B]" />
                     Section 7: Supporting Evidence Document
                   </div>
                   <div className="space-y-2">
@@ -1481,9 +1481,9 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
               {/* SECTION 8: ACTIVITY / AUDIT & ESCALATION HISTORY (Requirements §18 & §31) */}
               <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <History className="w-4 h-4 text-[#1F4E7A]" />
+                    <History className="w-4 h-4 text-[#00205B]" />
                     Section 8: Escalation & Assignment Audit Trail
                   </span>
                 </div>
@@ -1529,7 +1529,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
 
               {/* SECTION 9: RESOLUTION CONTROLS & FINAL AUDIT RECORD (Requirements §20, §47, §48) */}
               <div className="cims-card p-4 border-[#E2E8F0] space-y-3">
-                <div className="text-[11px] font-bold uppercase text-[#1F4E7A] tracking-wider">
+                <div className="text-[11px] font-bold uppercase text-[#00205B] tracking-wider">
                   Section 9: Resolution Status & Closure Notes
                 </div>
 
@@ -1544,7 +1544,7 @@ export const ExceptionManager: React.FC<ExceptionManagerProps> = ({
                       placeholder="Mandatory summary of investigations, verification of policy/document corrective actions, and justification for closure..."
                       value={resolutionNotes}
                       onChange={(e) => setResolutionNotes(e.target.value)}
-                      className="w-full p-2.5 border border-[#E2E8F0] rounded text-xs focus:ring-1 focus:ring-[#1F4E7A]"
+                      className="w-full p-2.5 border border-[#E2E8F0] rounded text-xs focus:ring-1 focus:ring-[#D48806] focus:border-[#D48806]"
                     />
                     {!resolutionNotes.trim() && (
                       <p className="text-[10px] text-amber-700 font-semibold">

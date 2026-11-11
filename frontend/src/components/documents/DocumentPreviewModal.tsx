@@ -812,7 +812,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Bar */}
-        <div className="px-5 py-3.5 bg-[#102E4A] text-white flex justify-between items-center border-b border-[#1F4E7A] flex-wrap gap-2">
+        <div className="px-5 py-3.5 bg-[#00205B] text-white flex justify-between items-center border-b border-[#1F4E7A] flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-white border border-white/20 shadow-xs">
               {docKind === 'docx' ? (
@@ -880,7 +880,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             {/* Download Button */}
             <button
               onClick={handleDownloadCurrent}
-              className="px-3 py-1.5 bg-[#1F4E7A] hover:bg-[#286095] border border-blue-400/30 rounded-lg text-white font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="px-3 py-1.5 bg-[#00205B] hover:bg-[#286095] border border-blue-400/30 rounded-lg text-white font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
               title="Download Document"
             >
               <Download className="w-3.5 h-3.5" />
@@ -907,7 +907,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <button
               onClick={() => setActiveTab('preview')}
               className={`px-3 py-1 rounded-lg font-bold transition-all text-xs cursor-pointer ${
-                activeTab === 'preview' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-200/70'
+                activeTab === 'preview' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               Document Preview
@@ -915,7 +915,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <button
               onClick={() => setActiveTab('metadata')}
               className={`px-3 py-1 rounded-lg font-bold transition-all text-xs cursor-pointer ${
-                activeTab === 'metadata' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-200/70'
+                activeTab === 'metadata' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               Metadata &amp; Legal Seal
@@ -923,7 +923,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <button
               onClick={() => setActiveTab('versions')}
               className={`px-3 py-1 rounded-lg font-bold transition-all text-xs cursor-pointer ${
-                activeTab === 'versions' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-200/70'
+                activeTab === 'versions' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               Version History ({docVersions.length > 0 ? docVersions.length : 1})
@@ -937,7 +937,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                 <button
                   onClick={() => setDocViewMode('file')}
                   className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                    docViewMode === 'file' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    docViewMode === 'file' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                   title="View original uploaded file or digitized document"
                 >
@@ -946,7 +946,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                 <button
                   onClick={() => setDocViewMode('certificate')}
                   className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                    docViewMode === 'certificate' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    docViewMode === 'certificate' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                   title="View vault custody certificate"
                 >
@@ -1014,7 +1014,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         <div className="flex-1 bg-slate-200/80 p-3 sm:p-5 overflow-auto min-h-[540px] flex items-center justify-center">
           {isLoadingContent ? (
             <div className="text-center space-y-2 bg-white p-6 rounded-xl shadow-md border border-slate-300">
-              <RefreshCw className="w-7 h-7 text-[#1F4E7A] animate-spin mx-auto" />
+              <RefreshCw className="w-7 h-7 text-[#00205B] animate-spin mx-auto" />
               <div className="text-xs font-bold text-slate-700">Loading document file stream...</div>
             </div>
           ) : activeTab === 'preview' ? (
@@ -1028,8 +1028,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                       {/* Sub-toolbar for DOCX: toggle Pages vs Reader view */}
                       <div className="mb-3 flex items-center justify-between w-full max-w-4xl bg-white px-3.5 py-2 rounded-xl border border-slate-300 shadow-sm text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-[#102E4A] flex items-center gap-1.5">
-                            <FileIcon className="w-4 h-4 text-[#1F4E7A]" />
+                          <span className="font-bold text-[#00205B] flex items-center gap-1.5">
+                            <FileIcon className="w-4 h-4 text-[#00205B]" />
                             {currentDoc.fileName || currentDoc.name}
                           </span>
                           <span className="text-slate-300">•</span>
@@ -1045,7 +1045,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                               onClick={() => setDocxSubMode('pages')}
                               className={`px-3 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer ${
                                 docxSubMode === 'pages'
-                                  ? 'bg-[#1F4E7A] text-white shadow-2xs font-bold'
+                                  ? 'bg-[#00205B] text-white shadow-2xs font-bold'
                                   : 'text-slate-600 hover:text-slate-900'
                               }`}
                             >
@@ -1055,7 +1055,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                               onClick={() => setDocxSubMode('reader')}
                               className={`px-3 py-1 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer ${
                                 docxSubMode === 'reader'
-                                  ? 'bg-[#1F4E7A] text-white shadow-2xs font-bold'
+                                  ? 'bg-[#00205B] text-white shadow-2xs font-bold'
                                   : 'text-slate-600 hover:text-slate-900'
                               }`}
                             >
@@ -1074,7 +1074,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
                       {docxRendering && (
                         <div className="p-8 text-center space-y-2 bg-white rounded-xl shadow-xs border border-slate-200 w-full max-w-4xl">
-                          <RefreshCw className="w-6 h-6 animate-spin text-[#1F4E7A] mx-auto" />
+                          <RefreshCw className="w-6 h-6 animate-spin text-[#00205B] mx-auto" />
                           <div className="text-xs font-bold text-slate-700">Rendering Word Document pages...</div>
                         </div>
                       )}
@@ -1266,10 +1266,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                         <img src="/dashen-logo.png" alt="Dashen Bank Logo" className="w-full h-full object-contain" />
                       </div>
                       <div>
-                        <div className="text-[11px] font-black uppercase tracking-wider text-[#1F4E7A]">
+                        <div className="text-[11px] font-black uppercase tracking-wider text-[#00205B]">
                           Dashen Bank S.C. (ዳሸን ባንክ)
                         </div>
-                        <h1 className="text-xl font-black text-[#102E4A] mt-0.5">
+                        <h1 className="text-xl font-black text-[#00205B] mt-0.5">
                           DMS REPOSITORY VAULT CERTIFICATE
                         </h1>
                         <p className="text-xs text-slate-500 font-medium">
@@ -1278,7 +1278,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-block px-3 py-1 bg-[#102E4A] text-white text-[10px] font-black tracking-wider uppercase rounded">
+                      <span className="inline-block px-3 py-1 bg-[#00205B] text-white text-[10px] font-black tracking-wider uppercase rounded">
                         OFFICIAL RECORD
                       </span>
                       <div className="text-[10px] font-mono text-slate-500 mt-1">
@@ -1310,8 +1310,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
                   {/* Remarks & Legal Clauses */}
                   <div className="p-3.5 bg-[#EFF5FB] border border-[#B9D3EB] rounded-lg text-xs space-y-1">
-                    <div className="font-bold text-[#102E4A] flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-[#1F4E7A]" />
+                    <div className="font-bold text-[#00205B] flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-[#00205B]" />
                       Document Integrity & Legal Enforceability Clause
                     </div>
                     <p className="text-[#334155] text-[11px] leading-relaxed">
@@ -1354,7 +1354,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                       </button>
                       <button
                         onClick={handleDownloadCurrent}
-                        className="px-3 py-1.5 bg-[#1F4E7A] hover:bg-[#102E4A] text-white rounded-lg font-bold flex items-center gap-1 text-xs cursor-pointer shadow-2xs"
+                        className="px-3 py-1.5 bg-[#00205B] hover:bg-[#00205B] text-white rounded-lg font-bold flex items-center gap-1 text-xs cursor-pointer shadow-2xs"
                       >
                         <Download className="w-3.5 h-3.5" /> Download
                       </button>
@@ -1372,11 +1372,11 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           ) : activeTab === 'metadata' ? (
             /* TAB 2: DETAILED METADATA & LEGAL PARAMETERS */
             <div className="w-full max-w-2xl bg-white border border-slate-300 rounded-xl p-6 shadow-sm space-y-4 text-xs">
-              <h4 className="font-bold text-sm text-[#102E4A] border-b pb-2 flex items-center justify-between">
+              <h4 className="font-bold text-sm text-[#00205B] border-b pb-2 flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#1F4E7A]" /> Detailed Document Parameters
+                  <FileText className="w-4 h-4 text-[#00205B]" /> Detailed Document Parameters
                 </span>
-                <span className="px-2 py-0.5 rounded font-mono font-bold bg-[#EFF5FB] text-[#1F4E7A] border border-[#B9D3EB]">
+                <span className="px-2 py-0.5 rounded font-mono font-bold bg-[#EFF5FB] text-[#00205B] border border-[#B9D3EB]">
                   {currentDoc.id}
                 </span>
               </h4>
@@ -1395,7 +1395,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                 </div>
                 <div className="space-y-1">
                   <span className="text-slate-400 font-medium">Target Entity ID:</span>
-                  <div className="font-mono font-bold text-[#1F4E7A]">
+                  <div className="font-mono font-bold text-[#00205B]">
                     {linkedCollateral?.code || currentDoc.entityId} ({currentDoc.entityType})
                   </div>
                 </div>
@@ -1472,13 +1472,13 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             /* TAB 3: VERSION HISTORY AUDIT TRAIL */
             <div className="w-full max-w-3xl bg-white border border-slate-300 rounded-xl p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-2">
-                <h4 className="font-bold text-sm text-[#102E4A] flex items-center gap-2">
-                  <GitBranch className="w-4 h-4 text-[#1F4E7A]" /> Complete Version Audit Trail
+                <h4 className="font-bold text-sm text-[#00205B] flex items-center gap-2">
+                  <GitBranch className="w-4 h-4 text-[#00205B]" /> Complete Version Audit Trail
                 </h4>
                 {canUploadVersion && onUploadNewVersion && (
                   <button
                     onClick={() => onUploadNewVersion(currentDoc)}
-                    className="px-3 py-1 bg-[#1F4E7A] text-white rounded text-xs font-bold hover:bg-[#102E4A] transition-colors cursor-pointer"
+                    className="px-3 py-1 bg-[#00205B] text-white rounded text-xs font-bold hover:bg-[#00205B] transition-colors cursor-pointer"
                   >
                     + Upload v{(currentDoc.version || 1) + 1}
                   </button>
@@ -1495,7 +1495,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-xs text-[#102E4A]">v{v.version || 1}</span>
+                        <span className="font-mono font-bold text-xs text-[#00205B]">v{v.version || 1}</span>
                         {v.isLatest !== false ? (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
                             Current Active
@@ -1517,7 +1517,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono text-slate-400">{formatFileSize(v.fileSize)}</span>
                       {v.id === currentDoc.id ? (
-                        <span className="px-2 py-0.5 bg-[#1F4E7A] text-white rounded text-[10px] font-bold">
+                        <span className="px-2 py-0.5 bg-[#00205B] text-white rounded text-[10px] font-bold">
                           Viewing
                         </span>
                       ) : (
@@ -1550,7 +1550,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         {/* Dedicated Sticky Bottom Footer Bar: Always visible under all tabs, scroll positions, and viewports */}
         <div className="px-5 py-3 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-2 shrink-0 shadow-lg">
           <div className="flex items-center gap-2 sm:gap-3 text-slate-600">
-            <span className="font-bold text-[#102E4A] truncate max-w-[200px] sm:max-w-md">
+            <span className="font-bold text-[#00205B] truncate max-w-[200px] sm:max-w-md">
               {currentDoc.name || currentDoc.fileName || 'Document'}
             </span>
             <span className="text-slate-300">•</span>
@@ -1577,7 +1577,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             </button>
             <button
               onClick={handleDownloadCurrent}
-              className="px-3 py-1.5 bg-[#1F4E7A] hover:bg-[#102E4A] text-white rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer text-xs shadow-2xs"
+              className="px-3 py-1.5 bg-[#00205B] hover:bg-[#00205B] text-white rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer text-xs shadow-2xs"
               title="Download Document"
             >
               <Download className="w-3.5 h-3.5" />
