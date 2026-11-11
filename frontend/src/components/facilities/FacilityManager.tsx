@@ -192,7 +192,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
               setSelectedFacility(r);
               setShowDetailModal(true);
             }}
-            className="btn-ghost py-1 px-2 text-xs flex items-center gap-1"
+            className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1.5"
           >
             <Eye className="w-3.5 h-3.5" />
             View

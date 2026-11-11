@@ -1427,7 +1427,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setAmendDocuments([]);
                             setShowAmendModal(true);
                           }}
-                          className="btn-ghost py-1 px-2 text-xs text-white border border-white/30 rounded flex items-center gap-1 hover:bg-white/10"
+                          className="py-1 px-2.5 text-xs text-white font-semibold bg-white/10 hover:bg-white/20 border border-white/30 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Edit className="w-3.5 h-3.5" />
                           Amend
@@ -1440,7 +1440,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setRenewDocuments([]);
                             setShowRenewModal(true);
                           }}
-                          className="btn-ghost py-1 px-2 text-xs text-emerald-300 border border-emerald-300/40 rounded flex items-center gap-1 hover:bg-white/10"
+                          className="py-1 px-2.5 text-xs text-emerald-200 hover:text-white font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <RotateCw className="w-3.5 h-3.5" />
                           Renew
@@ -1453,7 +1453,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setEndorseDocuments([]);
                             setShowEndorseModal(true);
                           }}
-                          className="btn-ghost py-1 px-2 text-xs text-amber-300 border border-amber-300/40 rounded flex items-center gap-1 hover:bg-white/10"
+                          className="py-1 px-2.5 text-xs text-amber-200 hover:text-white font-semibold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <FilePlus className="w-3.5 h-3.5" />
                           Endorse
@@ -1471,7 +1471,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setReplaceDocuments([]);
                             setShowReplaceModal(true);
                           }}
-                          className="btn-ghost py-1 px-2 text-xs text-blue-300 border border-blue-300/40 rounded flex items-center gap-1 hover:bg-white/10"
+                          className="py-1 px-2.5 text-xs text-blue-200 hover:text-white font-semibold bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/40 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           Replace
@@ -1481,7 +1481,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setCancelDocuments([]);
                             setShowCancelModal(true);
                           }}
-                          className="btn-ghost py-1 px-2 text-xs text-red-300 border border-red-300/40 rounded flex items-center gap-1 hover:bg-white/10"
+                          className="py-1 px-2.5 text-xs text-rose-200 hover:text-white font-semibold bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Ban className="w-3.5 h-3.5" />
                           Cancel
@@ -1491,7 +1491,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                             setCloseDocuments([]);
                             setShowCloseModal(true);
                           }}
-                          className="btn-ghost py-1 px-2 text-xs text-slate-300 border border-slate-300/40 rounded flex items-center gap-1 hover:bg-white/10"
+                          className="py-1 px-2.5 text-xs text-slate-200 hover:text-white font-semibold bg-slate-500/20 hover:bg-slate-500/30 border border-slate-400/40 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Archive className="w-3.5 h-3.5" />
                           Close
@@ -1506,7 +1506,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           setReopenDocuments([]);
                           setShowReopenModal(true);
                         }}
-                        className="btn-ghost py-1 px-2.5 text-xs text-emerald-300 border border-emerald-300/40 rounded flex items-center gap-1 hover:bg-white/10"
+                        className="py-1 px-2.5 text-xs text-emerald-200 hover:text-white font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5" />
                         Reopen Policy

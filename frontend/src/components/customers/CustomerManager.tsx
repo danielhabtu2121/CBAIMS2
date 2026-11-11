@@ -196,7 +196,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             e.stopPropagation();
             load360Data(r);
           }}
-          className="btn-ghost py-1 px-2.5 text-xs text-[#00205B] hover:text-[#D48806] font-semibold flex items-center gap-1 transition-colors"
+          className="btn-secondary py-1 px-2.5 text-xs text-[#00205B] hover:text-[#00205B] font-semibold flex items-center gap-1.5 transition-colors"
         >
           <Eye className="w-3.5 h-3.5" />
           View 360
@@ -969,7 +969,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             <div className="bg-slate-50 p-3 border-t border-slate-200 flex justify-between items-center">
               <button
                 onClick={() => setSelected360Policy(null)}
-                className="btn-ghost py-1.5 px-3 text-xs"
+                className="btn-secondary py-1.5 px-3 text-xs"
               >
                 Close Preview
               </button>

@@ -2060,7 +2060,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                           setOwnershipChangeError(null);
                           setShowOwnershipChangeModal(true);
                         }}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
+                        className="py-1 px-2.5 text-xs text-white font-semibold bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                       >
                         <UserCheck className="w-3.5 h-3.5" />
                         Change Ownership
@@ -2075,14 +2075,14 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                           setMaintainError(null);
                           setShowMaintainModal(true);
                         }}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
+                        className="py-1 px-2.5 text-xs text-white font-semibold bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                       >
                         <Edit className="w-3.5 h-3.5" />
                         Maintain Details
                       </button>
                       <button
                         onClick={() => setShowTransferModal(true)}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
+                        className="py-1 px-2.5 text-xs text-white font-semibold bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                       >
                         <ArrowRightLeft className="w-3.5 h-3.5" />
                         Transfer Segment
@@ -2090,7 +2090,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       <button
                         onClick={handleOpenReleaseModal}
                         disabled={loadingRelease}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
+                        className="py-1 px-2.5 text-xs text-white font-semibold bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
                       >
                         <Unlock className="w-3.5 h-3.5" />
                         {loadingRelease ? 'Validating…' : 'Release Security'}

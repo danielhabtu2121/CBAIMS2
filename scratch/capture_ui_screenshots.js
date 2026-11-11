@@ -99,24 +99,9 @@ async function run() {
 
       // 2. Perform Login as Branch Manager
       console.log('Logging in as Branch Manager (brmgr_user)...');
-      await page.evaluate(() => {
-        const btns = Array.from(document.querySelectorAll('button'));
-        const bmBtn = btns.find(b => b.textContent && b.textContent.includes('Branch Mgr'));
-        if (bmBtn) {
-          bmBtn.click();
-        } else {
-          const inputs = Array.from(document.querySelectorAll('input'));
-          if (inputs[0]) {
-            inputs[0].value = 'brmgr_user';
-            inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-          }
-          if (inputs[1]) {
-            inputs[1].value = 'password123';
-            inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        }
-      });
-      await sleep(500);
+      await page.type('#username-input', 'brmgr_user');
+      await page.type('#password-input', 'password123');
+      await sleep(300);
 
       const submitBtn = await page.$('button[type="submit"]');
       if (submitBtn) await submitBtn.click();

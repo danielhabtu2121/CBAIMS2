@@ -42,7 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         'bg-[#00205B] text-white hover:bg-[#0E284E] active:bg-[#07152B] border border-[#00205B] shadow-xs hover:shadow-sm focus-visible:ring-2 focus-visible:ring-[#00205B] focus-visible:ring-offset-2',
       secondary:
-        'bg-white text-[#00205B] hover:bg-slate-50 active:bg-slate-100 border border-slate-200 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2',
+        'bg-white text-[#00205B] hover:bg-slate-50 active:bg-slate-100 border border-slate-300 shadow-xs focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2',
       outline:
         'bg-transparent text-[#00205B] hover:bg-blue-50/70 border border-[#1F4E7A] focus-visible:ring-2 focus-visible:ring-[#1F4E7A] focus-visible:ring-offset-2',
       ghost:

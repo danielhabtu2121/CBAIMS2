@@ -1142,7 +1142,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                     <th className="p-3">Waiting Time</th>
                     <th className="p-3">Risk / Validation</th>
                     <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Actions</th>
+                    <th className="p-3 text-right whitespace-nowrap min-w-[140px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -1277,7 +1277,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                           <td className="p-3">
                             <StatusChip label={t.status} />
                           </td>
-                          <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          <td className="p-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => {
                                 setSelectedTask(t);

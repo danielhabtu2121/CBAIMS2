@@ -60,9 +60,10 @@
   - Restyled with sleek Dashen Navy surface, collapsed/expanded drawer, and Warm Gold active indicator.
   - Dashen Bank brand crest and typography badge in header.
   - Grouped navigation sections with role-aware indicator dots.
-  - Compact user profile footer with quick role switcher.
+  - Compact user profile footer with high-contrast collapse controls.
 - **`TopBar.tsx`**:
-  - Restyled with clean white background, gold breadcrumb accents, live system clock, search trigger, and notification drawer icon.
+  - Restyled with high-contrast Dashen Navy header, gold segment scope selector, global index search, and notification/approval action counters.
+  - 100% frozen authentication behavior with zero persona switching or bypass mechanisms.
 - **`Breadcrumbs.tsx`**: Clean chevron separation with home icon and bold current page label.
 - **`SessionTimeoutModal.tsx`**: Modernized warning dialog with dual countdown timer, stay-logged-in button in Dashen Navy, and logout button.
 - **`ChangePasswordModal.tsx`**: Clean compliance validation checklist for password policy (8+ chars, upper, digit, special character).
@@ -70,7 +71,7 @@
 ### Area 3: Login Page & Password Recovery (`LoginScreen.tsx`)
 - **Desktop Split Showcase**:
   - Left panel: Dashen Bank hero showcase with brand navy gradient, gold logo crest, security compliance seals (NBE Banking Directives, Basel III, 256-bit encryption), and key feature highlights.
-  - Right panel: High-contrast sign-in form with toggleable password visibility, quick sign-in persona chips for QA testing, and forgot-password workflow.
+  - Right panel: High-contrast sign-in form with toggleable password visibility, strictly authentic user credential authentication, and forgot-password workflow.
 - **Password Recovery Dialog**: Two-step modal (Token request -> New password compliance verification).
 
 ### Area 4: Role-Specific Dashboards (All 11 Role Views)
@@ -182,7 +183,7 @@ Captured via headless Google Chrome at 1440×900 with 1.5× device pixel ratio a
 
 | File Name | Screen Description | Resolution & Size |
 |---|---|---|
-| `01_login_screen.png` | Dashen Bank branded split login with security showcase & quick-sign-in | 2160×1350 (211 KB) |
+| `01_login_screen.png` | Dashen Bank branded split login with security showcase & compliant authentication | 2160×1350 (211 KB) |
 | `02_dashboard_overview.png` | Branch Manager portfolio overview, KPI cards & active renewal alerts | 2160×1350 (208 KB) |
 | `03_collateral_master.png` | Collateral Master DataGrid with valuation amounts and coverage chips | 2160×1350 (209 KB) |
 | `04_collateral_wizard.png` | 11-step Guided Collateral Registration Wizard stepper | 2160×1350 (208 KB) |
@@ -195,6 +196,22 @@ Captured via headless Google Chrome at 1440×900 with 1.5× device pixel ratio a
 
 ---
 
-## 5. "Not Done / Needs Logic Change" Notes
+## 5. Controlled Audit: Reversal of Quick Switches & High-Contrast Visual Hardening
+- **Strict Elimination of Persona / Quick Switches**:
+  - Completely removed test quick-fill buttons from `LoginScreen.tsx` to maintain 100% frozen, authentic sign-in behavior.
+  - Completely removed persona switcher dropdown from `TopBar.tsx`.
+- **Systematic Button & Text Contrast Hardening (WCAG AA Compliance)**:
+  - Encapsulated `.btn-primary`, `.btn-secondary`, `.btn-ghost`, and `.btn-accent` within `@layer components` in `index.css` so utility color classes are never erroneously overridden.
+  - Resolved low-contrast and invisible button states in dark containers:
+    - Collateral 360 Header: Upgraded `Change Ownership`, `Maintain Details`, `Transfer Segment`, and `Release Security` to high-contrast white action buttons (`bg-white/10 hover:bg-white/20 border-white/30 text-white`).
+    - Policy 360 Header: Upgraded `Amend`, `Renew`, `Endorse`, `Replace`, `Cancel`, `Close`, and `Reopen Policy` to distinct colored chip buttons with tinted backgrounds, crisp borders, and bright legible text (> 7:1 contrast ratio).
+    - Document Preview Header: Replaced dark navy `Download` button (`bg-[#00205B]` inside `bg-[#00205B]`) with brand Gold action button (`bg-[#D48806] hover:bg-[#B87802] text-white`).
+    - TopBar: Upgraded search bar input background, placeholder, segment selector, and action icons to bright, easily readable contrast against the `#00205B` header.
+    - Tables: Upgraded `.btn-secondary` and `.btn-ghost` actions in `CbsSimulator.tsx`, `FacilityManager.tsx`, `CustomerManager.tsx`, and `MakerCheckerInbox.tsx` with explicit borders (`border-slate-300`) and high-contrast typography.
+
+---
+
+## 6. "Not Done / Needs Logic Change" Notes
 **Status: None.**
 All requested visual modernization targets were achieved purely through CSS variables, Tailwind classes, and layout enhancements without touching backend endpoints, database schemas, authorization logic, or form validation rules.
+

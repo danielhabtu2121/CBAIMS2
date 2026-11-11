@@ -127,7 +127,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
               setSelectedCust(r);
               setShowCustModal(true);
             }}
-            className="btn-ghost py-1 px-2 text-xs"
+            className="btn-secondary py-1 px-2.5 text-xs"
           >
             Edit
           </button>
@@ -185,7 +185,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
               setSelectedFac(r);
               setShowFacModal(true);
             }}
-            className="btn-ghost py-1 px-2 text-xs"
+            className="btn-secondary py-1 px-2.5 text-xs"
           >
             Edit
           </button>
@@ -239,7 +239,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
               setSelectedCol(r);
               setShowColModal(true);
             }}
-            className="btn-ghost py-1 px-2 text-xs"
+            className="btn-secondary py-1 px-2.5 text-xs"
           >
             Edit
           </button>

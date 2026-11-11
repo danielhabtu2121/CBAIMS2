@@ -102,11 +102,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const handleQuickFill = (u: string, p: string = 'password123') => {
-    setIdentifier(u);
-    setPassword(p);
-    setError('');
-  };
+
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,32 +356,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </div>
             </form>
 
-            {/* Quick Persona Fill Chips for Convenience & QA Testing */}
-            <div className="mt-8 pt-6 border-t border-slate-100">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
-                Quick Sign-in for Testing:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { label: 'SysAdmin', user: 'sysadmin', role: 'SYSADMIN' },
-                  { label: 'Branch Mgr', user: 'brmgr_user', role: 'BRMGR' },
-                  { label: 'Risk Officer', user: 'cro_user', role: 'CRO' },
-                  { label: 'Relationship Off', user: 'bro_user', role: 'BRO' },
-                  { label: 'Deed Custodian', user: 'colldocoff_user', role: 'COLLDOCOFF' },
-                  { label: 'Auditor', user: 'auditor_user', role: 'AUDITOR' },
-                ].map((item) => (
-                  <button
-                    key={item.user}
-                    type="button"
-                    onClick={() => handleQuickFill(item.user)}
-                    className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-[#00205B] hover:border-blue-200 border border-slate-200/80 text-[11px] font-medium text-slate-600 transition-colors"
-                  >
-                    <span className="font-semibold">{item.label}</span>
-                    <span className="text-[10px] text-slate-400 ml-1">({item.user})</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+
           </div>
 
           {/* Security Notice */}

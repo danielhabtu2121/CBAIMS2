@@ -292,7 +292,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       {/* Left side: Segment Chip / Scope Selector */}
       <div className="flex items-center gap-3">
         {canSelectSegment ? (
-          <div className="flex items-center gap-2 bg-[#0E284E] border border-[#1B4580] rounded-lg px-2.5 py-1 shadow-xs">
+          <div className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-lg px-2.5 py-1 shadow-xs transition-colors">
             <Globe className="w-3.5 h-3.5 text-[#D48806] shrink-0" />
             <span className="text-[11px] text-blue-200 font-semibold hidden sm:inline">Segment:</span>
             <select
@@ -316,12 +316,12 @@ export const TopBar: React.FC<TopBarProps> = ({
         ) : (
           <div
             title="Authorized Segment (Locked to Your Assigned Role & Jurisdiction Scope)"
-            className="flex items-center gap-2 bg-[#0E284E] border border-[#1B4580] rounded-lg px-2.5 py-1 text-xs text-blue-200"
+            className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-white shadow-xs"
           >
             <Building className="w-3.5 h-3.5 text-[#D48806] shrink-0" />
-            <span className="hidden sm:inline text-[11px] font-medium text-blue-300">Segment:</span>
+            <span className="hidden sm:inline text-[11px] font-medium text-blue-200">Segment:</span>
             <span className="font-semibold text-white">{currentUser.segment || selectedSegment || 'Corporate Banking'}</span>
-            <span className="text-[10px] text-blue-300/80" title="Organizational scope locked">🔒</span>
+            <span className="text-[10px] text-blue-200/80" title="Organizational scope locked">🔒</span>
           </div>
         )}
       </div>
@@ -332,7 +332,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         className="flex-1 max-w-md mx-4 sm:mx-8 relative"
       >
         <div className="relative flex items-center">
-          <Search className="absolute left-3 w-4 h-4 text-blue-300 pointer-events-none" />
+          <Search className="absolute left-3 w-4 h-4 text-blue-200 pointer-events-none" />
           <input
             type="text"
             placeholder="Search CIF, Facility, Collateral, Policy, Document..."
@@ -344,7 +344,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               if (onGlobalSearch) onGlobalSearch(e.target.value);
             }}
             onKeyDown={handleKeyDown}
-            className="w-full bg-[#0E284E] border border-[#1B4580] hover:border-blue-400 focus:border-[#D48806] focus:ring-2 focus:ring-[#D48806]/20 rounded-lg py-1.5 pl-9 pr-9 text-xs text-white placeholder:text-blue-300/60 transition-all outline-none"
+            className="w-full bg-white/10 hover:bg-white/15 focus:bg-white/20 border border-white/20 hover:border-white/30 focus:border-[#D48806] focus:ring-2 focus:ring-[#D48806]/25 rounded-lg py-1.5 pl-9 pr-9 text-xs text-white placeholder:text-white/60 transition-all outline-none"
           />
           {searchQuery && (
             <button
@@ -353,7 +353,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 setIsFlyoutOpen(false);
                 if (onGlobalSearch) onGlobalSearch('');
               }}
-              className="absolute right-2.5 text-blue-300 hover:text-white p-0.5 rounded transition-colors"
+              className="absolute right-2.5 text-blue-200 hover:text-white p-0.5 rounded transition-colors"
               title="Clear search"
             >
               <X className="w-3.5 h-3.5" />
@@ -592,7 +592,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {currentUser.canApprove && (
           <button
             onClick={onOpenApprovals}
-            className="relative p-2 text-blue-200 hover:text-white hover:bg-[#0E284E] rounded-lg transition-colors"
+            className="relative p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             title="Approvals Inbox"
             aria-label="Approvals Inbox"
           >
@@ -608,7 +608,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Notifications Button */}
         <button
           onClick={onOpenNotifications}
-          className="relative p-2 text-blue-200 hover:text-white hover:bg-[#0E284E] rounded-lg transition-colors"
+          className="relative p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           title="Notification Center"
           aria-label="Notification Center"
         >
@@ -624,7 +624,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div ref={userMenuRef} className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-[#0E284E] transition-colors text-left"
+            className="flex items-center gap-2.5 px-2.5 py-1 rounded-lg hover:bg-white/10 transition-colors text-left"
             aria-expanded={showUserMenu}
           >
             {/* Initials Avatar */}
@@ -637,7 +637,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               <div className="text-[10px] text-[#D48806] font-semibold">{currentUser.role}</div>
             </div>
 
-            <ChevronDown className="w-3.5 h-3.5 text-blue-300" />
+            <ChevronDown className="w-3.5 h-3.5 text-blue-200" />
           </button>
 
           {/* User Menu Dropdown */}
@@ -648,32 +648,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <div className="text-[11px] text-blue-700 font-semibold">{currentUser.roleName || currentUser.role}</div>
                 <div className="text-[10px] text-slate-500 mt-0.5 truncate">{currentUser.branch}</div>
               </div>
-
-              {/* Persona Switcher for Testing (if multiple users provided) */}
-              {allUsers && allUsers.length > 1 && (
-                <div className="px-3 py-2 border-b border-slate-100">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Quick Persona Switch:
-                  </label>
-                  <select
-                    value={currentUser.userId}
-                    onChange={(e) => {
-                      const u = allUsers.find((usr) => usr.userId === e.target.value);
-                      if (u) {
-                        onSwitchUser(u);
-                        setShowUserMenu(false);
-                      }
-                    }}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md text-xs py-1 px-2 text-slate-800 outline-none focus:ring-1 focus:ring-blue-600"
-                  >
-                    {allUsers.map((u) => (
-                      <option key={u.userId} value={u.userId}>
-                        {u.role} — {u.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               <div className="p-1">
                 <button

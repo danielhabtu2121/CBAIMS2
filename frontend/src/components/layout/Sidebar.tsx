@@ -208,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <div key={sec} className="space-y-1">
               {!collapsed && (
-                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-200/60 px-2.5 py-1 select-none">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-200/90 px-2.5 py-1 select-none">
                   {sec}
                 </div>
               )}
@@ -222,15 +222,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onClick={() => onNavigate(item.id)}
                       className={`w-full flex items-center justify-between py-2 px-2.5 rounded-lg text-xs font-semibold transition-all group ${
                         isActive
-                          ? 'bg-[#143666] text-white border-l-3 border-[#D48806] shadow-xs'
-                          : 'text-blue-100/80 hover:bg-[#0E284E] hover:text-white border-l-3 border-transparent'
+                          ? 'bg-white/15 text-white font-bold border-l-3 border-[#D48806] shadow-xs'
+                          : 'text-blue-100 hover:bg-white/10 hover:text-white border-l-3 border-transparent'
                       } ${collapsed ? 'justify-center px-0' : ''}`}
                       title={collapsed ? item.label : undefined}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Icon
                           className={`w-4 h-4 shrink-0 transition-colors ${
-                            isActive ? 'text-[#D48806]' : 'text-blue-300/70 group-hover:text-white'
+                            isActive ? 'text-[#D48806]' : 'text-blue-200 group-hover:text-white'
                           }`}
                         />
                         {!collapsed && (

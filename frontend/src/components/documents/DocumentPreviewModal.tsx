@@ -880,7 +880,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             {/* Download Button */}
             <button
               onClick={handleDownloadCurrent}
-              className="px-3 py-1.5 bg-[#00205B] hover:bg-[#286095] border border-blue-400/30 rounded-lg text-white font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="px-3 py-1.5 bg-[#D48806] hover:bg-[#B87802] border border-[#D48806] rounded-lg text-white font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
               title="Download Document"
             >
               <Download className="w-3.5 h-3.5" />
