@@ -1038,39 +1038,39 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
   }, [currentStep]);
 
   return (
-    <div className="fixed inset-0 bg-[#102E4A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden text-xs">
+    <div className="fixed inset-0 bg-[#00205B]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden text-xs">
         {/* Modal Top Header */}
-        <div className="px-5 py-3.5 bg-[#102E4A] text-white flex justify-between items-center border-b border-blue-900">
+        <div className="px-5 py-3.5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center border-b border-[#00205B]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1F4E7A] rounded-lg shadow-inner">
-              <Building className="w-5 h-5 text-white" />
+            <div className="p-2 bg-white/10 rounded-lg shadow-inner border border-white/15">
+              <Building className="w-5 h-5 text-[#D48806]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold tracking-tight">Collateral Registration</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-950 text-blue-200 border border-blue-700/50">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-black/30 text-slate-200 border border-white/20">
                   {regCode}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-200 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#D48806]/20 text-[#D48806] border border-[#D48806]/40">
                   {regStatus}
                 </span>
               </div>
-              <p className="text-[11px] text-blue-200">
+              <p className="text-[11px] text-slate-300">
                 Step {currentStep} of 11: Banking-Grade Collateral Perfection &amp; Four-Eyes Dual Control
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition"
+            className="text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition"
           >
             ✕
           </button>
         </div>
 
         {/* 11-Stage Navigation Stepper */}
-        <div className="grid grid-cols-11 bg-[#EFF5FB] border-b border-[#E2E8F0] text-center text-[10px] font-semibold divide-x divide-[#E2E8F0]/60 select-none overflow-x-auto">
+        <div className="grid grid-cols-11 bg-slate-50 border-b border-slate-200 text-center text-[10px] font-semibold divide-x divide-slate-200 select-none overflow-x-auto">
           {[
             { step: 1, label: '1. Initiation' },
             { step: 2, label: '2. Borrower' },
@@ -1087,11 +1087,11 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <button
               key={s.step}
               onClick={() => setCurrentStep(s.step)}
-              className={`py-2 px-1 transition-all ${
+              className={`py-2.5 px-1 transition-all ${
                 currentStep === s.step
-                  ? 'bg-white text-[#102E4A] font-bold shadow-xs border-b-2 border-[#1F4E7A]'
+                  ? 'bg-white text-[#00205B] font-bold shadow-xs border-b-2 border-[#D48806]'
                   : currentStep > s.step
-                  ? 'text-[#1F4E7A] hover:bg-blue-50/50'
+                  ? 'text-[#00205B] hover:bg-slate-100 font-semibold'
                   : 'text-slate-400 hover:bg-slate-100/50'
               }`}
             >
@@ -1116,7 +1116,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="space-y-4">
               <div className="border-b border-slate-200 pb-3">
                 <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[#1F4E7A]" />
+                  <Shield className="w-4 h-4 text-[#00205B]" />
                   Page 1: Registration Initiation &amp; Asset Classification
                 </h4>
                 <p className="text-[#5B6472] text-[11px]">
@@ -1131,7 +1131,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     type="text"
                     disabled
                     value={regCode}
-                    className="w-full p-2 bg-slate-100 border border-slate-200 rounded font-mono font-bold text-[#102E4A]"
+                    className="w-full p-2 bg-slate-100 border border-slate-200 rounded font-mono font-bold text-[#00205B]"
                   />
                 </div>
                 <div>
@@ -1154,7 +1154,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Registration Status</label>
-                  <span className="inline-block mt-1 px-2.5 py-1 rounded bg-blue-50 text-[#1F4E7A] font-bold border border-blue-200">
+                  <span className="inline-block mt-1 px-2.5 py-1 rounded bg-blue-50 text-[#00205B] font-bold border border-blue-200">
                     {regStatus}
                   </span>
                 </div>
@@ -1207,7 +1207,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                       const subs = CANONICAL_TAXONOMY[newCat] || ['General'];
                       setSelectedSubtype(subs[0]);
                     }}
-                    className="w-full p-2 border border-slate-300 rounded font-semibold text-[#102E4A] focus:ring-1 focus:ring-blue-500 bg-white"
+                    className="w-full p-2 border border-slate-300 rounded font-semibold text-[#00205B] focus:ring-1 focus:ring-blue-500 bg-white"
                   >
                     {Object.keys(CANONICAL_TAXONOMY).map((cat) => (
                       <option key={cat} value={cat}>
@@ -1224,7 +1224,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   <select
                     value={selectedSubtype}
                     onChange={(e) => setSelectedSubtype(e.target.value)}
-                    className="w-full p-2 border border-slate-300 rounded font-semibold text-[#102E4A] focus:ring-1 focus:ring-blue-500 bg-white"
+                    className="w-full p-2 border border-slate-300 rounded font-semibold text-[#00205B] focus:ring-1 focus:ring-blue-500 bg-white"
                   >
                     {availableSubtypes.map((sub) => (
                       <option key={sub} value={sub}>
@@ -1251,7 +1251,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="space-y-4">
               <div className="border-b border-slate-200 pb-3">
                 <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                  <User className="w-4 h-4 text-[#1F4E7A]" />
+                  <User className="w-4 h-4 text-[#00205B]" />
                   Page 2: Borrower Information (Core Banking System)
                 </h4>
                 <p className="text-[#5B6472] text-[11px]">
@@ -1309,8 +1309,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               {selectedBorrower ? (
                 <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-3">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="font-bold text-[#102E4A] text-sm">{selectedBorrower.name}</span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-50 text-[#1F4E7A] border border-blue-200">
+                    <span className="font-bold text-[#00205B] text-sm">{selectedBorrower.name}</span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-50 text-[#00205B] border border-blue-200">
                       CIF: {selectedBorrower.cif || selectedBorrower.id}
                     </span>
                   </div>
@@ -1376,7 +1376,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="space-y-4">
               <div className="border-b border-slate-200 pb-3">
                 <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#1F4E7A]" />
+                  <Users className="w-4 h-4 text-[#00205B]" />
                   Page 3: Legal Collateral Owner &amp; Ownership Distribution
                 </h4>
                 <p className="text-[#5B6472] text-[11px]">
@@ -1397,7 +1397,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     onClick={() => setOwnershipType(opt.type as any)}
                     className={`p-3 rounded-lg border text-left transition ${
                       ownershipType === opt.type
-                        ? 'border-[#1F4E7A] bg-blue-50/50 shadow-xs ring-1 ring-[#1F4E7A]'
+                        ? 'border-[#00205B] bg-slate-50 shadow-xs ring-1 ring-[#00205B]'
                         : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
@@ -1406,7 +1406,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                         type="radio"
                         checked={ownershipType === opt.type}
                         onChange={() => {}}
-                        className="text-[#1F4E7A]"
+                        className="text-[#00205B]"
                       />
                       {opt.title}
                     </div>
@@ -1611,7 +1611,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                       <select
                         value={tpOwnerForm.relationshipToBorrower}
                         onChange={(e) => setTpOwnerForm({ ...tpOwnerForm, relationshipToBorrower: e.target.value })}
-                        className="w-full p-2 border border-slate-300 rounded font-semibold text-[#102E4A]"
+                        className="w-full p-2 border border-slate-300 rounded font-semibold text-[#00205B]"
                       >
                         {RELATIONSHIP_TYPES.map((rel) => (
                           <option key={rel} value={rel}>
@@ -1669,7 +1669,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     <tbody className="divide-y divide-slate-100">
                       {jointOwners.map((o, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/50">
-                          <td className="p-2 font-semibold text-[#102E4A]">{o.name}</td>
+                          <td className="p-2 font-semibold text-[#00205B]">{o.name}</td>
                           <td className="p-2">{o.ownerType}</td>
                           <td className="p-2 font-mono">{o.idNumber || o.tin || 'N/A'}</td>
                           <td className="p-2">{o.relationshipToBorrower || o.relationship || 'Co-Owner'}</td>
@@ -1763,7 +1763,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                           ]);
                           setNewJointOwner({ name: '', idNumber: '', percentage: 50 });
                         }}
-                        className="w-full py-1.5 px-3 bg-[#1F4E7A] text-white rounded font-bold hover:bg-[#102E4A]"
+                        className="w-full py-1.5 px-3 bg-[#00205B] text-white rounded font-bold hover:bg-[#00205B]"
                       >
                         + Add Owner
                       </button>
@@ -1781,7 +1781,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="space-y-4">
               <div className="border-b border-slate-200 pb-3">
                 <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#1F4E7A]" />
+                  <Layers className="w-4 h-4 text-[#00205B]" />
                   Page 4: Asset-Specific Details · {selectedCategory} ({selectedSubtype})
                 </h4>
                 <p className="text-[#5B6472] text-[11px]">
@@ -1914,7 +1914,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                           type="checkbox"
                           checked={!!assetDetails.isUnderConstruction}
                           onChange={(e) => setAssetDetails({ ...assetDetails, isUnderConstruction: e.target.checked })}
-                          className="w-4 h-4 text-[#1F4E7A] rounded"
+                          className="w-4 h-4 text-[#00205B] rounded"
                         />
                         <span className="font-bold text-xs">
                           {assetDetails.isUnderConstruction ? 'Yes (Under Construction)' : 'No (Completed Structure)'}
@@ -1981,7 +1981,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   {selectedSubtype.toLowerCase().includes('vehicle') ? (
                     <div className="space-y-3">
                       <h5 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <Truck className="w-4 h-4 text-[#1F4E7A]" />
+                        <Truck className="w-4 h-4 text-[#00205B]" />
                         Vehicle Identity Specifications
                       </h5>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -2351,7 +2351,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="space-y-4">
               <div className="border-b border-slate-200 pb-3">
                 <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-[#1F4E7A]" />
+                  <DollarSign className="w-4 h-4 text-[#00205B]" />
                   Page 5: Valuation Information &amp; Haircut Calculation
                 </h4>
                 <p className="text-[#5B6472] text-[11px]">
@@ -2391,8 +2391,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                 {/* 6.2 Bank-Assessed Value Card */}
                 <div className="bg-white p-4 border border-blue-200 rounded-lg space-y-2 shadow-xs ring-1 ring-blue-100">
-                  <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1.5">
-                    <Building className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                  <span className="font-bold text-[#00205B] text-xs flex items-center gap-1.5">
+                    <Building className="w-3.5 h-3.5 text-[#00205B]" />
                     6.2 Bank-Assessed Insurable Value <span className="text-red-500">*</span>
                   </span>
                   <p className="text-[10px] text-slate-500">
@@ -2404,7 +2404,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                       type="number"
                       value={bankAssessedValue}
                       onChange={(e) => setBankAssessedValue(Number(e.target.value))}
-                      className="w-full p-2 border border-blue-300 rounded text-xs font-mono font-bold text-[#102E4A]"
+                      className="w-full p-2 border border-blue-300 rounded text-xs font-mono font-bold text-[#00205B]"
                     />
                   </div>
                   <div>
@@ -2446,7 +2446,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="p-4 bg-[#EFF5FB] border border-[#CBDCEB] rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   <div>
-                    <label className="block font-semibold text-[#102E4A] mb-1">Haircut Percentage (%)</label>
+                    <label className="block font-semibold text-[#00205B] mb-1">Haircut Percentage (%)</label>
                     <input
                       type="number"
                       min="0"
@@ -2464,8 +2464,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="block text-[10px] text-[#1F4E7A] font-bold">NET COLLATERAL VALUE (NSV)</span>
-                      <span className="text-base font-extrabold text-[#102E4A] font-mono">
+                      <span className="block text-[10px] text-[#00205B] font-bold">NET COLLATERAL VALUE (NSV)</span>
+                      <span className="text-base font-extrabold text-[#00205B] font-mono">
                         ETB {netCollateralValue.toLocaleString()}
                       </span>
                     </div>
@@ -2522,7 +2522,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="space-y-4">
               <div className="border-b border-slate-200 pb-3">
                 <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                  <Award className="w-4 h-4 text-[#1F4E7A]" />
+                  <Award className="w-4 h-4 text-[#00205B]" />
                   Page 6: Security Rank &amp; Mortgage Priority
                 </h4>
                 <p className="text-[#5B6472] text-[11px]">
@@ -2537,7 +2537,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   onClick={() => setSecurityRank('1st')}
                   className={`p-4 rounded-lg border text-left transition ${
                     securityRank === '1st'
-                      ? 'border-[#1F4E7A] bg-blue-50/50 ring-1 ring-[#1F4E7A]'
+                      ? 'border-[#00205B] bg-slate-50 ring-1 ring-[#00205B]'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
@@ -2555,7 +2555,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   onClick={() => setSecurityRank('2nd')}
                   className={`p-4 rounded-lg border text-left transition ${
                     securityRank === '2nd'
-                      ? 'border-[#1F4E7A] bg-blue-50/50 ring-1 ring-[#1F4E7A]'
+                      ? 'border-[#00205B] bg-slate-50 ring-1 ring-[#00205B]'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
@@ -2694,7 +2694,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                           id="notedSecMortgagee"
                           checked={bankNotedAsSecondMortgagee}
                           onChange={(e) => setBankNotedAsSecondMortgagee(e.target.checked)}
-                          className="w-4 h-4 text-[#1F4E7A] rounded"
+                          className="w-4 h-4 text-[#00205B] rounded"
                         />
                         <label htmlFor="notedSecMortgagee" className="font-bold text-amber-900 text-xs cursor-pointer">
                           Dashen Bank S.C. is officially noted as Second Mortgagee in Land Registry extract
@@ -2720,7 +2720,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#1F4E7A]" />
+                    <FileText className="w-4 h-4 text-[#00205B]" />
                     Page 7: Documents &amp; Exceptions
                   </h4>
                   <p className="text-[#5B6472] text-[11px]">
@@ -2728,7 +2728,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded text-xs font-bold bg-blue-100 text-[#102E4A]">
+                  <span className="px-2.5 py-1 rounded text-xs font-bold bg-blue-100 text-[#00205B]">
                     {documentsList.filter((d) => d.fileContent || d.fileName).length + supportingDocumentsList.filter((d) => d.fileContent || d.fileName).length} Attached (Pending Verification)
                   </span>
                   {collateralExceptions.length > 0 && (
@@ -2744,8 +2744,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-xs text-[#102E4A]">Section A: Mandatory Documents (Admin-Configured Matrix)</span>
-                    <span className="text-[10px] bg-blue-50 text-[#1F4E7A] px-2 py-0.5 rounded font-semibold border border-blue-200">
+                    <span className="font-bold text-xs text-[#00205B]">Section A: Mandatory Documents (Admin-Configured Matrix)</span>
+                    <span className="text-[10px] bg-blue-50 text-[#00205B] px-2 py-0.5 rounded font-semibold border border-blue-200">
                       Single Authoritative Source
                     </span>
                   </div>
@@ -2777,7 +2777,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                         return (
                           <tr key={doc.id || idx} className="hover:bg-slate-50/70">
-                            <td className="p-2.5 font-semibold text-[#102E4A]">
+                            <td className="p-2.5 font-semibold text-[#00205B]">
                               <div className="flex items-center gap-1.5">
                                 {doc.isMandatory && <span className="text-red-500 font-bold">*</span>}
                                 <span>{doc.name}</span>
@@ -2843,7 +2843,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                             <td className="p-2.5 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 {/* Upload / Replace button */}
-                                <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-[#1F4E7A] text-white rounded text-[11px] font-bold hover:bg-[#102E4A] transition shadow-xs">
+                                <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-[#00205B] text-white rounded text-[11px] font-bold hover:bg-[#00205B] transition shadow-xs">
                                   <Upload className="w-3 h-3" />
                                   <span>{doc.fileName ? 'Replace' : 'Upload'}</span>
                                   <input
@@ -2953,7 +2953,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="space-y-2 pt-2 border-t border-slate-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-xs text-[#102E4A]">Section B: Other Supporting Documents (Optional / Ad-Hoc)</span>
+                    <span className="font-bold text-xs text-[#00205B]">Section B: Other Supporting Documents (Optional / Ad-Hoc)</span>
                     <p className="text-[10px] text-slate-500">
                       Attach auxiliary documentation (site photos, power of attorney, board resolutions, marriage certificates, spouse consent). These documents will be preserved in DMS but do not substitute for Admin mandatory rules.
                     </p>
@@ -2973,7 +2973,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                       });
                       setShowAddSupportingDocModal(true);
                     }}
-                    className="px-3 py-1.5 bg-[#1F4E7A] text-white rounded text-xs font-bold hover:bg-[#102E4A] flex items-center gap-1 shadow-xs transition"
+                    className="px-3 py-1.5 bg-[#00205B] text-white rounded text-xs font-bold hover:bg-[#00205B] flex items-center gap-1 shadow-xs transition"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>+ Add Other Supporting Document</span>
@@ -2996,7 +2996,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     <tbody className="divide-y divide-slate-100">
                       {supportingDocumentsList.map((sDoc, sIdx) => (
                         <tr key={sDoc.id || sIdx} className="hover:bg-slate-50/70">
-                          <td className="p-2.5 font-semibold text-[#102E4A]">{sDoc.name}</td>
+                          <td className="p-2.5 font-semibold text-[#00205B]">{sDoc.name}</td>
                           <td className="p-2.5 text-slate-600">{sDoc.type}</td>
                           <td className="p-2.5 font-mono text-slate-700">{sDoc.referenceNumber || '—'}</td>
                           <td className="p-2.5 text-slate-600">{sDoc.issuingAuthority || '—'}</td>
@@ -3004,8 +3004,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                             {sDoc.fileName ? `${sDoc.fileName} (${(Number(sDoc.fileSize || 102400) / 1024).toFixed(1)} KB)` : 'No file'}
                           </td>
                           <td className="p-2.5">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-[#102E4A] flex items-center gap-1 w-fit">
-                              <CheckCircle2 className="w-3 h-3 text-[#1F4E7A]" /> Attached (Pending Verification)
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-[#00205B] flex items-center gap-1 w-fit">
+                              <CheckCircle2 className="w-3 h-3 text-[#00205B]" /> Attached (Pending Verification)
                             </span>
                           </td>
                           <td className="p-2.5 text-right">
@@ -3043,7 +3043,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                    <Link2 className="w-4 h-4 text-[#1F4E7A]" />
+                    <Link2 className="w-4 h-4 text-[#00205B]" />
                     Page 8: Facility Linkage &amp; Cross-Collateralization
                   </h4>
                   <p className="text-[#5B6472] text-[11px]">
@@ -3052,7 +3052,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-slate-500 block">NET SECURITY VALUE CAPACITY</span>
-                  <span className="font-mono font-extrabold text-[#102E4A] text-sm">
+                  <span className="font-mono font-extrabold text-[#00205B] text-sm">
                     ETB {netCollateralValue.toLocaleString()}
                   </span>
                 </div>
@@ -3061,7 +3061,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               {/* Capacity Usage Gauge */}
               <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
                 <div className="flex justify-between text-xs font-semibold">
-                  <span>Total Allocated: <strong className="font-mono text-[#102E4A]">ETB {totalAllocated.toLocaleString()}</strong></span>
+                  <span>Total Allocated: <strong className="font-mono text-[#00205B]">ETB {totalAllocated.toLocaleString()}</strong></span>
                   <span className={isAllocationOverflow ? 'text-red-600 font-bold' : 'text-slate-600'}>
                     Remaining Capacity: <strong className="font-mono">ETB {remainingCapacity.toLocaleString()}</strong>
                   </span>
@@ -3069,7 +3069,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all ${
-                      isAllocationOverflow ? 'bg-red-600' : 'bg-[#1F4E7A]'
+                      isAllocationOverflow ? 'bg-red-600' : 'bg-[#00205B]'
                     }`}
                     style={{
                       width: `${Math.min(100, netCollateralValue > 0 ? (totalAllocated / netCollateralValue) * 100 : 0)}%`,
@@ -3134,10 +3134,10 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                                   setFacilityAllocations(copy);
                                 }
                               }}
-                              className="w-4 h-4 text-[#1F4E7A] rounded"
+                              className="w-4 h-4 text-[#00205B] rounded"
                             />
                           </td>
-                          <td className="p-2.5 font-mono font-bold text-[#102E4A]">{loan.loanReference}</td>
+                          <td className="p-2.5 font-mono font-bold text-[#00205B]">{loan.loanReference}</td>
                           <td className="p-2.5">{loan.facilityType || 'Term Loan'}</td>
                           <td className="p-2.5 font-mono">ETB {(loan.sanctionedLimit || 0).toLocaleString()}</td>
                           <td className="p-2.5 font-mono font-semibold">ETB {(loan.outstandingBalance || 0).toLocaleString()}</td>
@@ -3195,7 +3195,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#1F4E7A]" />
+                    <CheckCircle2 className="w-4 h-4 text-[#00205B]" />
                     Page 9: Real-Time Registration Validation Results
                   </h4>
                   <p className="text-[#5B6472] text-[11px]">
@@ -3206,7 +3206,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   type="button"
                   onClick={runPreValidation}
                   disabled={isValidating}
-                  className="px-3 py-1.5 bg-[#1F4E7A] text-white rounded font-bold hover:bg-[#102E4A] flex items-center gap-1.5 transition"
+                  className="px-3 py-1.5 bg-[#00205B] text-white rounded font-bold hover:bg-[#00205B] flex items-center gap-1.5 transition"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? 'animate-spin' : ''}`} />
                   <span>Re-Validate</span>
@@ -3317,7 +3317,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               {collateralExceptions.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-[#102E4A] flex items-center gap-1.5">
+                    <span className="font-bold text-xs text-[#00205B] flex items-center gap-1.5">
                       <Shield className="w-3.5 h-3.5 text-amber-600" />
                       Exceptions in Current Registration Package ({collateralExceptions.length})
                     </span>
@@ -3371,14 +3371,14 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   <button
                     type="button"
                     onClick={() => setCurrentStep(11)}
-                    className="px-4 py-2 bg-[#1F4E7A] text-white rounded font-bold hover:bg-[#102E4A] text-xs shadow-xs"
+                    className="px-4 py-2 bg-[#00205B] text-white rounded font-bold hover:bg-[#00205B] text-xs shadow-xs"
                   >
                     Proceed to Final Review (Page 11) →
                   </button>
                 </div>
               ) : (
                 <div className="bg-white p-5 border border-slate-200 rounded-lg space-y-4 shadow-xs">
-                  <span className="font-bold text-xs text-[#102E4A] block border-b pb-2">
+                  <span className="font-bold text-xs text-[#00205B] block border-b pb-2">
                     {collateralExceptions.length > 0 ? 'Add Another Exception / Policy Waiver' : 'Capture Exception Justification'}
                   </span>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3516,7 +3516,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-[#101828] text-sm flex items-center gap-2">
-                    <Award className="w-4 h-4 text-[#1F4E7A]" />
+                    <Award className="w-4 h-4 text-[#00205B]" />
                     Page 11: Comprehensive Final Review &amp; Maker-Checker Submission
                   </h4>
                   <p className="text-[#5B6472] text-[11px]">
@@ -3542,7 +3542,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     {submissionResult.exceptionsCount ? (
                       <div><strong>Exceptions Created:</strong> <span className="font-bold text-amber-700">{submissionResult.exceptionsCount} request(s)</span></div>
                     ) : null}
-                    <div><strong>Workflow Task ID:</strong> <span className="font-mono text-[#1F4E7A]">{submissionResult.workflowTaskId || 'Pending Checker'}</span></div>
+                    <div><strong>Workflow Task ID:</strong> <span className="font-mono text-[#00205B]">{submissionResult.workflowTaskId || 'Pending Checker'}</span></div>
                     <div><strong>Segregation of Duties:</strong> Awaiting independent four-eyes authorization by Checker / Approver.</div>
                   </div>
                   <button
@@ -3551,7 +3551,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                       if (submissionResult.collateral) onSuccess(submissionResult.collateral);
                       onClose();
                     }}
-                    className="px-5 py-2 bg-[#102E4A] text-white rounded-lg font-bold hover:bg-[#1F4E7A] text-xs shadow-md"
+                    className="px-5 py-2 bg-[#00205B] text-white rounded-lg font-bold hover:bg-[#00205B] text-xs shadow-md"
                   >
                     Close Wizard &amp; View in Collateral Register
                   </button>
@@ -3703,8 +3703,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {/* Card 1: Initiation */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <Shield className="w-3.5 h-3.5 text-[#1F4E7A]" /> 1. Registration Initiation
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <Shield className="w-3.5 h-3.5 text-[#00205B]" /> 1. Registration Initiation
                       </span>
                       <div className="space-y-1 text-[11px] text-slate-700">
                         <div>Ref: <strong className="font-mono">{regCode}</strong></div>
@@ -3718,8 +3718,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 2: Borrower */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <User className="w-3.5 h-3.5 text-[#1F4E7A]" /> 2. Borrower Information
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <User className="w-3.5 h-3.5 text-[#00205B]" /> 2. Borrower Information
                       </span>
                       <div className="space-y-1 text-[11px] text-slate-700">
                         <div>Name: <strong>{selectedBorrower?.name || 'N/A'}</strong></div>
@@ -3731,11 +3731,11 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 3: Legal Owner */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <Users className="w-3.5 h-3.5 text-[#1F4E7A]" /> 3. Legal Collateral Owner
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <Users className="w-3.5 h-3.5 text-[#00205B]" /> 3. Legal Collateral Owner
                       </span>
                       <div className="text-[11px] text-slate-700 space-y-1">
-                        <div>Ownership Type: <strong className="text-[#1F4E7A]">{ownershipType}</strong></div>
+                        <div>Ownership Type: <strong className="text-[#00205B]">{ownershipType}</strong></div>
                         {ownershipType === 'Borrower-owned' && (
                           <div>Owner: Same as borrower (100% share)</div>
                         )}
@@ -3752,26 +3752,26 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 4: Valuation & NSV */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <DollarSign className="w-3.5 h-3.5 text-[#1F4E7A]" /> 4. Valuation &amp; Net Value
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <DollarSign className="w-3.5 h-3.5 text-[#00205B]" /> 4. Valuation &amp; Net Value
                       </span>
                       <div className="space-y-1 text-[11px] text-slate-700">
                         <div>Assessed: <strong>ETB {bankAssessedValue.toLocaleString()}</strong></div>
                         <div>Haircut: <strong>{haircutPct}%</strong></div>
                         <div className="pt-1 border-t border-slate-100 flex justify-between font-bold">
                           <span>NSV Capacity:</span>
-                          <span className="font-mono text-[#102E4A]">ETB {netCollateralValue.toLocaleString()}</span>
+                          <span className="font-mono text-[#00205B]">ETB {netCollateralValue.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Card 5: Security Rank */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <Award className="w-3.5 h-3.5 text-[#1F4E7A]" /> 5. Security Rank &amp; Priority
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <Award className="w-3.5 h-3.5 text-[#00205B]" /> 5. Security Rank &amp; Priority
                       </span>
                       <div className="text-[11px] text-slate-700 space-y-1">
-                        <div>Rank: <strong className="text-[#102E4A]">{securityRank} Degree</strong> ({isFirstDegreeInternal ? 'Internal' : 'External'})</div>
+                        <div>Rank: <strong className="text-[#00205B]">{securityRank} Degree</strong> ({isFirstDegreeInternal ? 'Internal' : 'External'})</div>
                         {!isFirstDegreeInternal && (
                           <div>Senior Holder: <strong>{firstDegreeHolderName}</strong> (Bal: ETB {firstDegreeOutstandingBalance.toLocaleString()})</div>
                         )}
@@ -3783,8 +3783,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 6: Mandatory Documents */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <FileText className="w-3.5 h-3.5 text-[#1F4E7A]" /> 6. Mandatory Documents Compliance
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <FileText className="w-3.5 h-3.5 text-[#00205B]" /> 6. Mandatory Documents Compliance
                       </span>
                       <div className="text-[11px] text-slate-700 space-y-1">
                         <div>Admin Rules: <strong>{dynamicDocumentChecklist.filter(d => d.isMandatory).length} configured</strong></div>
@@ -3799,7 +3799,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 7: Other Supporting Documents */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
                         <FileText className="w-3.5 h-3.5 text-blue-600" /> 7. Supporting Documents (Ad-Hoc)
                       </span>
                       <div className="text-[11px] text-slate-700 space-y-1">
@@ -3820,12 +3820,12 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 8: Facilities & Cross-Collateralization */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
-                        <Link2 className="w-3.5 h-3.5 text-[#1F4E7A]" /> 8. Facilities &amp; Allocation
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                        <Link2 className="w-3.5 h-3.5 text-[#00205B]" /> 8. Facilities &amp; Allocation
                       </span>
                       <div className="text-[11px] text-slate-700 space-y-1">
                         <div>Linked Accounts: <strong>{selectedFacilityIds.length}</strong></div>
-                        <div>Total Allocated: <strong className="font-mono text-[#102E4A]">ETB {totalAllocated.toLocaleString()}</strong></div>
+                        <div>Total Allocated: <strong className="font-mono text-[#00205B]">ETB {totalAllocated.toLocaleString()}</strong></div>
                         {isAllocationOverflow ? (
                           <div className="text-red-600 font-bold">Overflow: ETB {(totalAllocated - netCollateralValue).toLocaleString()}</div>
                         ) : (
@@ -3836,12 +3836,12 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
 
                     {/* Card 9: Dual-Control Routing */}
                     <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
-                      <span className="font-bold text-[#102E4A] text-xs flex items-center gap-1 border-b pb-1 mb-2">
+                      <span className="font-bold text-[#00205B] text-xs flex items-center gap-1 border-b pb-1 mb-2">
                         <Shield className="w-3.5 h-3.5 text-emerald-600" /> 9. Segregation of Duties
                       </span>
                       <div className="text-[11px] text-slate-700 space-y-1">
                         <div>Maker: <strong>{currentUser.username}</strong> ({currentUser.role})</div>
-                        <div>Target Status: <span className="font-bold text-[#102E4A]">{collateralExceptions.length > 0 ? 'Pending Exception Approval' : 'Pending Approval'}</span></div>
+                        <div>Target Status: <span className="font-bold text-[#00205B]">{collateralExceptions.length > 0 ? 'Pending Exception Approval' : 'Pending Approval'}</span></div>
                         <div className="text-[10px] text-slate-500 pt-1 border-t">
                           Checker approval required. Maker self-approval strictly prevented.
                         </div>
@@ -3889,7 +3889,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   }
                   setCurrentStep(currentStep + 1);
                 }}
-                className="px-4 py-1.5 bg-[#1F4E7A] text-white rounded font-bold hover:bg-[#102E4A] flex items-center gap-1 shadow-xs"
+                className="px-4 py-1.5 bg-[#00205B] text-white rounded font-bold hover:bg-[#00205B] flex items-center gap-1 shadow-xs"
               >
                 Continue <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -3955,7 +3955,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="fixed inset-0 bg-black/50 backdrop-blur-2xs flex items-center justify-center z-60 p-4">
               <div className="bg-white rounded-lg border border-slate-300 shadow-2xl max-w-md w-full p-5 space-y-4 text-xs">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${isExcSubmission ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-[#102E4A]'}`}>
+                  <div className={`p-2 rounded-full ${isExcSubmission ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-[#00205B]'}`}>
                     <Shield className="w-6 h-6" />
                   </div>
                   <div>
@@ -4020,7 +4020,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <div className="bg-white rounded-xl border border-slate-300 shadow-2xl max-w-lg w-full p-5 space-y-4 text-xs">
               <div className="flex items-center justify-between border-b pb-2">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-blue-100 rounded-lg text-[#1F4E7A]">
+                  <div className="p-1.5 bg-blue-100 rounded-lg text-[#00205B]">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
@@ -4197,7 +4197,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     setSupportingDocumentsList((prev) => [...prev, newDoc]);
                     setShowAddSupportingDocModal(false);
                   }}
-                  className="px-4 py-1.5 bg-[#1F4E7A] text-white rounded font-bold hover:bg-[#102E4A] shadow-xs flex items-center gap-1.5"
+                  className="px-4 py-1.5 bg-[#00205B] text-white rounded font-bold hover:bg-[#00205B] shadow-xs flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Save Supporting Document</span>
@@ -4249,7 +4249,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     value={modalExceptionReason}
                     onChange={(e) => setModalExceptionReason(e.target.value)}
                     placeholder="State the commercial justification and why this collateral registration should proceed prior to document submission..."
-                    className="w-full p-2 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-[#1F4E7A]"
+                    className="w-full p-2 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-[#D48806]"
                   />
                 </div>
 
@@ -4262,7 +4262,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     value={modalExceptionComments}
                     onChange={(e) => setModalExceptionComments(e.target.value)}
                     placeholder="State commitments, undertaking letter dates, or additional security held as mitigation..."
-                    className="w-full p-2 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-[#1F4E7A]"
+                    className="w-full p-2 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-[#D48806]"
                   />
                 </div>
 

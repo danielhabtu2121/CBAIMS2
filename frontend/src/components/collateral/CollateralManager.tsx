@@ -1336,8 +1336,8 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
       header: 'Collateral Code',
       accessorKey: 'code',
       cell: (c) => (
-        <div className="flex items-center gap-2 font-semibold text-[#102E4A]">
-          <Building2 className="w-4 h-4 text-[#1F4E7A]" />
+        <div className="flex items-center gap-2 font-bold text-[#00205B]">
+          <Building2 className="w-4 h-4 text-[#00205B]" />
           <span>{c.code}</span>
         </div>
       ),
@@ -1399,7 +1399,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
       header: 'Market Valuation',
       accessorKey: 'valuationAmount',
       cell: (c) => (
-        <div className="tabular-nums font-semibold text-[#102E4A]">
+        <div className="tabular-nums font-semibold text-[#00205B]">
           {c.currency || 'ETB'} {c.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
         </div>
       ),
@@ -1991,10 +1991,10 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Collateral 360 Detail Modal */}
       {showDetailModal && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-6xl 2xl:max-w-7xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs min-w-0">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-6xl 2xl:max-w-7xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs min-w-0">
             {/* Header */}
-            <div className="p-4 sm:p-5 bg-[#102E4A] text-white flex flex-col xl:flex-row xl:items-center justify-between gap-3 min-w-0 shrink-0">
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex flex-col xl:flex-row xl:items-center justify-between gap-3 min-w-0 shrink-0">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-lg font-bold">
@@ -2024,13 +2024,13 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                     />
                   )}
                 </div>
-                <div className="text-xs text-blue-200 mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                <div className="text-xs text-slate-300 mt-1 flex flex-wrap gap-x-4 gap-y-1">
                   <span>
-                    Customer: {customers.find((c) => c.id === selectedCol.customerId || c.cif === selectedCol.customerId)?.name || selectedCol.customerId}
+                    Customer: <strong className="text-white">{customers.find((c) => c.id === selectedCol.customerId || c.cif === selectedCol.customerId)?.name || selectedCol.customerId}</strong>
                   </span>
-                  <span>Owning Segment: {selectedCol.owningSegment}</span>
-                  <span>Branch: {selectedCol.branch}</span>
-                  <span>Currency: {selectedCol.currency || 'ETB'}</span>
+                  <span>Owning Segment: <strong className="text-white">{selectedCol.owningSegment}</strong></span>
+                  <span>Branch: <strong className="text-white">{selectedCol.branch}</strong></span>
+                  <span>Currency: <strong className="text-white">{selectedCol.currency || 'ETB'}</strong></span>
                 </div>
               </div>
 
@@ -2060,7 +2060,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                           setOwnershipChangeError(null);
                           setShowOwnershipChangeModal(true);
                         }}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded flex items-center gap-1 hover:bg-white/10"
+                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
                       >
                         <UserCheck className="w-3.5 h-3.5" />
                         Change Ownership
@@ -2075,14 +2075,14 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                           setMaintainError(null);
                           setShowMaintainModal(true);
                         }}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded flex items-center gap-1 hover:bg-white/10"
+                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
                       >
                         <Edit className="w-3.5 h-3.5" />
                         Maintain Details
                       </button>
                       <button
                         onClick={() => setShowTransferModal(true)}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded flex items-center gap-1 hover:bg-white/10"
+                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
                       >
                         <ArrowRightLeft className="w-3.5 h-3.5" />
                         Transfer Segment
@@ -2090,7 +2090,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       <button
                         onClick={handleOpenReleaseModal}
                         disabled={loadingRelease}
-                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded flex items-center gap-1 hover:bg-white/10"
+                        className="btn-ghost py-1 px-2.5 text-xs text-white border border-white/30 rounded-lg flex items-center gap-1 hover:bg-white/10 transition-colors"
                       >
                         <Unlock className="w-3.5 h-3.5" />
                         {loadingRelease ? 'Validating…' : 'Release Security'}
@@ -2105,7 +2105,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                         setM3LinkModalMode('create');
                         setShowM3LinkModal(true);
                       }}
-                      className="btn-primary py-1 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center gap-1 font-semibold shadow-xs"
+                      className="btn-primary py-1 px-3 text-xs bg-[#D48806] hover:bg-[#b87405] text-white rounded-lg flex items-center gap-1 font-semibold shadow-xs transition-colors"
                       title="Link credit facility to this collateral"
                     >
                       <LinkIcon className="w-3.5 h-3.5" />
@@ -2116,7 +2116,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowDetailModal(false)}
-                  className="text-white hover:text-gray-300 text-lg px-2 py-1 rounded hover:bg-white/10 shrink-0 transition"
+                  className="text-white hover:text-slate-300 text-lg px-2 py-1 rounded-lg hover:bg-white/10 shrink-0 transition"
                   title="Close 360 View"
                 >
                   ✕
@@ -2125,20 +2125,20 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-4 sm:px-6 gap-2 pt-2 overflow-x-auto scrollbar-thin shrink-0">
+            <div className="flex border-b border-slate-200 bg-slate-50 px-4 sm:px-6 gap-2 pt-2 overflow-x-auto scrollbar-thin shrink-0">
               {(['details', 'exposure', 'adequacy', 'early-release', 'links', 'policies', 'documents', 'exceptions', 'history'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`pb-2.5 px-3 font-semibold border-b-2 capitalize transition-colors whitespace-nowrap ${
-                    activeTab === tab ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                    activeTab === tab ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
                   {tab === 'details' && 'Overview & Valuation'}
                   {tab === 'exposure' && 'Exposure Metrics'}
                   {tab === 'adequacy' && (
                     <span className="flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#00205B]" />
                       Insurance Adequacy (BR-18)
                       {adequacyAssessment && (
                         <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold uppercase ${
@@ -2500,15 +2500,15 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                         <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold">Regulatory Standard</span>
                       </h4>
                       <div>
-                        <span className="text-[#5B6472]">Collateral Value (Market):</span>{' '}
-                        <strong className="text-[#102E4A] tabular-nums">{selectedCol.currency || 'ETB'} {selectedCol.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+                        <span className="text-slate-500">Collateral Value (Market):</span>{' '}
+                        <strong className="text-[#00205B] tabular-nums">{selectedCol.currency || 'ETB'} {selectedCol.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Haircut Applied:</span>{' '}
+                        <span className="text-slate-500">Haircut Applied:</span>{' '}
                         <strong className="text-amber-800">{selectedCol.haircut ?? 20}%</strong>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Net Security Value (NSV):</span>{' '}
+                        <span className="text-slate-500">Net Security Value (NSV):</span>{' '}
                         <strong className="text-emerald-700 tabular-nums">
                           {selectedCol.currency || 'ETB'} {(selectedCol.nsv ?? ((selectedCol.valuationAmount || 0) * (1.0 - ((selectedCol.haircut || 0) / 100.0)))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </strong>
@@ -2523,24 +2523,24 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                         </div>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Total Allocated Amount:</span>{' '}
+                        <span className="text-slate-500">Total Allocated Amount:</span>{' '}
                         <strong className="text-blue-800 tabular-nums">{selectedCol.currency || 'ETB'} {(col360Data?.totalAllocatedAmount ?? selectedCol.currentAllocation ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Remaining Capacity:</span>{' '}
+                        <span className="text-slate-500">Remaining Capacity:</span>{' '}
                         <strong className="text-indigo-800 tabular-nums">{selectedCol.currency || 'ETB'} {(col360Data?.remainingCollateralCapacity ?? Math.max(0, (selectedCol.nsv ?? ((selectedCol.valuationAmount || 0) * 0.8)) - (selectedCol.currentAllocation || 0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Capacity Utilization:</span>{' '}
+                        <span className="text-slate-500">Capacity Utilization:</span>{' '}
                         <strong className="tabular-nums">{(selectedCol.utilizationPercentage || 0).toFixed(1)}%</strong>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Valuation Method:</span>{' '}
-                        <strong className="text-[#102E4A]">{selectedCol.valuationMethod || 'Certified Independent Appraisal'}</strong>
+                        <span className="text-slate-500">Valuation Method:</span>{' '}
+                        <strong className="text-[#00205B]">{selectedCol.valuationMethod || 'Certified Independent Appraisal'}</strong>
                       </div>
                       <div>
-                        <span className="text-[#5B6472]">Valuation Date:</span>{' '}
-                        <strong className="text-[#102E4A]">{selectedCol.valuationDate || selectedCol.startDate || '—'}</strong>
+                        <span className="text-slate-500">Valuation Date:</span>{' '}
+                        <strong className="text-[#00205B]">{selectedCol.valuationDate || selectedCol.startDate || '—'}</strong>
                       </div>
                     </div>
 
@@ -2582,7 +2582,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       </div>
                       <div>
                         <span className="text-[#5B6472]">Source System:</span>{' '}
-                        <span className="font-mono text-[#102E4A]">{selectedCol.sourceSystem || 'CBS / T24 Core'}</span>
+                        <span className="font-mono text-[#00205B] font-semibold">{selectedCol.sourceSystem || 'CBS / T24 Core'}</span>
                       </div>
                       <div>
                         <span className="text-[#5B6472]">CBS Last Updated:</span>{' '}
@@ -2659,7 +2659,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                           }}
                           className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1"
                         >
-                          <UserCheck className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                          <UserCheck className="w-3.5 h-3.5 text-[#00205B]" />
                           Initiate Ownership Change
                         </button>
                       )}
@@ -2767,9 +2767,9 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                   ) : exposureSummary ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 min-w-0">
-                        <div className="cims-card p-4 bg-[#EFF5FB] border-[#DCE9F5]">
-                          <div className="text-[11px] text-[#1F4E7A] font-semibold uppercase">Total Outstanding Exposure</div>
-                          <div className="text-base font-bold text-[#102E4A] mt-1 tabular-nums">
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-2xs">
+                          <div className="text-[11px] text-[#00205B] font-semibold uppercase">Total Outstanding Exposure</div>
+                          <div className="text-base font-bold text-[#00205B] mt-1 tabular-nums">
                             ETB {exposureSummary.totalOutstandingExposure?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </div>
                         </div>
@@ -2930,7 +2930,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                   <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E2E8F0] shadow-xs">
                     <div>
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-[#1F4E7A]" />
+                        <ShieldCheck className="w-5 h-5 text-[#00205B]" />
                         <h4 className="font-bold text-[#101828] text-sm">
                           Credit Policy Insurance Coverage Adequacy Determination (BR-18)
                         </h4>
@@ -3041,14 +3041,14 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
                       {/* 4 Core Metric KPI Cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                        <div className="cims-card p-4 bg-[#EFF5FB] border-[#DCE9F5]">
-                          <span className="text-[10px] text-[#1F4E7A] font-bold uppercase block">
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-2xs">
+                          <span className="text-[10px] text-[#00205B] font-bold uppercase block">
                             Bank-Assessed Insurable Value
                           </span>
-                          <div className="text-base font-extrabold text-[#102E4A] mt-1 tabular-nums">
+                          <div className="text-base font-extrabold text-[#00205B] mt-1 tabular-nums">
                             ETB {Number(adequacyAssessment.bankAssessedInsurableValue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </div>
-                          <span className="text-[10px] text-[#5B6472] block mt-0.5">
+                          <span className="text-[10px] text-slate-500 block mt-0.5">
                             Structure Only {adequacyAssessment.landValue ? `(Land ETB ${Number(adequacyAssessment.landValue).toLocaleString()} excluded)` : ''}
                           </span>
                         </div>
@@ -3093,13 +3093,13 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       {/* Primary Test vs Secondary Test Breakdown */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Primary Test Card */}
-                        <div className="cims-card p-4 space-y-3 border-l-4 border-l-[#1F4E7A]">
-                          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3 border-l-4 border-l-[#00205B] shadow-2xs">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                             <div>
-                              <strong className="block text-xs font-bold text-[#102E4A]">
+                              <strong className="block text-xs font-bold text-[#00205B]">
                                 Primary Test: Bank-Assessed Insurable Value (BR-18)
                               </strong>
-                              <span className="text-[10px] text-[#5B6472]">
+                              <span className="text-[10px] text-slate-500">
                                 Compares Total Insured vs Insurable Structure Value × Rule Coverage %
                               </span>
                             </div>
@@ -3137,10 +3137,10 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                         </div>
 
                         {/* Secondary Test Card */}
-                        <div className="cims-card p-4 space-y-3 border-l-4 border-l-blue-600">
-                          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3 border-l-4 border-l-blue-600 shadow-2xs">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                             <div>
-                              <strong className="block text-xs font-bold text-[#102E4A]">
+                              <strong className="block text-xs font-bold text-[#00205B]">
                                 Secondary Test: Aggregate Outstanding Exposure (BR-03 / BR-11)
                               </strong>
                               <span className="text-[10px] text-[#5B6472]">
@@ -3199,10 +3199,10 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       </div>
 
                       {/* Contributing Active Policies Table */}
-                      <div className="cims-card overflow-hidden w-full max-w-full">
-                        <div className="p-3 bg-[#EFF5FB] border-b border-[#E2E8F0] font-bold text-xs text-[#102E4A] flex justify-between items-center">
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden w-full max-w-full">
+                        <div className="p-3 bg-slate-50 border-b border-slate-200 font-bold text-xs text-[#00205B] flex justify-between items-center">
                           <span>Contributing Active Insurance Policies ({(adequacyAssessment.contributingPolicies || adequacyAssessment.activePolicies)?.length || 0})</span>
-                          <span className="text-[10px] text-[#5B6472]">Only policies in Active status are included</span>
+                          <span className="text-[10px] text-slate-500">Only policies in Active status are included</span>
                         </div>
                         {((adequacyAssessment.contributingPolicies || adequacyAssessment.activePolicies)?.length || 0) === 0 ? (
                           <div className="p-4 text-center text-xs text-slate-500">No active insurance policies linked to this collateral.</div>
@@ -3222,7 +3222,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                               <tbody className="divide-y divide-slate-100">
                                 {(adequacyAssessment.contributingPolicies || adequacyAssessment.activePolicies)?.map((p: any, idx: number) => (
                                   <tr key={idx} className="hover:bg-slate-50">
-                                    <td className="p-2.5 font-mono font-bold text-[#102E4A]">{p.policyNumber}</td>
+                                    <td className="p-2.5 font-mono font-bold text-[#00205B]">{p.policyNumber}</td>
                                     <td className="p-2.5 font-semibold">{p.insurerName || p.insurer}</td>
                                     <td className="p-2.5 font-bold text-emerald-800 tabular-nums">
                                       ETB {Number(p.insuredAmount || 0).toLocaleString()}
@@ -3241,10 +3241,10 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       </div>
 
                       {/* Contributing Facilities & Balances Table */}
-                      <div className="cims-card overflow-hidden w-full max-w-full">
-                        <div className="p-3 bg-[#EFF5FB] border-b border-[#E2E8F0] font-bold text-xs text-[#102E4A] flex justify-between items-center">
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden w-full max-w-full">
+                        <div className="p-3 bg-slate-50 border-b border-slate-200 font-bold text-xs text-[#00205B] flex justify-between items-center">
                           <span>Contributing Credit Facilities &amp; CBS Outstanding Balances ({(adequacyAssessment.contributingFacilities || adequacyAssessment.distinctFacilities)?.length || 0})</span>
-                          <span className="text-[10px] text-[#5B6472]">Deduplicated facilities securing this collateral</span>
+                          <span className="text-[10px] text-slate-500">Deduplicated facilities securing this collateral</span>
                         </div>
                         {((adequacyAssessment.contributingFacilities || adequacyAssessment.distinctFacilities)?.length || 0) === 0 ? (
                           <div className="p-4 text-center text-xs text-slate-500">No active credit facilities linked to this collateral.</div>
@@ -3264,7 +3264,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                               <tbody className="divide-y divide-slate-100">
                                 {(adequacyAssessment.contributingFacilities || adequacyAssessment.distinctFacilities)?.map((f: any, idx: number) => (
                                   <tr key={idx} className="hover:bg-slate-50">
-                                    <td className="p-2.5 font-mono font-bold text-[#102E4A]">{f.facilityNumber || f.loanReference || f.facilityId}</td>
+                                    <td className="p-2.5 font-mono font-bold text-[#00205B]">{f.facilityNumber || f.loanReference || f.facilityId}</td>
                                     <td className="p-2.5 font-semibold">{f.borrowerName || f.facilityType || 'Standard Facility'}</td>
                                     <td className="p-2.5 tabular-nums">ETB {Number(f.approvedLimit || 0).toLocaleString()}</td>
                                     <td className="p-2.5 font-bold text-blue-900 tabular-nums">
@@ -3428,7 +3428,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                             setReleaseDmsDocId('');
                             setShowEarlyReleaseModal(true);
                           }}
-                          className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-[#102E4A] hover:bg-[#1F4E7A] text-white font-semibold rounded"
+                          className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5 bg-[#00205B] hover:bg-[#0E284E] text-white font-semibold rounded-lg"
                         >
                           <Unlock className="w-3.5 h-3.5" />
                           Initiate Release Request
@@ -3580,7 +3580,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       {/* Current vs Projected Post-Release Comparison */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="cims-card p-4 bg-slate-50 space-y-2 text-xs">
-                          <h6 className="font-bold text-[#102E4A] border-b border-slate-200 pb-1.5 uppercase text-[11px]">
+                          <h6 className="font-bold text-[#00205B] border-b border-slate-200 pb-1.5 uppercase text-[11px]">
                             Current Collateral Position
                           </h6>
                           <div className="flex justify-between py-1 border-b border-slate-200">
@@ -3645,10 +3645,10 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       </div>
 
                       {/* Affected Cross-Collateralized Facilities Table */}
-                      <div className="cims-card overflow-hidden w-full max-w-full">
-                        <div className="p-3 bg-[#EFF5FB] border-b border-[#E2E8F0] font-bold text-xs text-[#102E4A] flex justify-between items-center">
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden w-full max-w-full">
+                        <div className="p-3 bg-slate-50 border-b border-slate-200 font-bold text-xs text-[#00205B] flex justify-between items-center">
                           <span>Cross-Collateralized Facilities Impact Analysis (BR-03)</span>
-                          <span className="text-[10px] text-[#5B6472]">Evaluates all facilities, not just proposed detachment</span>
+                          <span className="text-[10px] text-slate-500">Evaluates all facilities, not just proposed detachment</span>
                         </div>
                         {preReleaseImpact.affectedFacilities?.length === 0 ? (
                           <div className="p-4 text-center text-xs text-slate-500">No linked facilities found.</div>
@@ -3670,7 +3670,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                               <tbody className="divide-y divide-slate-100">
                                 {preReleaseImpact.affectedFacilities?.map((af: any, idx: number) => (
                                   <tr key={idx} className="hover:bg-slate-50">
-                                    <td className="p-2.5 font-mono font-bold text-[#102E4A]">{af.facilityNumber || af.loanReference || af.facilityId}</td>
+                                    <td className="p-2.5 font-mono font-bold text-[#00205B]">{af.facilityNumber || af.loanReference || af.facilityId}</td>
                                     <td className="p-2.5 font-semibold">{af.borrowerName || af.facilityType || 'Standard'}</td>
                                     <td className="p-2.5 tabular-nums">ETB {Number(af.outstandingBalance ?? af.preReleaseBalance ?? 0).toLocaleString()}</td>
                                     <td className="p-2.5 tabular-nums">{af.preReleaseCoverageRatio != null ? af.preReleaseCoverageRatio.toFixed(1) : '0'}%</td>
@@ -3830,7 +3830,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                                     setManualCbsNotes(activeReleaseReq.cbsUpdateNotes || activeReleaseReq.manualCbsNotes || '');
                                     setShowManualCbsModal(true);
                                   }}
-                                  className="btn-primary py-1.5 px-3 text-xs bg-[#1F4E7A] hover:bg-[#102E4A] text-white font-semibold rounded"
+                                  className="btn-primary py-1.5 px-3 text-xs bg-[#00205B] hover:bg-[#0E284E] text-white font-semibold rounded-lg"
                                 >
                                   Record Manual CBS Update
                                 </button>
@@ -3852,7 +3852,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                 <div className="space-y-4">
                   {/* Module 4: Prominent SHARED / CROSS-COLLATERALIZED Banner (§21) */}
                   {((m3SecuredSummary?.linkedFacilityCount ?? colLinks.length) > 1) && (
-                    <div className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-[#102E4A] rounded-xl text-white shadow-lg space-y-3 border border-indigo-700/60">
+                    <div className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-[#00205B] rounded-xl text-white shadow-lg space-y-3 border border-indigo-700/60">
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
                         <div className="flex items-center gap-2.5">
                           <span className="px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-amber-400 text-slate-900 shadow-sm animate-pulse">
@@ -4097,7 +4097,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                             const legalOwner = l.legalOwnerNames || (selectedCol as any).legalOwnerNames || (selectedCol as any).owners?.map((o: any) => o.name).join(', ') || 'Collateral Legal Owner';
                             return (
                               <tr key={l.id} className="hover:bg-[#EFF5FB]/60 group">
-                                <td className="p-2.5 font-semibold text-[#102E4A]">
+                                <td className="p-2.5 font-semibold text-[#00205B]">
                                   <div className="flex items-center gap-1.5">
                                     <CreditCard className="w-3.5 h-3.5 text-blue-600" />
                                     <span className="font-mono">{l.loanReference || l.facilityId}</span>
@@ -4273,7 +4273,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       ) : (
                         colPolicies.map((p) => (
                           <tr key={p.id} className="hover:bg-[#EFF5FB] group">
-                            <td className="p-2.5 font-semibold text-[#102E4A]">
+                            <td className="p-2.5 font-semibold text-[#00205B]">
                               <button
                                 onClick={() => {
                                   if (onNavigate) {
@@ -4327,7 +4327,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                       <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
                         <div>
                           <h5 className="font-bold text-[#101828] flex items-center gap-1.5">
-                            <FileCheck className="w-4 h-4 text-[#1F4E7A]" />
+                            <FileCheck className="w-4 h-4 text-[#00205B]" />
                             Regulatory Mandatory Document Checklist
                           </h5>
                           <p className="text-[11px] text-[#5B6472]">
@@ -4430,7 +4430,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                         ) : (
                           colDocs.map((d) => (
                             <tr key={d.id} className="hover:bg-[#EFF5FB]">
-                              <td className="p-2.5 font-semibold text-[#102E4A] flex items-center gap-1.5">
+                              <td className="p-2.5 font-semibold text-[#00205B] flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-[#2C6295]" />
                                 {d.name}
                               </td>
@@ -4450,7 +4450,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                                     setDocPreviewTarget(d);
                                     setShowDocPreviewModal(true);
                                   }}
-                                  className="btn-ghost py-0.5 px-2 text-[11px] text-[#1F4E7A] hover:text-[#102E4A] border border-[#B9D3EB] hover:bg-[#EFF5FB] rounded inline-flex items-center gap-1 font-semibold"
+                                  className="btn-ghost py-0.5 px-2 text-[11px] text-[#00205B] hover:text-[#D48806] border border-slate-200 hover:bg-slate-50 rounded inline-flex items-center gap-1 font-semibold"
                                   title="Preview Document File"
                                 >
                                   <Eye className="w-3 h-3" /> Preview
@@ -4550,7 +4550,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                               <td className="p-2.5 font-mono text-[#5B6472]">
                                 {h.entityType}: {h.entityId}
                               </td>
-                              <td className="p-2.5 font-semibold text-[#102E4A]">
+                              <td className="p-2.5 font-semibold text-[#00205B]">
                                 {h.fieldChanged || '—'}
                               </td>
                               <td className="p-2.5 font-mono text-slate-500 max-w-[120px] truncate">
@@ -4599,15 +4599,15 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Exception Request Submission Modal */}
       {showExceptionModal && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden text-xs">
             {/* Header */}
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-amber-400" />
+                <Shield className="w-4 h-4 text-[#D48806]" />
                 <div>
                   <h3 className="text-sm font-bold">Collateral Exception Details</h3>
-                  <p className="text-[11px] text-blue-200">
+                  <p className="text-[11px] text-slate-300">
                     Request Authorized Management Override &amp; Approval
                   </p>
                 </div>
@@ -4699,7 +4699,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                     htmlFor="col-exception-evidence-file"
                     className="cursor-pointer py-1.5 px-3 bg-white border border-slate-300 hover:bg-slate-50 rounded text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
                   >
-                    <UploadCloud className="w-3.5 h-3.5 text-[#1F4E7A]" />
+                    <UploadCloud className="w-3.5 h-3.5 text-[#00205B]" />
                     {exceptionForm.evidenceDocument ? 'Replace Evidence File' : 'Attach Supporting Memo'}
                   </label>
                   {exceptionForm.evidenceDocument && (
@@ -4770,16 +4770,16 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Verify Collateral Owner Modal */}
       {showVerifyOwnerModal && verifyingOwner && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Owner Legal Verification</h3>
-                <p className="text-[11px] text-blue-200">
+                <p className="text-[11px] text-slate-300">
                   {verifyingOwner.name} — Four-Eyes Identity &amp; Title Verification
                 </p>
               </div>
-              <button onClick={() => setShowVerifyOwnerModal(false)} className="text-white hover:text-gray-300">
+              <button onClick={() => setShowVerifyOwnerModal(false)} className="text-slate-300 hover:text-white">
                 ✕
               </button>
             </div>
@@ -4852,14 +4852,14 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Upload Document Modal (in 360 view) */}
       {showUploadDocModal && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Upload Document (DMS)</h3>
-                <p className="text-[11px] text-blue-200">{selectedCol.code} — Attach to Repository</p>
+                <p className="text-[11px] text-slate-300">{selectedCol.code} — Attach to Repository</p>
               </div>
-              <button onClick={() => setShowUploadDocModal(false)} className="text-white hover:text-gray-300">
+              <button onClick={() => setShowUploadDocModal(false)} className="text-slate-300 hover:text-white">
                 ✕
               </button>
             </div>
@@ -4915,14 +4915,14 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Maintain Collateral Modal */}
       {showMaintainModal && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Maintain Collateral Details</h3>
-                <p className="text-[11px] text-blue-200">{selectedCol.code} — Maker Amendment</p>
+                <p className="text-[11px] text-slate-300">{selectedCol.code} — Maker Amendment</p>
               </div>
-              <button onClick={() => setShowMaintainModal(false)} className="text-white hover:text-gray-300">
+              <button onClick={() => setShowMaintainModal(false)} className="text-slate-300 hover:text-white">
                 ✕
               </button>
             </div>
@@ -5028,21 +5028,21 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Transfer Segment Modal */}
       {showTransferModal && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Transfer Collateral Segment</h3>
-                <p className="text-[11px] text-blue-200">{selectedCol.code} — Ownership Segment Transfer</p>
+                <p className="text-[11px] text-slate-300">{selectedCol.code} — Ownership Segment Transfer</p>
               </div>
-              <button onClick={() => setShowTransferModal(false)} className="text-white hover:text-gray-300">
+              <button onClick={() => setShowTransferModal(false)} className="text-slate-300 hover:text-white">
                 ✕
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div>
                 <span className="text-[#5B6472] block mb-1">Current Segment:</span>
-                <strong className="text-[#102E4A] text-sm">{selectedCol.owningSegment}</strong>
+                <strong className="text-[#00205B] text-sm">{selectedCol.owningSegment}</strong>
               </div>
               <div>
                 <label className="block font-semibold text-[#101828] mb-1">Destination Segment (M)</label>
@@ -5097,14 +5097,14 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Release Collateral Modal */}
       {showReleaseModal && selectedCol && releaseCheck && (
-        <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl max-w-md w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold">Release Security Obligation</h3>
-                <p className="text-[11px] text-blue-200">{selectedCol.code} — Settlement & Release Engine</p>
+                <p className="text-[11px] text-slate-300">{selectedCol.code} — Settlement & Release Engine</p>
               </div>
-              <button onClick={() => setShowReleaseModal(false)} className="text-white hover:text-gray-300">
+              <button onClick={() => setShowReleaseModal(false)} className="text-slate-300 hover:text-white">
                 ✕
               </button>
             </div>
@@ -5150,15 +5150,15 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Ownership Change Modal */}
       {showOwnershipChangeModal && selectedCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-lg w-full overflow-hidden text-xs">
-            <div className="p-4 bg-[#102E4A] text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden text-xs">
+            <div className="p-4 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-blue-300" />
+                  <UserCheck className="w-4 h-4 text-[#D48806]" />
                   Initiate Collateral Ownership Change
                 </h3>
-                <p className="text-[11px] text-blue-200">
+                <p className="text-[11px] text-slate-300">
                   {selectedCol.code} — Historical ownership will be preserved in audit trail.
                 </p>
               </div>
@@ -5225,7 +5225,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
               {/* Current Active Owner Display */}
               <div className="p-3 bg-slate-50 border border-[#E2E8F0] rounded-lg">
                 <span className="text-[10px] text-[#5B6472] uppercase font-bold tracking-wider block">Current Effective Owner</span>
-                <div className="text-sm font-bold text-[#102E4A] mt-0.5">
+                <div className="text-sm font-bold text-[#00205B] mt-0.5">
                   {selectedCol.owners?.find(o => !o.supersededDate)?.name || customers.find(c => c.id === selectedCol.customerId || c.cif === selectedCol.customerId)?.name || selectedCol.customerId}
                 </div>
                 <div className="text-[11px] text-[#5B6472]">
@@ -5487,7 +5487,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* Promotion Review Modal (Requirement 4) */}
       {showPromoteModal && promotingCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-lg w-full p-5 space-y-4 text-xs animate-fadeIn">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
@@ -5603,7 +5603,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
       {/* External Balance Refresh Modal (Requirement 4) */}
       {showRefreshBalModal && refreshingCol && (
-        <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-5 space-y-4 text-xs animate-fadeIn">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
@@ -5721,9 +5721,9 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
       {showAdequacyExceptionModal && selectedCol && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <h3 className="text-sm font-bold text-[#102E4A] flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-purple-700" />
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-bold text-[#00205B] flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-[#D48806]" />
                 Request Insurance Coverage Exception (BR-07 / BR-12)
               </h3>
               <button
@@ -5873,9 +5873,9 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
       {showEarlyReleaseModal && selectedCol && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <h3 className="text-sm font-bold text-[#102E4A] flex items-center gap-2">
-                <Unlock className="w-4 h-4 text-purple-700" />
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-bold text-[#00205B] flex items-center gap-2">
+                <Unlock className="w-4 h-4 text-[#D48806]" />
                 Initiate Early Collateral Release Request
               </h3>
               <button
@@ -5974,7 +5974,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                     setSubmittingEarlyRelease(false);
                   }
                 }}
-                className="btn-primary bg-[#102E4A] hover:bg-[#1F4E7A] text-white font-bold"
+                className="btn-primary bg-[#00205B] hover:bg-[#0E284E] text-white font-bold"
               >
                 {submittingEarlyRelease ? 'Submitting…' : 'Submit for Checker Approval'}
               </button>
@@ -5989,8 +5989,8 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
       {showManualCbsModal && activeReleaseReq && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <h3 className="text-sm font-bold text-[#102E4A] flex items-center gap-2">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-bold text-[#00205B] flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
                 Record Manual Core Banking System (CBS) Update
               </h3>
@@ -6084,7 +6084,7 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                     setSubmittingManualCbs(false);
                   }
                 }}
-                className="btn-primary bg-[#1F4E7A] hover:bg-[#102E4A] text-white font-bold"
+                className="btn-primary bg-[#00205B] hover:bg-[#0E284E] text-white font-bold"
               >
                 {submittingManualCbs ? 'Saving…' : 'Save CBS Update Record'}
               </button>
