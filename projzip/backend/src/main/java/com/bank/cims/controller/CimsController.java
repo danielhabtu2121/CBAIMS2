@@ -30,6 +30,9 @@ public class CimsController {
     private CustomerRepository customerRepository;
 
     @Autowired
+    private com.bank.cims.service.cbs.CbsGateway cbsGateway;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -47,6 +50,9 @@ public class CimsController {
     @Autowired
     private com.bank.cims.service.CollateralFacilityRelationshipService collateralFacilityRelationshipService;
 
+    @Autowired
+    private BusinessSegmentRepository businessSegmentRepository;
+
     @GetMapping("/state")
     public ResponseEntity<Map<String, Object>> getState() {
         return ResponseEntity.ok(cimsService.getFullState());
@@ -58,7 +64,10 @@ public class CimsController {
     }
 
     @PostMapping("/config/system-date")
-    public ResponseEntity<Map<String, String>> setSystemDate(@RequestBody(required = false) Map<String, String> payload) {
+    public ResponseEntity<Map<String, String>> setSystemDate(
+            @RequestBody(required = false) Map<String, String> payload,
+            @RequestParam(defaultValue = "SYSADMIN") String userId) {
+        cimsService.assertUserPermission(userId, "System Settings", "EDIT");
         String d = payload != null ? payload.get("systemDate") : null;
         cimsService.setSimulatedSystemDate(d);
         return ResponseEntity.ok(Map.of("systemDate", cimsService.getSimulatedSystemDate()));
@@ -69,6 +78,7 @@ public class CimsController {
     public ResponseEntity<Map<String, Object>> addSegment(
             @RequestBody BusinessSegment segment,
             @RequestParam(defaultValue = "SYSADMIN") String userId) {
+        cimsService.assertUserPermission(userId, "Business Segments", "EDIT");
         cimsService.addBusinessSegment(segment, userId);
         return ResponseEntity.ok(cimsService.getFullState());
     }
@@ -78,6 +88,7 @@ public class CimsController {
             @RequestParam String segmentId,
             @RequestParam boolean active,
             @RequestParam(defaultValue = "SYSADMIN") String userId) {
+        cimsService.assertUserPermission(userId, "Business Segments", "EDIT");
         cimsService.toggleSegmentActiveStatus(segmentId, active, userId);
         return ResponseEntity.ok(cimsService.getFullState());
     }
@@ -110,38 +121,60 @@ public class CimsController {
     }
 
     @PostMapping("/transfers/approve")
-    public ResponseEntity<Map<String, Object>> approveTransfer(
+    public ResponseEntity<?> approveTransfer(
             @RequestParam String transferId,
             @RequestParam String userId) {
-        ownershipTransferRepository.findById(transferId).ifPresent(trf -> {
-            trf.setStatus("Approved");
-            trf.setApprovedBy(userId);
-            trf.setApprovedAt(java.time.LocalDate.now().toString());
-            ownershipTransferRepository.save(trf);
+        cimsService.assertUserPermission(userId, "Collateral", "APPROVE");
+        OwnershipTransfer trf = ownershipTransferRepository.findById(transferId)
+                .orElseThrow(() -> new IllegalArgumentException("Ownership transfer request not found: " + transferId));
+        if (!"Pending".equalsIgnoreCase(trf.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Only transfers in Pending status can be approved. Current status: " + trf.getStatus()));
+        }
+        if (trf.getRequestedBy() != null && trf.getRequestedBy().equalsIgnoreCase(userId)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Dual control violation: Requester (" + trf.getRequestedBy() + ") cannot approve their own segment transfer."));
+        }
+        boolean destActive = businessSegmentRepository.findById(trf.getDestinationSegment())
+                .or(() -> businessSegmentRepository.findAll().stream().filter(s -> trf.getDestinationSegment().equalsIgnoreCase(s.getName()) || trf.getDestinationSegment().equalsIgnoreCase(s.getCode())).findFirst())
+                .map(BusinessSegment::isActive)
+                .orElse(false);
+        if (!destActive) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Destination segment '" + trf.getDestinationSegment() + "' is inactive or not found."));
+        }
 
-            collateralRepository.findById(trf.getCollateralId()).ifPresent(col -> {
-                String oldSeg = col.getOwningSegment();
-                col.setOwningSegment(trf.getDestinationSegment());
-                collateralRepository.save(col);
-                cimsService.logAudit(userId, "HODEPT", "APPROVE_OWNERSHIP_TRANSFER", "Collateral", col.getId(), "Segment", oldSeg, trf.getDestinationSegment(), "Approved segment transfer");
-            });
+        trf.setStatus("Approved");
+        trf.setApprovedBy(userId);
+        trf.setApprovedAt(java.time.LocalDate.now().toString());
+        ownershipTransferRepository.save(trf);
+
+        collateralRepository.findById(trf.getCollateralId()).ifPresent(col -> {
+            String oldSeg = col.getOwningSegment();
+            col.setOwningSegment(trf.getDestinationSegment());
+            collateralRepository.save(col);
+            cimsService.logAudit(userId, "HODEPT", "APPROVE_OWNERSHIP_TRANSFER", "Collateral", col.getId(), "Segment", oldSeg, trf.getDestinationSegment(), "Approved segment transfer");
         });
         return ResponseEntity.ok(cimsService.getFullState());
     }
 
     @PostMapping("/transfers/reject")
-    public ResponseEntity<Map<String, Object>> rejectTransfer(
+    public ResponseEntity<?> rejectTransfer(
             @RequestParam String transferId,
             @RequestParam String remarks,
             @RequestParam String userId) {
-        ownershipTransferRepository.findById(transferId).ifPresent(trf -> {
-            trf.setStatus("Rejected");
-            trf.setApprovedBy(userId);
-            trf.setApprovedAt(java.time.LocalDate.now().toString());
-            trf.setRemarks(remarks);
-            ownershipTransferRepository.save(trf);
-            cimsService.logAudit(userId, "HODEPT", "REJECT_OWNERSHIP_TRANSFER", "OwnershipTransfer", transferId, "Status", "Pending", "Rejected", remarks);
-        });
+        cimsService.assertUserPermission(userId, "Collateral", "APPROVE");
+        OwnershipTransfer trf = ownershipTransferRepository.findById(transferId)
+                .orElseThrow(() -> new IllegalArgumentException("Ownership transfer request not found: " + transferId));
+        if (!"Pending".equalsIgnoreCase(trf.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Only transfers in Pending status can be rejected. Current status: " + trf.getStatus()));
+        }
+        if (trf.getRequestedBy() != null && trf.getRequestedBy().equalsIgnoreCase(userId)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Dual control violation: Requester (" + trf.getRequestedBy() + ") cannot reject their own segment transfer."));
+        }
+        trf.setStatus("Rejected");
+        trf.setApprovedBy(userId);
+        trf.setApprovedAt(java.time.LocalDate.now().toString());
+        trf.setRemarks(remarks);
+        ownershipTransferRepository.save(trf);
+        cimsService.logAudit(userId, "HODEPT", "REJECT_OWNERSHIP_TRANSFER", "OwnershipTransfer", transferId, "Status", "Pending", "Rejected", remarks);
         return ResponseEntity.ok(cimsService.getFullState());
     }
 
@@ -151,22 +184,95 @@ public class CimsController {
     @PostMapping({"/customers/add", "/customers/register-manual"})
     public ResponseEntity<Map<String, Object>> registerManualCustomer(
             @RequestBody Customer customer,
-            @RequestParam String userId) {
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "userId is required to register a customer."));
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String userId) {
+        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId.trim() : (userId != null ? userId.trim() : null);
+        if (effUserId == null || effUserId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "userId / X-User-Id is required to register a customer."));
         }
+
+        if (customer == null || customer.getName() == null || customer.getName().trim().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Customer name is mandatory."));
+        }
+        if (customer.getSegment() == null || customer.getSegment().trim().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Business segment is mandatory."));
+        }
+
+        String suppliedCif = customer.getCif() != null ? customer.getCif().trim() : "";
+        if (!suppliedCif.isBlank()) {
+            // 1. CBS Sourced CIF validation & duplicate check
+            if (customerRepository.findByCif(suppliedCif).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Duplicate Customer: A customer with CIF '" + suppliedCif + "' already exists in CIMS."
+                ));
+            }
+            try {
+                var cbsCustOpt = cbsGateway.fetchCustomerByCif(suppliedCif);
+                if (cbsCustOpt.isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "error", "Invalid CIF: Customer with CIF '" + suppliedCif + "' was not found in Core Banking System."
+                    ));
+                }
+            } catch (Exception e) {
+                // If CBS simulator/adapter threw an exception, fail closed
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Core Banking System CIF verification error: " + e.getMessage()
+                    ));
+            }
+        } else {
+            // 2. Third-Party Owner / Non-CIF Customer Duplicate Detection (Audit Finding 20)
+            if (customer.getNationalId() != null && !customer.getNationalId().trim().isBlank()) {
+                var dup = customerRepository.findFirstByNationalIdIgnoreCase(customer.getNationalId().trim());
+                if (dup.isPresent()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "error", "Duplicate Customer: A customer with National ID '" + customer.getNationalId() + "' already exists (" + dup.get().getName() + ")."
+                    ));
+                }
+            }
+            if (customer.getTaxIdNo() != null && !customer.getTaxIdNo().trim().isBlank()) {
+                var dup = customerRepository.findFirstByTaxIdNoIgnoreCase(customer.getTaxIdNo().trim());
+                if (dup.isPresent()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "error", "Duplicate Customer: A customer with Tax ID '" + customer.getTaxIdNo() + "' already exists (" + dup.get().getName() + ")."
+                    ));
+                }
+            }
+            if (customer.getBusinessRegNo() != null && !customer.getBusinessRegNo().trim().isBlank()) {
+                var dup = customerRepository.findFirstByBusinessRegNoIgnoreCase(customer.getBusinessRegNo().trim());
+                if (dup.isPresent()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "success", false,
+                            "error", "Duplicate Customer: A customer with Business Reg No '" + customer.getBusinessRegNo() + "' already exists (" + dup.get().getName() + ")."
+                    ));
+                }
+            }
+        }
+
         if (customer.getId() == null || customer.getId().isBlank()) {
             customer.setId("cust-" + System.currentTimeMillis());
         }
-        customer.setSource("Manual");
+        if (suppliedCif.isBlank()) {
+            customer.setCif(null);
+            customer.setIdentificationType("UNREGISTERED_THIRD_PARTY");
+        } else {
+            customer.setCif(suppliedCif);
+            customer.setIdentificationType("CBS_CIF");
+        }
+        customer.setStatus("Pending Approval");
+        customer.setSource(suppliedCif.isBlank() ? "Manual_ThirdParty" : "Manual_CBS");
         customer.setRecordStat("U");
         customer.setAuthStat("U");
-        customer.setMakerId(userId);
+        customer.setMakerId(effUserId);
         customer.setMakerDtStamp(java.time.LocalDateTime.now().toString());
         customerRepository.save(customer);
 
         String approverRole = cimsService.resolveCustomerApproverRole();
-        cimsService.submitToWorkflow("PROC_CUSTOMER_REGISTRATION", "Customer", customer.getId(), "Register Customer Manually", "{}", "Manual customer registration", userId, approverRole);
+        cimsService.submitToWorkflow("PROC_CUSTOMER_REGISTRATION", "Customer", customer.getId(), "Register Customer Manually", "{}", "Manual customer registration", effUserId, approverRole);
         return ResponseEntity.ok(cimsService.getFullState());
     }
 
@@ -241,9 +347,14 @@ public class CimsController {
         return ResponseEntity.ok(cimsService.getMandatoryDocumentChecklist(id));
     }
 
-    @GetMapping("/collateral/taxonomy")
+    @GetMapping({"/collateral/taxonomy", "/collateral/taxonomies"})
     public ResponseEntity<List<CollateralTaxonomy>> getCollateralTaxonomy() {
         return ResponseEntity.ok(cimsService.getCollateralTaxonomy());
+    }
+
+    @GetMapping({"/collateral/document-matrix", "/collateral/mandatory-document-rules"})
+    public ResponseEntity<List<MandatoryDocumentRule>> getMandatoryDocumentRules() {
+        return ResponseEntity.ok(cimsService.getMandatoryDocumentRules());
     }
 
     @GetMapping("/collateral/{id}/facilities")
@@ -421,6 +532,8 @@ public class CimsController {
         private Collateral collateral;
         private List<Map<String, Object>> allocations;
         private List<Map<String, Object>> documents;
+        private List<Map<String, Object>> exceptions;
+        private boolean isDraft;
 
         public Collateral getCollateral() { return collateral; }
         public void setCollateral(Collateral collateral) { this.collateral = collateral; }
@@ -428,6 +541,10 @@ public class CimsController {
         public void setAllocations(List<Map<String, Object>> allocations) { this.allocations = allocations; }
         public List<Map<String, Object>> getDocuments() { return documents; }
         public void setDocuments(List<Map<String, Object>> documents) { this.documents = documents; }
+        public List<Map<String, Object>> getExceptions() { return exceptions; }
+        public void setExceptions(List<Map<String, Object>> exceptions) { this.exceptions = exceptions; }
+        public boolean isDraft() { return isDraft; }
+        public void setDraft(boolean isDraft) { this.isDraft = isDraft; }
     }
 
     @PostMapping("/collateral/register-with-allocations")
@@ -436,7 +553,8 @@ public class CimsController {
             @RequestParam(defaultValue = "CRO_USER") String userId) {
         try {
             return ResponseEntity.ok(cimsService.registerCollateralWithAllocations(
-                    request.getCollateral(), request.getAllocations(), request.getDocuments(), userId));
+                    request.getCollateral(), request.getAllocations(), request.getDocuments(),
+                    request.getExceptions(), request.isDraft(), userId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
@@ -450,6 +568,7 @@ public class CimsController {
         List<Map<String, Object>> documents = null;
         List<Map<String, Object>> allocations = null;
         List<Map<String, Object>> owners = null;
+        List<Map<String, Object>> exceptions = null;
 
         if (payload.containsKey("collateral")) {
             collateral = mapper.convertValue(payload.get("collateral"), Collateral.class);
@@ -462,6 +581,9 @@ public class CimsController {
             if (payload.containsKey("owners")) {
                 owners = (List<Map<String, Object>>) payload.get("owners");
             }
+            if (payload.containsKey("exceptions")) {
+                exceptions = (List<Map<String, Object>>) payload.get("exceptions");
+            }
         } else {
             collateral = mapper.convertValue(payload, Collateral.class);
             if (payload.containsKey("documents")) {
@@ -473,8 +595,11 @@ public class CimsController {
             if (payload.containsKey("owners")) {
                 owners = (List<Map<String, Object>>) payload.get("owners");
             }
+            if (payload.containsKey("exceptions")) {
+                exceptions = (List<Map<String, Object>>) payload.get("exceptions");
+            }
         }
-        return ResponseEntity.ok(cimsService.preValidateCollateralRegistration(collateral, documents, allocations, owners));
+        return ResponseEntity.ok(cimsService.preValidateCollateralRegistration(collateral, documents, allocations, owners, exceptions));
     }
 
     @PostMapping("/collateral/submit-exception-request")
@@ -494,9 +619,10 @@ public class CimsController {
     public ResponseEntity<Map<String, Object>> allocateCollateralFacilities(
             @PathVariable String id,
             @RequestBody List<Map<String, Object>> allocations,
+            @RequestParam(defaultValue = "false") boolean fullReplacement,
             @RequestParam(defaultValue = "CRO_USER") String userId) {
         try {
-            return ResponseEntity.ok(cimsService.allocateCollateralFacilities(id, allocations, userId));
+            return ResponseEntity.ok(collateralFacilityRelationshipService.allocateCollateralFacilities(id, allocations, fullReplacement, userId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }

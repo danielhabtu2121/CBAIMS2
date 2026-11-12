@@ -1,5 +1,6 @@
 package com.bank.cims.service;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -8,14 +9,17 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@ConditionalOnProperty(name = "cims.scheduler.enabled", havingValue = "true", matchIfMissing = true)
 public class CimsSchedulerService {
     @Autowired private ConfigurationService configurationService;
     @Autowired private CimsService cimsService;
     @Autowired private RenewalEscalationService renewalEscalationService;
+    @Autowired private FirstDegreeSecondDegreeService firstDegreeSecondDegreeService;
 
     private final AtomicLong lastReminderRun = new AtomicLong(0);
     private final AtomicLong lastExceptionRun = new AtomicLong(0);
     private final AtomicLong lastCbsRun = new AtomicLong(0);
+    private final AtomicLong lastReportRun = new AtomicLong(0);
 
     /**
      * Runs frequently but uses Admin-configured intervals to decide whether work is due.
@@ -37,6 +41,7 @@ public class CimsSchedulerService {
                 try{
                     cimsService.scanAndGenerateExceptions();
                     cimsService.runAutomaticExceptionEscalation();
+                    firstDegreeSecondDegreeService.runPeriodicFirstDegreeBalanceReview("SCHEDULER");
                     lastExceptionRun.set(now);
                 }
                 catch(Exception e){ cimsService.logAudit("SYSTEM","SYSADMIN","SCHEDULER_EXCEPTION_ERROR","Scheduler","EXCEPTIONS","Error","",e.getMessage(),"Scheduled exception scan and escalation failed"); }
@@ -47,6 +52,16 @@ public class CimsSchedulerService {
             if(now-lastCbsRun.get()>=interval){
                 try{ cimsService.syncAllPendingCbs("SYSTEM"); lastCbsRun.set(now); }
                 catch(Exception e){ cimsService.logAudit("SYSTEM","SYSADMIN","SCHEDULER_CBS_SYNC_ERROR","Scheduler","CBS","Error","",e.getMessage(),"Scheduled CBS simulator synchronization failed"); }
+            }
+        }
+
+        // Scheduled report execution lifecycle (Finding 75)
+        if (now - lastReportRun.get() >= 300_000L) { // Every 5 minutes
+            try {
+                cimsService.executeScheduledReports();
+                lastReportRun.set(now);
+            } catch (Exception e) {
+                cimsService.logAudit("SYSTEM", "SYSADMIN", "SCHEDULER_REPORT_ERROR", "Scheduler", "REPORTS", "Error", "", e.getMessage(), "Scheduled report execution failed");
             }
         }
     }

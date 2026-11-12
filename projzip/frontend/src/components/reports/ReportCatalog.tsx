@@ -688,21 +688,22 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
           { header: 'Audit Date', key: 'Audit Date' },
         ];
 
-        // Synthesize release audit records from collaterals marked as Released, Pending Release, or eligible for release
+        // Authoritative release audit records from collaterals marked as Released or having active release request (Finding 133)
         const allRows = collaterals
-          .map((c, idx) => {
+          .filter((c) => (c.status || '').toLowerCase().includes('released') || !!c.activeReleaseRequestId)
+          .map((c) => {
             const isReleased = (c.status || '').toLowerCase().includes('released');
             return {
-              'Release Ref': `REL-2026-${(idx + 101).toString()}`,
+              'Release Ref': c.activeReleaseRequestId || `REL-${c.code}`,
               'Collateral Code': c.code,
               Description: c.description,
-              'Customer Name': customerMap[c.customerId || ''] || c.customerId || 'Customer PLC',
+              'Customer Name': customerMap[c.customerId || ''] || c.customerId || 'Customer',
               Valuation: c.valuationAmount || 0,
               'Facility Balance': 0.0,
-              'Zero-Balance Checklist': 'Verified 100% Repaid (0 ETB)',
-              'Approving Authority': 'Senior Branch Manager & Credit Committee',
-              'Release Stage': isReleased ? 'De-Pledged & Handed Over' : 'Release Audit Verified',
-              'Audit Date': c.reviewDate || c.makerDtStamp ? (c.reviewDate || c.makerDtStamp || '').substring(0, 10) : '2026-09-01',
+              'Zero-Balance Checklist': isReleased ? 'Verified 100% Repaid (0 ETB)' : 'Release Assessment Pending',
+              'Approving Authority': 'Credit Committee / Branch Manager',
+              'Release Stage': isReleased ? 'De-Pledged & Handed Over' : 'Release In Progress',
+              'Audit Date': c.reviewDate || c.makerDtStamp ? (c.reviewDate || c.makerDtStamp || '').substring(0, 10) : new Date().toISOString().substring(0, 10),
               Segment: c.owningSegment || 'Corporate',
               Branch: c.branch || 'Head Office',
             };
@@ -742,7 +743,13 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
         const missingRows: Record<string, any>[] = [];
 
         collaterals.forEach((c) => {
-          const colDocs = documents.filter((d) => d.entityId === c.id || d.entityId === c.code || d.collateralId === c.id);
+          const colDocs = documents.filter(
+            (d) =>
+              (d.entityId === c.id || d.entityId === c.code || d.collateralId === c.id || (c.code && d.collateralId === c.code)) &&
+              d.status !== 'Archived' &&
+              d.verificationStatus !== 'Rejected' &&
+              (!d.expiryDate || new Date(d.expiryDate) >= new Date())
+          );
           const cat = (c.category || '').toLowerCase();
 
           const docTypesPresent = colDocs.map((d) => (d.type || '').toLowerCase());
@@ -969,33 +976,30 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
       <div className="flex border-b border-[#E2E8F0] bg-white px-4 pt-3 rounded-t-lg gap-2 shadow-2xs">
         <button
           onClick={() => setActiveTab('catalog')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${
-            activeTab === 'catalog'
+          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'catalog'
               ? 'border-[#102E4A] text-[#102E4A]'
               : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+            }`}
         >
           <BarChart3 className="w-4 h-4" />
           Standard Report Catalog (10 Standard Reports)
         </button>
         <button
           onClick={() => setActiveTab('preview')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${
-            activeTab === 'preview'
+          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'preview'
               ? 'border-[#102E4A] text-[#102E4A]'
               : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+            }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
           Interactive Report Viewer &amp; Export ({selectedReportCode})
         </button>
         <button
           onClick={() => setActiveTab('schedules')}
-          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${
-            activeTab === 'schedules'
+          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'schedules'
               ? 'border-[#102E4A] text-[#102E4A]'
               : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+            }`}
         >
           <Clock className="w-4 h-4" />
           Automated Report Schedules ({scheduledReports.length})
@@ -1025,9 +1029,8 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                   setSubFilter('All');
                   setActiveTab('preview');
                 }}
-                className={`cims-card p-5 cursor-pointer hover:border-[#3E7AB0] hover:shadow-md transition-all space-y-2.5 group relative ${
-                  selectedReportCode === rpt.code ? 'border-[#102E4A] bg-[#EFF5FB]/30' : ''
-                }`}
+                className={`cims-card p-5 cursor-pointer hover:border-[#3E7AB0] hover:shadow-md transition-all space-y-2.5 group relative ${selectedReportCode === rpt.code ? 'border-[#102E4A] bg-[#EFF5FB]/30' : ''
+                  }`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
@@ -1218,9 +1221,8 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                     {currentReportResult.columns.map((col, idx) => (
                       <th
                         key={idx}
-                        className={`p-3 whitespace-nowrap ${
-                          col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
-                        }`}
+                        className={`p-3 whitespace-nowrap ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                          }`}
                       >
                         {col.header}
                       </th>
@@ -1256,9 +1258,8 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                             return (
                               <td
                                 key={colIdx}
-                                className={`p-3 text-right tabular-nums whitespace-nowrap font-mono ${
-                                  col.isDanger && val > 0 ? 'text-red-600 font-bold' : 'text-slate-800'
-                                }`}
+                                className={`p-3 text-right tabular-nums whitespace-nowrap font-mono ${col.isDanger && val > 0 ? 'text-red-600 font-bold' : 'text-slate-800'
+                                  }`}
                               >
                                 ETB {val.toLocaleString()}
                               </td>
@@ -1276,9 +1277,8 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
                           return (
                             <td
                               key={colIdx}
-                              className={`p-3 whitespace-nowrap max-w-xs truncate ${
-                                colIdx === 0 ? 'font-bold text-[#102E4A]' : 'text-slate-700'
-                              } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}
+                              className={`p-3 whitespace-nowrap max-w-xs truncate ${colIdx === 0 ? 'font-bold text-[#102E4A]' : 'text-slate-700'
+                                } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}
                             >
                               {val !== undefined && val !== null ? String(val) : '—'}
                             </td>

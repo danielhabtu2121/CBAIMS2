@@ -225,9 +225,8 @@ export function DataGrid<T extends Record<string, any>>({
                   <th
                     key={key}
                     onClick={() => col.sortable !== false && col.accessorKey && handleSort(col.accessorKey as string)}
-                    className={`py-3 px-4 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${
-                      col.sortable !== false && col.accessorKey ? 'cursor-pointer hover:bg-slate-100/80 transition-colors' : ''
-                    }`}
+                    className={`py-3 px-4 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.sortable !== false && col.accessorKey ? 'cursor-pointer hover:bg-slate-100/80 transition-colors' : ''
+                      }`}
                   >
                     <div className={`inline-flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : ''}`}>
                       <span className="font-bold text-[#00205B]">{col.header}</span>

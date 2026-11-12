@@ -76,6 +76,33 @@ public class LoanCollateralLinkHistory {
     @Column(name = "auth_stat")
     private String authStat = "A";
 
+    @Column(name = "collateral_rank")
+    private String collateralRank;
+
+    @Column(name = "borrower_customer_id")
+    private String borrowerCustomerId;
+
+    @Column(name = "legal_owner_customer_id")
+    private String legalOwnerCustomerId;
+
+    @Column(name = "relationship_context")
+    private String relationshipContext;
+
+    @Column(name = "third_party")
+    private boolean thirdParty = false;
+
+    @Column(name = "relationship_to_borrower")
+    private String relationshipToBorrower;
+
+    @Column(name = "pledge_agreement_ref")
+    private String pledgeAgreementRef;
+
+    @Column(name = "consent_info", columnDefinition = "TEXT")
+    private String consentInfo;
+
+    @Column(name = "consent_document_ref")
+    private String consentDocumentRef;
+
     public LoanCollateralLinkHistory() {}
 
     public String getId() { return id; }
@@ -146,4 +173,31 @@ public class LoanCollateralLinkHistory {
 
     public String getAuthStat() { return authStat; }
     public void setAuthStat(String authStat) { this.authStat = authStat; }
+
+    public String getCollateralRank() { return collateralRank; }
+    public void setCollateralRank(String collateralRank) { this.collateralRank = collateralRank; }
+
+    public String getBorrowerCustomerId() { return borrowerCustomerId; }
+    public void setBorrowerCustomerId(String borrowerCustomerId) { this.borrowerCustomerId = borrowerCustomerId; }
+
+    public String getLegalOwnerCustomerId() { return legalOwnerCustomerId; }
+    public void setLegalOwnerCustomerId(String legalOwnerCustomerId) { this.legalOwnerCustomerId = legalOwnerCustomerId; }
+
+    public String getRelationshipContext() { return relationshipContext; }
+    public void setRelationshipContext(String relationshipContext) { this.relationshipContext = relationshipContext; }
+
+    public boolean isThirdParty() { return thirdParty; }
+    public void setThirdParty(boolean thirdParty) { this.thirdParty = thirdParty; }
+
+    public String getRelationshipToBorrower() { return relationshipToBorrower; }
+    public void setRelationshipToBorrower(String relationshipToBorrower) { this.relationshipToBorrower = relationshipToBorrower; }
+
+    public String getPledgeAgreementRef() { return pledgeAgreementRef; }
+    public void setPledgeAgreementRef(String pledgeAgreementRef) { this.pledgeAgreementRef = pledgeAgreementRef; }
+
+    public String getConsentInfo() { return consentInfo; }
+    public void setConsentInfo(String consentInfo) { this.consentInfo = consentInfo; }
+
+    public String getConsentDocumentRef() { return consentDocumentRef; }
+    public void setConsentDocumentRef(String consentDocumentRef) { this.consentDocumentRef = consentDocumentRef; }
 }

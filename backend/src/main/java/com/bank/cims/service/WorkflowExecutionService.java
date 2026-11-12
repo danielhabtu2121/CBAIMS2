@@ -43,6 +43,12 @@ public class WorkflowExecutionService {
     private CimsExceptionRepository cimsExceptionRepository;
 
     @Autowired
+    private CollateralReleaseRequestRepository collateralReleaseRequestRepository;
+
+    @Autowired
+    private InsuranceExceptionRepository insuranceExceptionRepository;
+
+    @Autowired
     private CbsGateway cbsGateway;
 
     @Autowired
@@ -72,9 +78,31 @@ public class WorkflowExecutionService {
     @Autowired
     private PolicyHistoryRepository policyHistoryRepository;
 
+    @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private FirstDegreeSecondDegreeService firstDegreeSecondDegreeService;
+
     @Autowired
     @org.springframework.context.annotation.Lazy
     private NotificationService notificationService;
+
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private EarlyCollateralReleaseService earlyCollateralReleaseService;
+
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private InsuranceAdequacyService insuranceAdequacyService;
+
+    @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private ConfigurationService configurationService;
+
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private CimsService cimsService;
+
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Transactional
     public WorkflowActionResultDto submitToWorkflow(String entityType, String entityId, String actionType, String makerId, String remarks, String payloadJson) {
@@ -86,13 +114,18 @@ public class WorkflowExecutionService {
         // system and with whatever the Approval Hierarchy admin screen actually says.
         String candidateRole = roleHierarchyService.resolveApproverRole(entityType, actionType, fallbackRole);
 
-        // Check if existing pending task exists
+        // Check if existing pending task exists for exact transaction (entityType, entityId, actionType)
         WorkflowTask task = null;
         List<WorkflowTask> existing = workflowTaskRepository.findAll();
         for (WorkflowTask t : existing) {
             if (entityId.equalsIgnoreCase(t.getEntityId()) && "Pending".equalsIgnoreCase(t.getStatus())) {
-                task = t;
-                break;
+                if (entityType.equalsIgnoreCase(t.getEntityType()) && actionType.equalsIgnoreCase(t.getActionType())) {
+                    task = t;
+                    break;
+                } else {
+                    throw new IllegalStateException("An active workflow task (" + t.getActionType() + " - " + t.getId() +
+                            ") is already pending for " + entityType + " " + entityId + ". Cannot submit concurrent action " + actionType + ".");
+                }
             }
         }
 
@@ -150,7 +183,8 @@ public class WorkflowExecutionService {
         }
 
         // Strict Four-Eyes Check
-        if (task.getMakerId() != null && task.getMakerId().trim().equalsIgnoreCase(checkerId.trim())) {
+        boolean dualControlStrict = configurationService == null || configurationService.isDualControlStrictEnabled();
+        if (dualControlStrict && task.getMakerId() != null && task.getMakerId().trim().equalsIgnoreCase(checkerId.trim())) {
             throw new IllegalStateException("Dual Control Violation: Maker (" + task.getMakerId() + ") cannot approve their own submission.");
         }
 
@@ -203,31 +237,44 @@ public class WorkflowExecutionService {
         if ("Collateral".equalsIgnoreCase(entityType)) {
             Collateral col = findCollateral(entityId);
             if (col != null) {
-                if ("COLLATERAL_RELEASE".equalsIgnoreCase(task.getActionType())) {
-                    List<LoanCollateralLink> links = loanCollateralLinkRepository.findByCollateralId(col.getId());
-                    double pendingExposure = 0;
-                    List<String> activeLoanRefs = new java.util.ArrayList<>();
-                    for (LoanCollateralLink link : links) {
-                        Optional<LoanAccount> loanOpt = loanAccountRepository.findById(link.getLoanAccountId());
-                        if (loanOpt.isPresent() && loanOpt.get().getOutstandingBalance() > 0) {
-                            pendingExposure += loanOpt.get().getOutstandingBalance();
-                            activeLoanRefs.add(loanOpt.get().getLoanReference());
+                if (task.getActionType() != null && task.getActionType().startsWith("Maintain ")) {
+                    if (cimsService != null) {
+                        cimsService.applyMaintenanceApproval(task, checkerId);
+                    }
+                    finalEntityStatus = col.getStatus();
+                } else if ("Change Collateral Ownership".equalsIgnoreCase(task.getActionType())) {
+                    if (cimsService != null) {
+                        cimsService.applyCollateralOwnershipApproval(task, checkerId);
+                    }
+                    finalEntityStatus = col.getStatus();
+                } else if ("COLLATERAL_RELEASE".equalsIgnoreCase(task.getActionType())) {
+                    if (earlyCollateralReleaseService != null) {
+                        String relId = col.getActiveReleaseRequestId();
+                        if (relId != null) {
+                            earlyCollateralReleaseService.approveReleaseRequest(relId, checkerId, checkerRole, comments);
+                        } else {
+                            var assessment = earlyCollateralReleaseService.performPreReleaseImpactAssessment(col.getId(), null);
+                            if (assessment.isHardBlocked()) {
+                                throw new IllegalStateException("Collateral release blocked: " + String.join("; ", assessment.getBlockingReasons()));
+                            }
+                            CollateralReleaseRequest req = new CollateralReleaseRequest();
+                            req.setId("rel-req-" + UUID.randomUUID().toString().substring(0, 8));
+                            req.setCollateralId(col.getId());
+                            req.setFacilityIds("ALL");
+                            req.setReleaseType("FULL_COLLATERAL");
+                            req.setRequesterId(task.getMakerId());
+                            req.setApproverId(checkerId);
+                            req.setReason(comments != null ? comments : "Collateral release approved by checker");
+                            req.setStatus("APPROVED");
+                            req.setCbsUpdateStatus("PENDING");
+                            req.setDecisionDate(now);
+                            req.setDecisionComments(comments);
+                            collateralReleaseRequestRepository.save(req);
+                            col.setActiveReleaseRequestId(req.getId());
+                            collateralRepository.save(col);
                         }
                     }
-                    if (pendingExposure > 0) {
-                        throw new IllegalStateException("Collateral release blocked: Active outstanding loan obligations remain on linked facilities (" + String.join(", ", activeLoanRefs) + ") totaling ETB " + String.format(java.util.Locale.ROOT, "%.2f", pendingExposure) + ".");
-                    }
-                    col.setStatus("Released");
-                    col.setAuthStat("A");
-                    col.setRecordStat("O");
-                    col.setCheckerId(checkerId);
-                    col.setCheckerDtStamp(now);
-                    collateralRepository.save(col);
-                    for (LoanCollateralLink link : links) {
-                        link.setStatus("Released");
-                        loanCollateralLinkRepository.save(link);
-                    }
-                    finalEntityStatus = "Released";
+                    finalEntityStatus = "Approved (Pending CBS Manual Update)";
                 } else {
                     col.setAuthStat("A");
                     col.setRecordStat("O");
@@ -410,14 +457,46 @@ public class WorkflowExecutionService {
                     .or(() -> customerRepository.findFirstByCifIgnoreCase(entityId))
                     .orElse(null);
             if (cust != null) {
-                cust.setRecordStat("O");
-                cust.setAuthStat("A");
-                cust.setStatus("Active");
-                cust.setCheckerId(checkerId);
-                cust.setCheckerDtStamp(now);
-                cust.setOnceAuth("Y");
-                customerRepository.save(cust);
+                if (task.getActionType() != null && task.getActionType().startsWith("Maintain ")) {
+                    if (cimsService != null) {
+                        cimsService.applyMaintenanceApproval(task, checkerId);
+                    }
+                    finalEntityStatus = cust.getStatus();
+                } else {
+                    cust.setRecordStat("O");
+                    cust.setAuthStat("A");
+                    cust.setStatus("Active");
+                    cust.setCheckerId(checkerId);
+                    cust.setCheckerDtStamp(now);
+                    cust.setOnceAuth("Y");
+                    customerRepository.save(cust);
+                    finalEntityStatus = "Active";
+                }
+            }
+        } else if ("LoanCollateralLink".equalsIgnoreCase(entityType) || "CollateralFacilityLink".equalsIgnoreCase(entityType) || "Relationship".equalsIgnoreCase(entityType)) {
+            LoanCollateralLink link = loanCollateralLinkRepository.findById(entityId).orElse(null);
+            if (link != null) {
+                link.setStatus("Active");
+                link.setRelationshipStatus("Active");
+                link.setAuthStat("A");
+                link.setRecordStat("O");
+                link.setCheckerId(checkerId);
+                link.setCheckerDtStamp(now);
+                loanCollateralLinkRepository.save(link);
                 finalEntityStatus = "Active";
+
+                Collateral col = collateralRepository.findById(link.getCollateralId()).orElse(null);
+                if (col != null) {
+                    List<LoanCollateralLink> colLinks = loanCollateralLinkRepository.findByCollateralId(col.getId());
+                    double totalAllocated = colLinks.stream()
+                            .filter(LoanCollateralLink::isCapacityConsuming)
+                            .mapToDouble(LoanCollateralLink::getAllocatedAmount).sum();
+                    col.setCurrentAllocation(totalAllocated);
+                    double nsv = col.getValuationAmount() * (1.0 - (col.getHaircut() / 100.0));
+                    col.setUtilizationPercentage(nsv > 0 ? (totalAllocated / nsv) * 100.0 : 0.0);
+                    collateralRepository.save(col);
+                    exposureCalculationService.calculateExposureAndAdequacy(col.getId());
+                }
             }
         } else if ("Document".equalsIgnoreCase(entityType) || "Ownership Document".equalsIgnoreCase(entityType) || "Collateral Document".equalsIgnoreCase(entityType)) {
             OwnershipDocument doc = ownershipDocumentRepository.findById(entityId).orElse(null);
@@ -486,11 +565,22 @@ public class WorkflowExecutionService {
                 finalEntityStatus = "Active";
                 exposureCalculationService.calculateExposureAndAdequacy(link.getCollateralId());
             }
+        } else if ("Collateral Release".equalsIgnoreCase(entityType) || "CollateralReleaseRequest".equalsIgnoreCase(entityType) || "COLLATERAL_RELEASE".equalsIgnoreCase(entityType)) {
+            if (earlyCollateralReleaseService != null) {
+                earlyCollateralReleaseService.approveReleaseRequest(entityId, checkerId, checkerRole, comments);
+            }
+            finalEntityStatus = "Approved (Pending CBS Manual Update)";
+        } else if ("Insurance Exception".equalsIgnoreCase(entityType) || "InsuranceException".equalsIgnoreCase(entityType) || "INSURANCE_EXCEPTION".equalsIgnoreCase(entityType)) {
+            if (insuranceAdequacyService != null) {
+                insuranceAdequacyService.approveException(entityId, checkerId, checkerRole, comments);
+            }
+            finalEntityStatus = "Approved";
         }
 
         // Update Task
         task.setStatus("Approved");
         task.setCompletedAt(now);
+        task.setCurrentStep("Completed");
         task.setRemarks(comments != null ? comments : "Approved by " + checkerId);
         workflowTaskRepository.save(task);
 
@@ -557,19 +647,42 @@ public class WorkflowExecutionService {
         if ("Collateral".equalsIgnoreCase(entityType)) {
             Collateral col = findCollateral(entityId);
             if (col != null) {
-                col.setAuthStat("U");
-                col.setRecordStat("U");
-                col.setStatus("Draft");
-                collateralRepository.save(col);
+                if ((task.getActionType() != null && task.getActionType().startsWith("Maintain "))
+                        || "Change Collateral Ownership".equalsIgnoreCase(task.getActionType())) {
+                    col.setAuthStat("A");
+                    col.setRecordStat("O");
+                    collateralRepository.save(col);
+                } else {
+                    col.setAuthStat("U");
+                    col.setRecordStat("U");
+                    col.setStatus("Draft");
+                    collateralRepository.save(col);
 
-                List<LoanCollateralLink> links = loanCollateralLinkRepository.findByCollateralId(col.getId());
-                for (LoanCollateralLink link : links) {
-                    if ("Pending Approval".equalsIgnoreCase(link.getStatus())) {
-                        link.setStatus("Draft");
-                        link.setAuthStat("U");
-                        link.setRecordStat("U");
-                        loanCollateralLinkRepository.save(link);
+                    List<LoanCollateralLink> links = loanCollateralLinkRepository.findByCollateralId(col.getId());
+                    for (LoanCollateralLink link : links) {
+                        if ("Pending Approval".equalsIgnoreCase(link.getStatus())) {
+                            link.setStatus("Draft");
+                            link.setAuthStat("U");
+                            link.setRecordStat("U");
+                            loanCollateralLinkRepository.save(link);
+                        }
                     }
+                }
+            }
+        } else if ("Customer".equalsIgnoreCase(entityType)) {
+            Customer cust = customerRepository.findById(entityId)
+                    .or(() -> customerRepository.findFirstByCifIgnoreCase(entityId))
+                    .orElse(null);
+            if (cust != null) {
+                if (task.getActionType() != null && task.getActionType().startsWith("Maintain ")) {
+                    cust.setAuthStat("A");
+                    cust.setRecordStat("O");
+                    customerRepository.save(cust);
+                } else {
+                    cust.setAuthStat("R");
+                    cust.setRecordStat("R");
+                    cust.setStatus("Rejected");
+                    customerRepository.save(cust);
                 }
             }
         } else if ("Insurance Policy".equalsIgnoreCase(entityType) || "Insurance".equalsIgnoreCase(entityType) || "Policy".equalsIgnoreCase(entityType)) {
@@ -622,9 +735,18 @@ public class WorkflowExecutionService {
                 link.setRecordStat("U");
                 loanCollateralLinkRepository.save(link);
             }
+        } else if ("Collateral Release".equalsIgnoreCase(entityType) || "CollateralReleaseRequest".equalsIgnoreCase(entityType) || "COLLATERAL_RELEASE".equalsIgnoreCase(entityType)) {
+            if (earlyCollateralReleaseService != null) {
+                earlyCollateralReleaseService.returnReleaseRequest(entityId, checkerId, checkerRole, comments);
+            }
+        } else if ("Insurance Exception".equalsIgnoreCase(entityType) || "InsuranceException".equalsIgnoreCase(entityType) || "INSURANCE_EXCEPTION".equalsIgnoreCase(entityType)) {
+            if (insuranceAdequacyService != null) {
+                insuranceAdequacyService.returnException(entityId, checkerId, checkerRole, comments);
+            }
         }
 
         task.setStatus("Returned");
+        task.setCurrentStep("Returned to Maker");
         task.setRemarks(comments);
         workflowTaskRepository.save(task);
 
@@ -712,19 +834,65 @@ public class WorkflowExecutionService {
                 String prevStatus = pol.getStatus();
                 if ("POLICY_CANCELLATION".equalsIgnoreCase(task.getActionType()) || "Cancellation Pending".equalsIgnoreCase(pol.getStatus())) {
                     pol.setStatus("Active");
+                    pol.setAuthStat("A");
+                    pol.setRecordStat("O");
                     pol.setCancellationReason(null);
                 } else if ("POLICY_CLOSURE".equalsIgnoreCase(task.getActionType()) || "Closure Pending".equalsIgnoreCase(pol.getStatus())) {
                     pol.setStatus("Active");
+                    pol.setAuthStat("A");
+                    pol.setRecordStat("O");
                     pol.setClosureReason(null);
                 } else if ("POLICY_REOPEN".equalsIgnoreCase(task.getActionType()) || "Reopen Pending".equalsIgnoreCase(pol.getStatus())) {
                     pol.setStatus("Closed");
+                    pol.setAuthStat("A");
+                    pol.setRecordStat("O");
                 } else if ("POLICY_AMENDMENT".equalsIgnoreCase(task.getActionType())) {
                     pol.setStatus("Active");
+                    pol.setAuthStat("A");
+                    pol.setRecordStat("O");
+                    pol.setAmendmentReason(null);
+                    // Rollback proposed policy values from prior approved snapshot (Audit Finding 61)
+                    List<PolicyHistory> historyList = policyHistoryRepository.findByPolicyIdOrderByTimestampDesc(pol.getId());
+                    PolicyHistory priorSnapshot = historyList.stream()
+                            .filter(h -> "AMENDMENT_PROPOSED".equalsIgnoreCase(h.getEventType()) && h.getSnapshotJson() != null && !h.getSnapshotJson().isBlank())
+                            .findFirst()
+                            .orElse(null);
+                    if (priorSnapshot != null) {
+                        try {
+                            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(priorSnapshot.getSnapshotJson());
+                            if (node.has("version")) pol.setVersion(node.get("version").asInt());
+                            if (node.has("insurerName")) pol.setInsurerName(node.get("insurerName").asText());
+                            if (node.has("coverageType")) pol.setCoverageType(node.get("coverageType").asText());
+                            if (node.has("insuredAmount")) pol.setInsuredAmount(node.get("insuredAmount").asDouble());
+                            if (node.has("premium")) pol.setPremium(node.get("premium").asDouble());
+                            if (node.has("effectiveDate")) pol.setEffectiveDate(node.get("effectiveDate").asText());
+                            if (node.has("expiryDate")) pol.setExpiryDate(node.get("expiryDate").asText());
+                        } catch (Exception ignored) {
+                            if (pol.getVersion() > 1) pol.setVersion(pol.getVersion() - 1);
+                        }
+                    } else if (pol.getVersion() > 1) {
+                        pol.setVersion(pol.getVersion() - 1);
+                    }
+                } else if ("POLICY_ENDORSEMENT".equalsIgnoreCase(task.getActionType())) {
+                    // Isolate rejection to the pending endorsement record; keep underlying policy Active (Audit Finding 62)
+                    pol.setStatus("Active");
+                    pol.setAuthStat("A");
+                    pol.setRecordStat("O");
+                    List<PolicyEndorsement> endorsements = policyEndorsementRepository.findByPolicyId(pol.getId());
+                    for (PolicyEndorsement end : endorsements) {
+                        if ("Pending".equalsIgnoreCase(end.getRecordStat()) || "U".equalsIgnoreCase(end.getRecordStat())) {
+                            end.setRecordStat("R");
+                            end.setAuthStat("R");
+                            end.setCheckerId(checkerId);
+                            end.setCheckerDtStamp(now);
+                            policyEndorsementRepository.save(end);
+                        }
+                    }
                 } else {
                     pol.setStatus("Rejected");
+                    pol.setAuthStat("R");
+                    pol.setRecordStat("R");
                 }
-                pol.setAuthStat("R");
-                pol.setRecordStat("R");
                 pol.setCheckerId(checkerId);
                 pol.setCheckerDtStamp(now);
                 String rejNote = String.format(Locale.ROOT,
@@ -778,10 +946,19 @@ public class WorkflowExecutionService {
                 link.setCheckerDtStamp(now);
                 loanCollateralLinkRepository.save(link);
             }
+        } else if ("Collateral Release".equalsIgnoreCase(entityType) || "CollateralReleaseRequest".equalsIgnoreCase(entityType) || "COLLATERAL_RELEASE".equalsIgnoreCase(entityType)) {
+            if (earlyCollateralReleaseService != null) {
+                earlyCollateralReleaseService.rejectReleaseRequest(entityId, checkerId, checkerRole, comments);
+            }
+        } else if ("Insurance Exception".equalsIgnoreCase(entityType) || "InsuranceException".equalsIgnoreCase(entityType) || "INSURANCE_EXCEPTION".equalsIgnoreCase(entityType)) {
+            if (insuranceAdequacyService != null) {
+                insuranceAdequacyService.rejectException(entityId, checkerId, checkerRole, comments);
+            }
         }
 
         task.setStatus("Rejected");
         task.setCompletedAt(now);
+        task.setCurrentStep("Rejected");
         task.setRemarks(comments);
         workflowTaskRepository.save(task);
 

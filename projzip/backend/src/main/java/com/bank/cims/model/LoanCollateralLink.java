@@ -138,6 +138,84 @@ public class LoanCollateralLink {
     @Column(name = "collateral_allocation_pct")
     private double collateralAllocationPct = 0;
 
+    @Column(name = "collateral_rank")
+    private String collateralRank = "1st";
+
+    @Column(name = "is_first_degree_internal")
+    private boolean isFirstDegreeInternal = true;
+
+    @Column(name = "first_degree_collateral_id")
+    private String firstDegreeCollateralId;
+
+    @Column(name = "first_degree_holder_name")
+    private String firstDegreeHolderName = "Dashen Bank S.C.";
+
+    @Column(name = "first_degree_facility_ref")
+    private String firstDegreeFacilityRef;
+
+    @Column(name = "first_degree_outstanding_balance")
+    private double firstDegreeOutstandingBalance = 0.0;
+
+    @Column(name = "first_degree_balance_as_of_date")
+    private String firstDegreeBalanceAsOfDate;
+
+    @Column(name = "registered_mortgage_amount")
+    private double registeredMortgageAmount = 0.0;
+
+    @Column(name = "mortgage_registration_number")
+    private String mortgageRegistrationNumber;
+
+    @Column(name = "mortgage_registration_date")
+    private String mortgageRegistrationDate;
+
+    @Column(name = "first_degree_policy_number")
+    private String firstDegreePolicyNumber;
+
+    @Column(name = "first_degree_insurer")
+    private String firstDegreeInsurer;
+
+    @Column(name = "first_degree_policy_expiry")
+    private String firstDegreePolicyExpiry;
+
+    @Column(name = "bank_noted_as_second_mortgagee")
+    private boolean bankNotedAsSecondMortgagee = false;
+
+    @Column(name = "first_degree_confirmation_doc_id")
+    private String firstDegreeConfirmationDocId;
+
+    @Column(name = "first_degree_extract_doc_id")
+    private String firstDegreeExtractDocId;
+
+    @Column(name = "borrower_customer_id")
+    private String borrowerCustomerId;
+
+    @Column(name = "legal_owner_customer_id")
+    private String legalOwnerCustomerId;
+
+    @Column(name = "legal_owner_name")
+    private String legalOwnerName;
+
+    @Column(name = "owner_without_cif")
+    private boolean ownerWithoutCif = false;
+
+    @Column(name = "relationship_context")
+    private String relationshipContext = "Borrower-owned";
+
+    @Column(name = "third_party")
+    private boolean thirdParty = false;
+
+    @Column(name = "relationship_to_borrower")
+    private String relationshipToBorrower;
+
+    @Column(name = "pledge_agreement_ref")
+    private String pledgeAgreementRef;
+
+    @Column(name = "consent_info", columnDefinition = "TEXT")
+    private String consentInfo;
+
+    @Column(name = "consent_document_ref")
+    private String consentDocumentRef;
+
     public LoanCollateralLink() {}
 
     public LoanCollateralLink(String id, String loanAccountId, String collateralId, double allocatedAmount) {
@@ -253,5 +331,97 @@ public class LoanCollateralLink {
     public void setCollateralAllocationPct(double collateralAllocationPct) { 
         this.collateralAllocationPct = collateralAllocationPct; 
         this.linkedPercent = collateralAllocationPct;
+    }
+
+    public String getCollateralRank() { return collateralRank != null ? collateralRank : "1st"; }
+    public void setCollateralRank(String collateralRank) { this.collateralRank = collateralRank; }
+    public boolean isFirstDegreeInternal() { return isFirstDegreeInternal; }
+    public void setFirstDegreeInternal(boolean firstDegreeInternal) { isFirstDegreeInternal = firstDegreeInternal; }
+    public String getFirstDegreeCollateralId() { return firstDegreeCollateralId; }
+    public void setFirstDegreeCollateralId(String firstDegreeCollateralId) { this.firstDegreeCollateralId = firstDegreeCollateralId; }
+    public String getFirstDegreeHolderName() { return firstDegreeHolderName; }
+    public void setFirstDegreeHolderName(String firstDegreeHolderName) { this.firstDegreeHolderName = firstDegreeHolderName; }
+    public String getFirstDegreeFacilityRef() { return firstDegreeFacilityRef; }
+    public void setFirstDegreeFacilityRef(String firstDegreeFacilityRef) { this.firstDegreeFacilityRef = firstDegreeFacilityRef; }
+    public double getFirstDegreeOutstandingBalance() { return firstDegreeOutstandingBalance; }
+    public void setFirstDegreeOutstandingBalance(double firstDegreeOutstandingBalance) { this.firstDegreeOutstandingBalance = firstDegreeOutstandingBalance; }
+    public String getFirstDegreeBalanceAsOfDate() { return firstDegreeBalanceAsOfDate; }
+    public void setFirstDegreeBalanceAsOfDate(String firstDegreeBalanceAsOfDate) { this.firstDegreeBalanceAsOfDate = firstDegreeBalanceAsOfDate; }
+    public double getRegisteredMortgageAmount() { return registeredMortgageAmount; }
+    public void setRegisteredMortgageAmount(double registeredMortgageAmount) { this.registeredMortgageAmount = registeredMortgageAmount; }
+    public String getMortgageRegistrationNumber() { return mortgageRegistrationNumber; }
+    public void setMortgageRegistrationNumber(String mortgageRegistrationNumber) { this.mortgageRegistrationNumber = mortgageRegistrationNumber; }
+    public String getMortgageRegistrationDate() { return mortgageRegistrationDate; }
+    public void setMortgageRegistrationDate(String mortgageRegistrationDate) { this.mortgageRegistrationDate = mortgageRegistrationDate; }
+    public String getFirstDegreePolicyNumber() { return firstDegreePolicyNumber; }
+    public void setFirstDegreePolicyNumber(String firstDegreePolicyNumber) { this.firstDegreePolicyNumber = firstDegreePolicyNumber; }
+    public String getFirstDegreeInsurer() { return firstDegreeInsurer; }
+    public void setFirstDegreeInsurer(String firstDegreeInsurer) { this.firstDegreeInsurer = firstDegreeInsurer; }
+    public String getFirstDegreePolicyExpiry() { return firstDegreePolicyExpiry; }
+    public void setFirstDegreePolicyExpiry(String firstDegreePolicyExpiry) { this.firstDegreePolicyExpiry = firstDegreePolicyExpiry; }
+    public boolean isBankNotedAsSecondMortgagee() { return bankNotedAsSecondMortgagee; }
+    public void setBankNotedAsSecondMortgagee(boolean bankNotedAsSecondMortgagee) { this.bankNotedAsSecondMortgagee = bankNotedAsSecondMortgagee; }
+    public String getFirstDegreeConfirmationDocId() { return firstDegreeConfirmationDocId; }
+    public void setFirstDegreeConfirmationDocId(String firstDegreeConfirmationDocId) { this.firstDegreeConfirmationDocId = firstDegreeConfirmationDocId; }
+    public String getFirstDegreeExtractDocId() { return firstDegreeExtractDocId; }
+    public void setFirstDegreeExtractDocId(String firstDegreeExtractDocId) { this.firstDegreeExtractDocId = firstDegreeExtractDocId; }
+    public String getBorrowerCustomerId() { return borrowerCustomerId != null ? borrowerCustomerId : customerId; }
+    public void setBorrowerCustomerId(String borrowerCustomerId) { this.borrowerCustomerId = borrowerCustomerId; }
+    public String getLegalOwnerCustomerId() { return legalOwnerCustomerId; }
+    public void setLegalOwnerCustomerId(String legalOwnerCustomerId) { this.legalOwnerCustomerId = legalOwnerCustomerId; }
+    public String getLegalOwnerName() { return legalOwnerName; }
+    public void setLegalOwnerName(String legalOwnerName) { this.legalOwnerName = legalOwnerName; }
+    public boolean isOwnerWithoutCif() { return ownerWithoutCif; }
+    public void setOwnerWithoutCif(boolean ownerWithoutCif) { this.ownerWithoutCif = ownerWithoutCif; }
+
+    public String getRelationshipContext() {
+        if (relationshipContext != null && !relationshipContext.isBlank()) return relationshipContext;
+        return isThirdParty() ? "Third-party" : "Borrower-owned";
+    }
+    public void setRelationshipContext(String relationshipContext) { this.relationshipContext = relationshipContext; }
+    public boolean isThirdParty() { return thirdParty; }
+    public void setThirdParty(boolean thirdParty) { this.thirdParty = thirdParty; }
+    public String getRelationshipToBorrower() { return relationshipToBorrower; }
+    public void setRelationshipToBorrower(String relationshipToBorrower) { this.relationshipToBorrower = relationshipToBorrower; }
+    public String getPledgeAgreementRef() { return pledgeAgreementRef; }
+    public void setPledgeAgreementRef(String pledgeAgreementRef) { this.pledgeAgreementRef = pledgeAgreementRef; }
+    public String getConsentInfo() { return consentInfo; }
+    public void setConsentInfo(String consentInfo) { this.consentInfo = consentInfo; }
+    public String getConsentDocumentRef() { return consentDocumentRef; }
+    public void setConsentDocumentRef(String consentDocumentRef) { this.consentDocumentRef = consentDocumentRef; }
+
+    public boolean isEffectiveActive() {
+        String stat = this.status != null ? this.status : this.relationshipStatus;
+        if (stat == null) return false;
+        if (!"Active".equalsIgnoreCase(stat) && !"Approved".equalsIgnoreCase(stat)) {
+            return false;
+        }
+        if ("Released".equalsIgnoreCase(stat) || "Historical".equalsIgnoreCase(stat) || "Ended".equalsIgnoreCase(stat)
+                || "Cancelled".equalsIgnoreCase(stat) || "Rejected".equalsIgnoreCase(stat) || "Draft".equalsIgnoreCase(stat)
+                || "Pending Approval".equalsIgnoreCase(stat)) {
+            return false;
+        }
+        if (this.authStat != null && !"A".equalsIgnoreCase(this.authStat)) {
+            return false;
+        }
+        if (this.endDate != null && !this.endDate.isBlank()) {
+            try {
+                java.time.LocalDate end = java.time.LocalDate.parse(this.endDate.substring(0, 10));
+                if (end.isBefore(java.time.LocalDate.now())) {
+                    return false;
+                }
+            } catch (Exception ignored) {}
+        }
+        return true;
+    }
+
+    public boolean isCapacityConsuming() {
+        String stat = this.status != null ? this.status : this.relationshipStatus;
+        if (stat == null) return false;
+        if ("Released".equalsIgnoreCase(stat) || "Historical".equalsIgnoreCase(stat) || "Ended".equalsIgnoreCase(stat)
+                || "Cancelled".equalsIgnoreCase(stat) || "Rejected".equalsIgnoreCase(stat)) {
+            return false;
+        }
+        return "Active".equalsIgnoreCase(stat) || "Pending Approval".equalsIgnoreCase(stat) || "Draft".equalsIgnoreCase(stat);
     }
 }

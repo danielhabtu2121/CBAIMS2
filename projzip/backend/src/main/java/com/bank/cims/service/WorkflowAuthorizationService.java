@@ -9,6 +9,7 @@ import com.bank.cims.repository.WorkflowTaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,6 +18,7 @@ public class WorkflowAuthorizationService {
     @Autowired private RolePermissionRepository rolePermissionRepository;
     @Autowired private WorkflowTaskRepository workflowTaskRepository;
     @Autowired private RoleHierarchyService roleHierarchyService;
+    @Autowired private com.bank.cims.repository.ApprovalHistoryRepository approvalHistoryRepository;
 
     /**
      * Verifies that {@code userId} is entitled to approve, reject, or return the given
@@ -41,14 +43,24 @@ public class WorkflowAuthorizationService {
             throw new IllegalStateException("Dual-Control Violation: Maker (" + task.getMakerId() + ") cannot authorize their own submission. Segregation of duties (Four-Eyes Principle) strictly requires an independent Checker.");
         }
 
+        // Multi-Level Four-Eyes Principle: Level 1 approver cannot also approve Level 2
+        if ("Level 2 Review".equalsIgnoreCase(task.getCurrentStep()) && approvalHistoryRepository != null) {
+            boolean alreadyApprovedLevel1 = approvalHistoryRepository.findByWorkflowTaskIdOrderByDecidedAtDesc(taskId).stream()
+                    .anyMatch(h -> "Approved".equalsIgnoreCase(h.getDecision()) && isSamePerson(h.getActorId(), user));
+            if (alreadyApprovedLevel1) {
+                throw new IllegalStateException("Dual-Control Violation: You have already authorized Level 1 for this transaction. Secondary Level 2 authorization must be completed by an independent " + task.getCandidateRole() + " reviewer.");
+            }
+        }
+
         if (task.getCandidateRole() != null && !roleHierarchyService.isAuthorizedToActOn(user.getRole(), task.getCandidateRole())) {
             throw new IllegalStateException("User role " + user.getRole() + " is not authorized for candidate role " + task.getCandidateRole() + ".");
         }
 
-        Optional<RolePermission> permission = rolePermissionRepository.findByRoleCodeIgnoreCaseAndScreenNameIgnoreCase(user.getRole(), "Approvals").stream().findFirst();
-        if (permission.isPresent()) {
-            if (!permission.get().isCanApprove()) {
-                throw new IllegalStateException("User does not have approval permission for the Approvals module.");
+        List<RolePermission> permissions = rolePermissionRepository.findByRoleCodeIgnoreCaseAndScreenNameIgnoreCase(user.getRole(), "Approvals");
+        if (!permissions.isEmpty()) {
+            List<RolePermission> activePerms = permissions.stream().filter(RolePermission::isActive).toList();
+            if (activePerms.isEmpty() || !activePerms.get(0).isCanApprove()) {
+                throw new IllegalStateException("User does not have approval permission for the Approvals module (permission inactive or approval not granted).");
             }
         } else {
             boolean defaultAllowed = java.util.Arrays.asList("BRMGR", "EXEC", "SRMGMT", "HODEPT", "DISTDIR", "MGRCOLLDOC", "COMPLIANCE")

@@ -73,6 +73,9 @@ public class Module1RelationshipComprehensiveIntegrationTest {
     @Autowired
     private InsurancePolicyRepository policyRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private Customer custCorporate;
     private Customer custDifferent;
     private Collateral col100M;
@@ -83,6 +86,22 @@ public class Module1RelationshipComprehensiveIntegrationTest {
 
     @BeforeEach
     public void setUp() {
+        String[] testUsers = {"TEST_MAKER", "MAKER_ALICE", "TEST_USER", "MAKER_1", "CHECKER_1", "TEST_CHECKER", "APPROVER_1"};
+        for (String uId : testUsers) {
+            if (userRepository.findById(uId).isEmpty()) {
+                com.bank.cims.model.User u = new com.bank.cims.model.User();
+                u.setId(uId);
+                u.setUsername(uId);
+                u.setFullName(uId);
+                u.setPassword("password");
+                u.setRole("SYSADMIN");
+                u.setBranch("Head Office");
+                u.setSegment("Corporate Banking");
+                u.setActive(true);
+                userRepository.save(u);
+            }
+        }
+
         testUid = UUID.randomUUID().toString().substring(0, 6);
 
         // Corporate Borrower (Normal Owner)

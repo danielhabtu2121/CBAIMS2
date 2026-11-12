@@ -37,6 +37,9 @@ public class DocumentController {
     @Autowired
     private CimsService cimsService;
 
+    @Autowired
+    private com.bank.cims.service.dms.DmsStorageService dmsStorageService;
+
     @GetMapping("/search")
     public ResponseEntity<List<OwnershipDocument>> searchDocuments(
             @RequestParam(required = false) String customerName,
@@ -345,12 +348,8 @@ public class DocumentController {
     public ResponseEntity<Map<String, Object>> archiveDocument(
             @PathVariable String id,
             @RequestParam(defaultValue = "MGRCOLLDOC") String userId) {
-        ownershipDocumentRepository.findById(id).ifPresent(d -> {
-            d.setStatus("Archived");
-            ownershipDocumentRepository.save(d);
-            cimsService.logAudit(userId, "MGRCOLLDOC", "ARCHIVE_DOCUMENT", "Document", id, "Status", "Active", "Archived", "Archived document " + d.getName());
-        });
-        return ResponseEntity.ok(Map.of("success", true, "message", "Document archived in DMS."));
+        OwnershipDocument doc = cimsService.archiveDocument(id, userId);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Document archived in DMS.", "documentId", doc.getId()));
     }
 
     private String generateVaultRecordText(OwnershipDocument doc) {
@@ -519,17 +518,24 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Object> downloadDocument(@PathVariable String id) {
+    public ResponseEntity<Object> downloadDocument(
+            @PathVariable String id,
+            @RequestParam(required = false) String userId) {
         Optional<OwnershipDocument> docOpt = ownershipDocumentRepository.findById(id);
         if (docOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         OwnershipDocument doc = docOpt.get();
+        String actor = (userId != null && !userId.isBlank()) ? userId : "COLLDOCOFF";
+        cimsService.logAudit(actor, "COLLDOCOFF", "DOWNLOAD_DOCUMENT", "Document", doc.getId(), "FileDownload", "Vault", doc.getName(), "Downloaded document: " + doc.getName() + " (v" + doc.getVersion() + ")");
         String fileName = doc.getFileName() != null && !doc.getFileName().isBlank()
                 ? doc.getFileName()
                 : (doc.getName().endsWith(".pdf") ? doc.getName() : doc.getName() + ".pdf");
         
         byte[] bytes = tryDecodeBase64File(doc.getFileContent());
+        if (bytes == null && doc.getDmsRef() != null && !doc.getDmsRef().isBlank()) {
+            bytes = dmsStorageService.retrieveDocument(doc.getDmsRef());
+        }
         if (bytes == null) {
             String rootId = doc.getParentDocumentId() != null ? doc.getParentDocumentId() : doc.getId();
             List<OwnershipDocument> versions = ownershipDocumentRepository.findAll().stream()
@@ -538,6 +544,9 @@ public class DocumentController {
                     .toList();
             for (OwnershipDocument v : versions) {
                 bytes = tryDecodeBase64File(v.getFileContent());
+                if (bytes == null && v.getDmsRef() != null && !v.getDmsRef().isBlank()) {
+                    bytes = dmsStorageService.retrieveDocument(v.getDmsRef());
+                }
                 if (bytes != null) {
                     if (v.getFileName() != null && !v.getFileName().isBlank()) {
                         fileName = v.getFileName();
@@ -555,13 +564,9 @@ public class DocumentController {
                     .body(bytes);
         }
 
-        // Return authoritative PDF binary attachment
-        byte[] pdfBytes = generateVaultPdfBytes(doc);
-        String pdfFileName = fileName.endsWith(".pdf") ? fileName : fileName.replaceFirst("\\.[^.]+$", "") + ".pdf";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pdfFileName + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdfBytes);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("error", "Document content unavailable", "message", "Original file content is not available in DMS for document: " + id));
     }
 
     @GetMapping("/{id}/content")
@@ -601,22 +606,35 @@ public class DocumentController {
                     .body(bytes);
         }
 
-        // Return authoritative PDF binary stream with HTTP 200
-        byte[] pdfBytes = generateVaultPdfBytes(doc);
-        String pdfFileName = fileName.endsWith(".pdf") ? fileName : fileName.replaceFirst("\\.[^.]+$", "") + ".pdf";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + pdfFileName + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdfBytes);
+        return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/{id}/preview")
-    public ResponseEntity<Object> previewDocument(@PathVariable String id) {
+    @GetMapping("/{id}/custody-record")
+    public ResponseEntity<byte[]> getCustodyRecordPdf(@PathVariable String id) {
         Optional<OwnershipDocument> docOpt = ownershipDocumentRepository.findById(id);
         if (docOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         OwnershipDocument doc = docOpt.get();
+        byte[] pdfBytes = generateVaultPdfBytes(doc);
+        String pdfFileName = "Custody_Record_" + doc.getId() + ".pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + pdfFileName + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    @GetMapping("/{id}/preview")
+    public ResponseEntity<Object> previewDocument(
+            @PathVariable String id,
+            @RequestParam(required = false) String userId) {
+        Optional<OwnershipDocument> docOpt = ownershipDocumentRepository.findById(id);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        OwnershipDocument doc = docOpt.get();
+        String actor = (userId != null && !userId.isBlank()) ? userId : "COLLDOCOFF";
+        cimsService.logAudit(actor, "COLLDOCOFF", "PREVIEW_DOCUMENT", "Document", doc.getId(), "FilePreview", "Vault", doc.getName(), "Previewed document: " + doc.getName() + " (v" + doc.getVersion() + ")");
         String fileName = doc.getFileName() != null ? doc.getFileName() : (doc.getName().endsWith(".pdf") ? doc.getName() : doc.getName() + ".pdf");
         String fileContent = doc.getFileContent();
 

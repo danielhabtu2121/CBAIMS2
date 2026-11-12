@@ -60,7 +60,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const [zoom, setZoom] = useState<number>(100);
   const [rotation, setRotation] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'preview' | 'metadata' | 'versions'>('preview');
-  const [docViewMode, setDocViewMode] = useState<'file' | 'instrument' | 'certificate'>('file');
+  const [docViewMode, setDocViewMode] = useState<'file' | 'certificate'>('file');
   const [docxSubMode, setDocxSubMode] = useState<'pages' | 'reader'>('pages');
   const [docxHtml, setDocxHtml] = useState<string>('');
   const [docxRendering, setDocxRendering] = useState<boolean>(false);
@@ -559,7 +559,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     } catch (e) {
       console.error('Error generating authoritative PDF fallback:', e);
       setDocKind('empty');
-      setDocViewMode('instrument');
+      setDocViewMode('file');
     }
   };
 
@@ -939,18 +939,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                   className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                     docViewMode === 'file' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
-                  title="View original uploaded file or digitized instrument"
+                  title="View original uploaded file or digitized document"
                 >
                   {docKind === 'docx' ? 'Word Document View' : docKind === 'pdf' ? 'Interactive PDF View' : 'Original File View'}
-                </button>
-                <button
-                  onClick={() => setDocViewMode('instrument')}
-                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                    docViewMode === 'instrument' ? 'bg-[#1F4E7A] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                  title="View formatted responsive legal instrument sheet"
-                >
-                  Legal Instrument Sheet
                 </button>
                 <button
                   onClick={() => setDocViewMode('certificate')}
@@ -1156,12 +1147,6 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                             </a>
                           )}
                           <button
-                            onClick={() => setDocViewMode('instrument')}
-                            className="hover:text-white flex items-center gap-1 font-semibold cursor-pointer"
-                          >
-                            <FileText className="w-3 h-3" /> Sheet View
-                          </button>
-                          <button
                             onClick={onClose}
                             className="px-2 py-0.5 bg-rose-600/90 hover:bg-rose-600 text-white rounded font-bold flex items-center gap-1 transition-colors cursor-pointer text-[11px]"
                             title="Close Document Review"
@@ -1249,16 +1234,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                       </div>
                       <div className="flex justify-center gap-3 pt-2">
                         <button
-                          onClick={() => setDocViewMode('instrument')}
+                          onClick={() => setDocViewMode('certificate')}
                           className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                         >
-                          <FileCheck className="w-4 h-4" /> View Legal Instrument Sheet
-                        </button>
-                        <button
-                          onClick={() => setDocViewMode('certificate')}
-                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg border border-slate-300 text-xs cursor-pointer"
-                        >
-                          View Vault Certificate
+                          <FileCheck className="w-4 h-4" /> View Vault Certificate
                         </button>
                       </div>
                     </div>
@@ -1384,158 +1363,6 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                         className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-lg font-bold flex items-center gap-1 text-xs cursor-pointer shadow-xs"
                       >
                         <X className="w-3.5 h-3.5" /> Close Certificate
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* VIEW MODE 3: HIGH-FIDELITY LEGAL INSTRUMENT SHEET */}
-              {docViewMode === 'instrument' && (
-                <div
-                  className="w-full max-w-3xl bg-white border-2 border-slate-300 rounded-xl shadow-2xl p-8 sm:p-12 relative overflow-hidden text-slate-900 space-y-6 transition-transform duration-200"
-                  style={{
-                    transform: `scale(${zoom / 100})`,
-                    transformOrigin: 'top center',
-                  }}
-                >
-                  {/* Subtle Legal Watermark */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-4 select-none -rotate-12 font-serif font-black text-7xl text-slate-900 leading-tight text-center">
-                    LEGAL INSTRUMENT<br />DASHEN BANK S.C.
-                  </div>
-
-                  {/* Formal Instrument Header */}
-                  <div className="text-center border-b-2 border-slate-900 pb-5 space-y-1">
-                    <div className="flex items-center justify-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-white p-1 rounded-lg border border-slate-200 shadow-xs flex items-center justify-center">
-                        <img src="/dashen-logo.png" alt="Dashen Bank" className="w-full h-full object-contain" />
-                      </div>
-                      <div className="text-left">
-                        <div className="text-xs font-black uppercase tracking-widest text-[#00205B]">
-                          Federal Democratic Republic of Ethiopia
-                        </div>
-                        <div className="text-[11px] font-bold text-slate-600">
-                          {getAuthorityTitle(currentDoc.type)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <h1 className="text-xl sm:text-2xl font-serif font-black text-slate-900 uppercase tracking-wide">
-                      {currentDoc.name || currentDoc.type}
-                    </h1>
-
-                    <div className="flex items-center justify-center gap-4 text-xs text-slate-600 font-medium pt-1 flex-wrap">
-                      <span>Document Ref: <strong className="font-mono text-slate-900">{currentDoc.id}</strong></span>
-                      <span>•</span>
-                      <span>Instrument Code: <strong className="font-mono text-slate-900">ET-CBAIMS-{linkedCollateral?.code || currentDoc.entityId}</strong></span>
-                      <span>•</span>
-                      <span>Status: <strong className="text-emerald-700 font-bold">{currentDoc.verificationStatus || 'Legally Binding'}</strong></span>
-                    </div>
-                  </div>
-
-                  {/* Body Content Tailored by Document & Linked Collateral */}
-                  <div className="space-y-4 text-xs">
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                      <h4 className="font-bold text-sm text-[#00205B] border-b border-slate-200 pb-1">
-                        Pledged Asset & Legal Instrument Particulars
-                      </h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-                        <div>
-                          <span className="text-slate-500">Document Title:</span>
-                          <div className="font-bold text-slate-900">{currentDoc.name}</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Category:</span>
-                          <div className="font-bold text-slate-900">{currentDoc.type}</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Collateral Code:</span>
-                          <div className="font-mono font-bold text-[#1F4E7A]">{linkedCollateral?.code || currentDoc.entityId}</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Asset Description:</span>
-                          <div className="font-bold text-slate-900">{linkedCollateral?.description || 'Registered Bank Security Collateral'}</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Market Valuation:</span>
-                          <div className="font-mono font-bold text-emerald-800">
-                            {linkedCollateral?.valuationAmount ? `ETB ${linkedCollateral.valuationAmount.toLocaleString()}` : 'Registered in Credit File'}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Insured Amount:</span>
-                          <div className="font-mono font-bold text-blue-900">
-                            {linkedCollateral?.insuredAmount ? `ETB ${linkedCollateral.insuredAmount.toLocaleString()}` : 'See Policy Schedule'}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Branch &amp; District:</span>
-                          <div className="font-bold text-slate-900">{linkedCollateral?.branch || 'Head Office'}</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Business Segment:</span>
-                          <div className="font-bold text-slate-900">{linkedCollateral?.owningSegment || 'Corporate'}</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Registration Date:</span>
-                          <div className="font-mono font-bold text-slate-900">{currentDoc.uploadDate || currentDoc.uploadedAt || '2026-03-15'}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-[#EFF5FB] border border-[#B9D3EB] rounded-lg space-y-1.5">
-                      <div className="font-bold text-[#00205B]">Bank First Priority Mortgage &amp; Hypothecation Clause:</div>
-                      <p className="text-[11px] text-slate-700 leading-relaxed">
-                        This physical title instrument is deposited in physical vault custody of <strong>DASHEN BANK S.C.</strong> to secure banking facilities. Pursuant to National Bank of Ethiopia banking supervision directives and Ethiopian commercial law, this asset is encumbered with a First Priority Registered Charge. Any conveyance, alienation, or secondary pledge without prior written authorization from Dashen Bank S.C. is strictly prohibited.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Signatures & Barcode */}
-                  <div className="border-t-2 border-slate-800 pt-6 grid grid-cols-3 gap-4 text-center text-xs">
-                    <div className="space-y-1">
-                      <div className="font-mono text-[10px] text-slate-400">REGULATORY REGISTRAR</div>
-                      <div className="font-serif italic font-bold text-slate-900 text-sm">Ato Girma Belay</div>
-                      <div className="text-[10px] text-slate-500">Director of Title Records</div>
-                      <div className="text-[9px] font-mono text-emerald-700">Official Municipal Seal ✓</div>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <QrCode className="w-12 h-12 text-slate-800" />
-                      <div className="font-mono text-[9px] text-slate-500">{generateChecksum(currentDoc)}</div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="font-mono text-[10px] text-slate-400">DASHEN BANK CUSTODY OFFICER</div>
-                      <div className="font-serif italic font-bold text-[#00205B] text-sm">{currentDoc.uploadedBy || 'Dawit Girma'}</div>
-                      <div className="text-[10px] text-slate-500">Senior DMS Vault Officer</div>
-                      <div className="text-[9px] font-mono text-emerald-700">Four-Eyes Verified ✓</div>
-                    </div>
-                  </div>
-
-                  {/* End-of-Instrument Action Strip */}
-                  <div className="border-t-2 border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl">
-                    <div className="text-slate-600 text-xs">
-                      <strong>Legal Instrument Review Complete:</strong> Pledged security asset particulars verified.
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handlePrint}
-                        className="px-3 py-1.5 border border-slate-300 hover:bg-white text-slate-700 rounded-lg font-bold flex items-center gap-1 text-xs cursor-pointer"
-                      >
-                        <Printer className="w-3.5 h-3.5" /> Print Instrument
-                      </button>
-                      <button
-                        onClick={handleDownloadCurrent}
-                        className="px-3 py-1.5 bg-[#1F4E7A] hover:bg-[#102E4A] text-white rounded-lg font-bold flex items-center gap-1 text-xs cursor-pointer shadow-2xs"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Download
-                      </button>
-                      <button
-                        onClick={onClose}
-                        className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-lg font-bold flex items-center gap-1 text-xs cursor-pointer shadow-xs"
-                      >
-                        <X className="w-3.5 h-3.5" /> Close Review
                       </button>
                     </div>
                   </div>

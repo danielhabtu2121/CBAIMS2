@@ -17,6 +17,9 @@ public class EscalationRule {
     @Column(name = "recipient_type", nullable = false)
     private String recipientType;
 
+    @Column(name = "active")
+    private boolean active = true;
+
     public EscalationRule() {}
 
     public EscalationRule(String id, int daysBeforeExpiry, String escalationRole, String recipientType) {
@@ -34,4 +37,6 @@ public class EscalationRule {
     public void setEscalationRole(String escalationRole) { this.escalationRole = escalationRole; }
     public String getRecipientType() { return recipientType; }
     public void setRecipientType(String recipientType) { this.recipientType = recipientType; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

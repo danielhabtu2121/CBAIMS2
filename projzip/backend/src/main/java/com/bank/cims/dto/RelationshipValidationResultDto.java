@@ -49,6 +49,13 @@ public class RelationshipValidationResultDto {
 
     private boolean ownerBorrowerMatch = true;
     private boolean thirdParty = false;
+    private String relationshipContext = "Borrower-owned"; // "Borrower-owned" or "Third-party"
+    private String validationState = "NORMAL"; // NORMAL, THIRD_PARTY_REQUIRED, THIRD_PARTY_INCOMPLETE, THIRD_PARTY_VALIDATED, HARD_STOP, PASS
+    private boolean duplicate = false;
+    private boolean thirdPartyRequired = false;
+    private boolean firstDegreeRequired = false;
+    private boolean secondDegreeRequired = false;
+    private List<String> requiredDocuments = new ArrayList<>();
     private String consentStatus;
     private String pledgeAgreementRef;
     private boolean hasRequiredPledgeEvidence = true;
@@ -157,6 +164,15 @@ public class RelationshipValidationResultDto {
     public String getRelationshipToBorrower() { return relationshipToBorrower; }
     public void setRelationshipToBorrower(String relationshipToBorrower) { this.relationshipToBorrower = relationshipToBorrower; }
 
+    public String getRelationshipContext() {
+        if (relationshipContext != null && !relationshipContext.isBlank()) return relationshipContext;
+        return isThirdParty() ? "Third-party" : "Borrower-owned";
+    }
+    public void setRelationshipContext(String relationshipContext) { this.relationshipContext = relationshipContext; }
+
+    public String getValidationState() { return validationState; }
+    public void setValidationState(String validationState) { this.validationState = validationState; }
+
     public String getBorrowerName() { return borrowerName; }
     public void setBorrowerName(String borrowerName) { this.borrowerName = borrowerName; }
 
@@ -171,6 +187,21 @@ public class RelationshipValidationResultDto {
 
     public boolean isThirdParty() { return thirdParty; }
     public void setThirdParty(boolean thirdParty) { this.thirdParty = thirdParty; }
+
+    public boolean isDuplicate() { return duplicate; }
+    public void setDuplicate(boolean duplicate) { this.duplicate = duplicate; }
+
+    public boolean isThirdPartyRequired() { return thirdPartyRequired; }
+    public void setThirdPartyRequired(boolean thirdPartyRequired) { this.thirdPartyRequired = thirdPartyRequired; }
+
+    public boolean isFirstDegreeRequired() { return firstDegreeRequired; }
+    public void setFirstDegreeRequired(boolean firstDegreeRequired) { this.firstDegreeRequired = firstDegreeRequired; }
+
+    public boolean isSecondDegreeRequired() { return secondDegreeRequired; }
+    public void setSecondDegreeRequired(boolean secondDegreeRequired) { this.secondDegreeRequired = secondDegreeRequired; }
+
+    public List<String> getRequiredDocuments() { return requiredDocuments; }
+    public void setRequiredDocuments(List<String> requiredDocuments) { this.requiredDocuments = requiredDocuments; }
 
     public String getConsentStatus() { return consentStatus; }
     public void setConsentStatus(String consentStatus) { this.consentStatus = consentStatus; }

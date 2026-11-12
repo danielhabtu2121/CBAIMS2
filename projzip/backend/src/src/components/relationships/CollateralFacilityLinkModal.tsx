@@ -1379,7 +1379,7 @@ export const CollateralFacilityLinkModal: React.FC<CollateralFacilityLinkModalPr
                             ? targetCustomer.name
                             : selectedCustomer?.name || selectedCollateral?.customerId}
                         </strong>
-                        . Ensure the facility is active, within your branch/portfolio scope, and not already linked.
+                        . Ensure the facility is active, within your branch/portfolio scope, and not already linked to this specific collateral asset (linking under-covered facilities to multiple co-collaterals is fully supported).
                       </div>
                     </div>
                   ) : (

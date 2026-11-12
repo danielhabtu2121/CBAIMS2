@@ -8,5 +8,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired private AdminAuthorizationInterceptor adminAuthorizationInterceptor;
-    @Override public void addInterceptors(InterceptorRegistry registry){ registry.addInterceptor(adminAuthorizationInterceptor); }
+    @Autowired private SecurityAuthenticationInterceptor securityAuthenticationInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(securityAuthenticationInterceptor);
+        registry.addInterceptor(adminAuthorizationInterceptor);
+    }
 }

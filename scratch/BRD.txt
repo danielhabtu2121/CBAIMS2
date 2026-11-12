@@ -1,0 +1,460 @@
+﻿Business Requirements for Collateral Insurance Management System (CIMS)
+Bank Modernization Department
+July 15, 2026
+Contents
+1.Introduction3
+2.Functional Requirements Summary4
+3.Business Requirement Overview5
+4.Detail Business Requirements (BR)5
+BR-1 Bank-wide and Business Segment Management5
+BR-2 Collateral Ownership and Ownership Document Management6
+BR-3 Loan and Collateral Relationship Management7
+BR-4 Bank wide Collateral Coverage Monitoring8
+BR-5 Customer, Loan and Collateral Information Management9
+BR-06 Insurance Policy Lifecycle Management9
+BR-07 Insurance Eligibility and Compliance Validation9
+BR-08 Insurance Renewal and Expiry Management10
+BR-09 Notification and Alert Management10
+BR-10 Workflow and Approval Management11
+BR-11 Document Management11
+BR-12 Exception Management12
+BR-13 Reporting and Dashboard12
+BR-10 Audit Trail and Activity Logging13
+BR-11 User and Role Management13
+BR-12 Integration Requirements14
+BR-13 Security and Information Protection15
+BR-14 Administration and Configuration15
+5.Proposed implementation Milestones15
+Introduction
+The Collateral Insurance Management System (CIMS) is a strategic initiative designed to automate and streamline the end-to-end management of collateral insurance across the Bank. The solution aims to replace manual and fragmented processes with a centralized, integrated, and workflow-driven platform that manages the complete insurance lifecycle—from policy registration and monitoring to renewal, expiry management, and policy closure.
+CIMS will provide a single source of truth for managing collateral insurance associated with all lending portfolios, including Corporate Banking, Retail Banking, MSME Banking, and Interest-Free Banking (IFB). The system will support both borrower-owned and third-party-owned collateral, including cross-collateralized facilities where a single collateral secures multiple loan accounts.
+By integrating with the Bank's Core Banking System (CBS), Document Management System (DMS), SMS Gateway, Email Server, and Business Intelligence (BI) platforms, the solution will facilitate seamless information exchange, automate business processes, and provide real-time visibility into collateral insurance compliance across the Bank.
+The implementation of CIMS is intended to strengthen risk management and regulatory compliance by ensuring that pledged collateral remains adequately insured throughout the loan lifecycle. Through configurable workflows, automated notifications, maker-checker approvals, comprehensive audit trails, and enterprise-wide dashboards, the system will improve operational efficiency, enhance accountability, and support proactive decision-making.
+Specifically, the implementation of CIMS is expected to:
+Achieve end-to-end automation of the collateral insurance management process.
+Ensure continuous insurance coverage of pledged collateral through proactive monitoring and timely policy renewals.
+Reduce operational and credit risks associated with expired, missing, or inadequate insurance coverage.
+Strengthen compliance with the Bank's internal credit policies, governance framework, and applicable regulatory requirements.
+Improve operational efficiency by replacing manual tracking and follow-up activities with automated workflows, notifications, and exception management.
+Enhance customer experience through timely communication, simplified renewal processes, and improved service delivery.
+Increase transparency and accountability through comprehensive dashboards, management reports, and complete audit trails.
+Support informed decision-making by providing real-time management information, compliance monitoring, and actionable exception reporting.
+Establish a secure, integrated, scalable, and enterprise-wide platform that aligns with the Bank's digital transformation strategy, enterprise architecture, and governance standards.
+This Business Requirements Document (BRD) defines the business needs, functional capabilities, business rules, integration requirements, and non-functional requirements necessary for the successful design, development, implementation, and deployment of the Collateral Insurance Management System.
+Functional Requirements Summary
+The Collateral Insurance Management System (CIMS) will provide end-to-end automation of the collateral insurance lifecycle, from policy registration to renewal and closure. The solution will capture and manage customer, loan, collateral, and insurance policy information while maintaining all related documents in a centralized repository. Detail specification will be presented in the BRD
+The system will automate insurance expiry monitoring through configurable reminders and escalation workflows, sending notifications via SMS, email, and in-system alerts to Relationship Managers, customers, and insurance companies. It will also support maker-checker approval workflows, policy renewals, and maintain a complete audit trail of all transactions.
+The solution will enforce business rules related to insurance eligibility, coverage adequacy, policy renewal, approval hierarchies, and compliance requirements. Role-based access will ensure users perform activities according to their responsibilities, including Relationship Managers, Relationship Officers, Branch Managers, and System Administrators.
+The system will integrate with the Core Banking System (CBS), SMS Gateway, Email Server, Document Management System, and Reporting/Business Intelligence platforms to enable seamless data exchange and process automation.
+Comprehensive dashboards and reports will provide real-time visibility into insured collateral, policy expirations, renewal status, compliance, and operational performance. The solution will also identify and manage exceptions Detail specification will be presented in the BRD 
+Finally, the system will incorporate robust security controls, including user authentication, role-based access control, audit logging, data protection, and information confidentiality, ensuring compliance with the Bank's governance, risk management, and regulatory requirements.
+Business Requirement Overview
+The Collateral Insurance Management System (CIMS) shall automate and digitize the end-to-end management of collateral insurance throughout the lending lifecycle. The solution shall ensure that all collateral pledged against credit facilities remains adequately insured at all times while improving operational efficiency, strengthening regulatory compliance, minimizing operational risk, and providing management with real-time visibility into insurance status across the Bank.
+The system shall eliminate manual tracking of insurance policies, reduce dependency on spreadsheets and manual follow-up, improve customer service through timely notifications, and ensure continuous insurance coverage of pledged collateral.
+Detail Business Requirements (BR)
+BR-01 Bank-wide and Business Segment Management
+The Collateral Insurance Management System (CIMS) shall support centralized, bank-wide management of collateral insurance while accommodating the operational responsibilities of the Bank's different lending business segments.
+The solution shall support the following business segments:
+Corporate Banking 
+Retail Banking 
+MSME Banking 
+Interest-Free Banking (IFB) 
+Any additional lending segment configured by the Bank 
+The system shall:
+Maintain ownership of each collateral insurance record by the responsible business segment. 
+Assign Relationship Managers, Relationship Officers, Credit Officers, and Branch users according to the respective business segment. 
+Support segment-specific insurance monitoring, follow-up, renewal, and reporting. 
+Allow Head Office users to monitor collateral insurance across all business segments. 
+Enable segment heads and management to monitor insurance compliance within their respective portfolios. 
+Support configurable business rules that may vary by business segment, including approval hierarchy, reminder schedules, and insurance requirements. 
+Generate both Bank-wide and segment-specific dashboards and management reports. 
+Maintain a consolidated view of collateral insurance exposure across the Bank while preserving segment accountability. 
+Allow transfer of portfolio ownership between business segments with complete audit history. 
+BR-02 Customer, Loan and Collateral Information Management
+The system shall provide centralized management of all information required for collateral insurance administration.
+The solution shall:
+Capture customer information from the Core Banking System (CBS) or manually captured 
+Capture loan and credit facility details from CBS 
+Retrieve collateral information linked to each loan 
+Maintain collateral ownership information 
+Maintain collateral valuation details 
+Maintain collateral classification 
+Support multiple collateral records under a single loan 
+Support multiple loans secured by one collateral where applicable 
+Maintain relationship hierarchy between customer, facility, collateral and insurance policy 
+Synchronize master information with CBS automatically 
+BR-03 Loan and Collateral Relationship Management
+The system shall maintain a complete relationship between collateral assets and the credit facilities secured by them.
+The solution shall support:
+One collateral securing one loan account. 
+One collateral securing multiple loan accounts (Cross-Collateralization). 
+Multiple collateral assets securing a single loan account. 
+Multiple collateral assets securing multiple loan accounts. 
+For every collateral, the system shall maintain:
+Linked loan account(s) 
+Loan reference number 
+Customer information 
+Facility type 
+Outstanding loan balance 
+Sanction amount 
+Collateral allocation amount 
+Collateral utilization percentage 
+Business segment ownership 
+Branch ownership 
+Relationship Manager 
+For cross-collateralized facilities, the solution shall:
+Display all linked loan accounts from a single collateral record. 
+Display all collateral linked to a selected loan account. 
+Calculate the total secured exposure against the collateral. 
+Monitor insurance adequacy against the aggregate exposure of all linked facilities. 
+Prevent duplicate collateral registration. 
+Support release of collateral only after validating all linked facilities. 
+Automatically update all linked loan relationships whenever collateral information changes. 
+Maintain historical linkage records for audit purposes. 
+BR-04 Collateral Ownership and Ownership Document Management
+The Collateral Insurance Management System (CIMS) shall maintain comprehensive ownership information for every collateral asset pledged to secure the Bank's lending facilities, regardless of whether the collateral is owned by the borrower or by a third party.
+The solution shall support both:
+Borrower-owned collateral – where the borrower is the legal owner of the pledged collateral. 
+Third-party collateral – where the collateral is legally owned by an individual or organization other than the borrower but has been pledged as security for the borrower's credit facility. 
+The system shall capture and maintain:
+Ownership Information
+Ownership type (Borrower-owned or Third-party-owned) 
+Legal owner name 
+Owner type (Individual, Business Organization, Government Entity, or Other) 
+National ID, Passport, or Business Registration Number 
+Tax Identification Number (where applicable) 
+Contact details of the owner 
+Ownership percentage (for jointly owned collateral) 
+Ownership verification status 
+Relationship between the borrower and the collateral owner (e.g., Shareholder, Guarantor, Parent Company, Director, Spouse, Family Member, Business Partner, or Other) 
+Date of ownership verification 
+Ownership remarks 
+Change of ownership, if there is any
+Third-Party Collateral Management
+Where collateral is owned by a third party, the system shall:
+Capture the third-party owner's details. 
+Link the collateral owner to the borrower and the associated loan account(s). 
+Record the legal relationship between the borrower and the collateral owner. 
+Capture the third-party consent and pledge information. 
+Maintain the status of all required legal documentation supporting the pledge. 
+Allow one third-party collateral to secure one or multiple loan accounts, including cross-collateralized facilities. 
+Maintain a complete audit trail of any changes to ownership information. 
+Ownership Document Management
+The system shall support uploading, storing, and managing scanned copies of ownership and legal documents, including but not limited to:
+Title Deed 
+Property Ownership Certificate 
+Vehicle Registration Certificate 
+Machinery Ownership Certificate 
+Share Certificate 
+Warehouse Receipt 
+Business Registration Certificate 
+Lease Agreement (where applicable) 
+Third-Party Collateral Agreement
+Letter of Consent from the Third-Party Owner 
+Mortgage Registration Documents 
+Court Registration Documents (where applicable) 
+Any additional supporting legal documents required by the Bank 
+The solution shall provide:
+Multiple document attachments for each collateral. 
+High-resolution scanned document storage. 
+Version control and document history. 
+Document preview and retrieval. 
+Secure access based on user roles. 
+Document expiry monitoring (where applicable). 
+The system shall prevent collateral registration or insurance policy activation where mandatory ownership or legal documents are missing unless an authorized exception has been approved in accordance with the Bank's approval hierarchy.
+BR-05 Insurance Policy Lifecycle Management
+The system shall support complete lifecycle management of collateral insurance policies.
+The solution shall enable users to:
+Assign unique ID for each customer
+Register new insurance policies 
+Capture insurer information 
+Capture policy details 
+Record policy number 
+Record coverage type 
+Record insured amount 
+Record premium information 
+Record policy effective date 
+Record policy expiry date 
+Maintain policy status 
+Register endorsements 
+Capture policy amendments 
+Record policy cancellation 
+Record policy replacement 
+Process policy renewals 
+Close expired or cancelled policies 
+Reopening of closed policies
+Maintain complete historical records 
+BR-06 Insurance Eligibility and Compliance Validation
+The system shall automatically validate insurance compliance before accepting policy registration or renewal.
+The solution shall verify:
+Insurance is mandatory based on collateral type 
+Insurance company is approved by the Bank 
+Coverage amount satisfies Bank policy 
+Policy validity period meets lending requirements 
+Collateral valuation supports insured amount 
+Duplicate policies are prevented 
+Multiple Policies of a single customer are linked to single unique customer ID 
+Expired policies cannot be accepted 
+Mandatory documents are available 
+Customer and collateral information are complete 
+Regulatory requirements are satisfied 
+Validation failures shall prevent workflow progression unless overridden by authorized personnel.
+BR-07 Workflow and Approval Management
+The system shall automate approval processes using configurable maker-checker workflows.
+The workflow shall support:
+Policy registration approval 
+Policy amendment approval 
+Renewal approval 
+Exception approval 
+Policy cancellation approval 
+Policy reopening
+Workflow shall include:
+Maker 
+Checker 
+Supervisor approval (for exceptions)
+Escalation 
+Delegation 
+Approval comments 
+Approval history 
+Approval hierarchy shall be configurable based on:
+Branch 
+District office
+Head Office Front Office Departments 
+Exception type 
+BR-08 Document Management
+The system shall maintain a centralized repository for all insurance-related documents.
+The solution shall support:
+Policy documents / Endorsements 
+Premium receipts 
+Valuation reports 
+Mortgage documents 
+Renewal certificates 
+Customer correspondence 
+Supporting evidence 
+The system shall provide:
+Document upload 
+Document download 
+Version control 
+Search capability 
+Document preview 
+Access control 
+Archive management 
+Where available, document storage shall integrate with the Bank's Enterprise Document Management System (Alfresco)
+BR-09 Insurance Renewal and Expiry Management
+The system shall proactively monitor policy validity and automate renewal management.
+The solution shall:
+Continuously monitor insurance expiry dates 
+Generate configurable reminder schedules 
+Notify Relationship Managers 
+Notify Relationship Officers 
+Notify customers 
+Notify insurance companies, where possible
+Escalate overdue renewals with define escalation Metrix 
+Monitor renewal completion 
+Support policy replacement 
+Track renewal turnaround time 
+Generate overdue renewal reports 
+Automatically update policy status after renewal 
+Reminder intervals shall be configurable without system customization.
+BR-10 Notification and Alert Management
+The system shall provide automated communication throughout the insurance lifecycle.
+Notifications shall be delivered through:
+SMS 
+Email/Outlook
+The solution shall notify stakeholders regarding:
+Upcoming policy expiry 30 days before expiry
+Expired policies with predefined interval
+Renewal requirements 
+Approval requests 
+Rejected policies 
+Missing documentation 
+Compliance exceptions 
+Policy cancellations 
+Policy endorsements 
+System-generated alerts 
+Notification templates shall be configurable by administrators.
+BR-11 Bank wide Collateral Coverage Monitoring
+The system shall continuously monitor insurance adequacy for all collateral pledged across the Bank.
+The solution shall:
+Calculate insurance coverage against the total secured exposure where collateral secures multiple facilities. 
+Identify underinsured collateral. 
+Identify uninsured collateral. 
+Identify duplicate insurance records. 
+Monitor expired ownership documents. 
+Monitor missing ownership documentation. 
+Highlight collateral linked to multiple business segments. 
+Produce Bank-wide collateral insurance exposure reports. 
+Produce segment-wise collateral coverage reports. 
+Produce branch-wise compliance reports. 
+Produce Relationship Manager-wise insurance compliance reports. 
+Management shall be able to drill down from Bank level to:
+Business Segment 
+District 
+Branch 
+Relationship Manager 
+Customer Segment
+Loan Account 
+Individual Collateral
+BR-12 Exception Management
+The solution shall identify, manage and monitor insurance-related exceptions.
+Examples include:
+Expired policies 
+Underinsured collateral 
+Missing insurance 
+Missing documents 
+Unapproved insurers 
+Renewal delays 
+Policy inconsistencies 
+Each exception shall:
+Generate an alert 
+Be assigned to responsible users 
+Track resolution status 
+Maintain investigation history 
+Support escalation 
+Capture corrective actions 
+BR-13 Reporting and Dashboard
+The system shall provide operational and management reporting.
+Standard dashboards shall include:
+Total insured collateral 
+Uninsured collateral 
+Policies nearing expiry before 30 days
+Due soon with 7days 
+Expired policies 
+Renewal in pipeline 
+Compliance status 
+Insurance company exposure 
+Exception summary 
+Policy aging 
+Operational workload 
+Reports shall support:
+Export to Excel 
+Export to PDF 
+Scheduled reporting 
+Ad-hoc reporting 
+Drill-down capability 
+Filtering 
+Trend analysis 
+BR-14 Audit Trail and Activity Logging
+The solution shall maintain a complete audit trail for all system activities.
+The audit log shall capture:
+User ID 
+Timestamp 
+Previous value 
+New value 
+Activity performed 
+Approval actions 
+Login history 
+Document changes 
+Workflow history 
+Exception handling 
+Notification history 
+Audit records shall not be editable or removable by business users.
+BR-15 User and Role Management
+The solution shall implement Role-Based Access Control (RBAC).
+The system shall support roles including:
+Relationship Manager 
+Relationship Officer 
+Branch Manager 
+Senior Managers
+Compliance Officer 
+Risk Officer 
+System Administrator 
+Internal Auditor 
+Read-only users 
+The system shall control:
+Screen access 
+Menu access 
+Data visibility 
+Transaction authorization 
+Approval authority 
+Report access 
+Document access 
+BR-16 Integration Requirements
+The solution shall integrate with enterprise systems using secure APIs or approved integration mechanisms.
+Mandatory integrations include:
+Core Banking System (CBS)
+Customer information 
+Loan information 
+Collateral information 
+Loan closure 
+Facility changes 
+SMS Gateway
+Customer notifications 
+Staff notifications 
+Email Server
+Automated email alerts 
+Approval notifications 
+Document Management System (DMS)
+Document storage 
+Document retrieval 
+Reporting / Business Intelligence Platform
+Data extraction 
+Dashboard integration 
+Management reporting 
+BR-17 Security and Information Protection
+The solution shall comply with the Bank's Information Security Policy and regulatory requirements.
+Security controls shall include:
+User authentication 
+Single Sign-On (where applicable) 
+Role-based authorization 
+Session timeout 
+Password policy compliance 
+Data encryption in transit 
+Data encryption at rest 
+Audit logging 
+Access monitoring 
+Information confidentiality 
+Secure API communication 
+The solution shall comply with the Bank's governance, risk management, information security, and applicable regulatory requirements.
+BR-18 Administration and Configuration
+The system shall provide administration capabilities without requiring software changes.
+Administrators shall configure:
+Insurance reminder periods 
+Escalation timelines 
+Workflow hierarchy 
+Approval matrix 
+Notification templates 
+Insurance companies 
+Collateral types 
+Coverage rules 
+Business rules 
+User roles 
+Branch hierarchy 
+Holiday calendar 
+System parameters 
+Configuration changes shall be fully audited.
+Proposed implementation Milestones
+The proposed implementation milestones for the Collateral Insurance Management System (CIMS) are presented below for review. The respective task owners are requested to validate and complete the planned timelines for the remaining phases of the project.
+Milestone
+Primary Owner
+Planned Start Date
+Planned End Date
+Business Requirements Document (BRD) Completion
+Bank Modernization Department in collaboration with Business Units
+20-Jul-2026
+31-Jul-2026
+Functional and Technical Design Sign-off
+IT Modernization Team
+To be Confirmed
+To be Confirmed
+Development Completion
+IT Modernization Team
+To be Confirmed
+To be Confirmed
+System Integration Completion
+IT Modernization Team in collaboration with the Infrastructure Team
+To be Confirmed
+To be Confirmed
+User Acceptance Testing (UAT) Sign-off and Production Readiness Approval
+Business Process Owners in collaboration with the Bank Modernization Department
+To be Confirmed
+To be Confirmed
+User Training and Operational Readiness Confirmation
+Bank Modernization Department in collaboration with Talent Learning & Development and Business Units
+To be Confirmed
+To be Confirmed
+Pilot Implementation Successfully Completed
+Bank Modernization Department, IT Modernization Team, and Business Units
+To be Confirmed
+To be Confirmed
+Note: The implementation schedule will be finalized following alignment and approval of the Business Requirements Document (BRD).

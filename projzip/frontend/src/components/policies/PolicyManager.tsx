@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FileCheck,
   Plus,
@@ -149,11 +149,10 @@ const DocumentAttachmentZone: React.FC<DocumentAttachmentZoneProps> = ({
             setIsDragging(false);
             handleFiles(e.dataTransfer.files);
           }}
-          className={`border-2 border-dashed rounded-xl p-3.5 text-center transition-all cursor-pointer ${
-            isDragging
-              ? 'border-[#1F4E7A] bg-[#EFF5FB]'
-              : 'border-[#CBD5E1] bg-slate-50 hover:bg-[#EFF5FB]/60 hover:border-[#1F4E7A]/60'
-          }`}
+          className={`border-2 border-dashed rounded-xl p-3.5 text-center transition-all cursor-pointer ${isDragging
+            ? 'border-[#1F4E7A] bg-[#EFF5FB]'
+            : 'border-[#CBD5E1] bg-slate-50 hover:bg-[#EFF5FB]/60 hover:border-[#1F4E7A]/60'
+            }`}
           onClick={() => {
             const el = document.getElementById(inputId);
             if (el) el.click();
@@ -193,13 +192,12 @@ const DocumentAttachmentZone: React.FC<DocumentAttachmentZoneProps> = ({
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
-                    className={`w-7 h-7 rounded flex items-center justify-center text-[10px] font-black shrink-0 ${
-                      isPdf
-                        ? 'bg-rose-100 text-rose-700'
-                        : isImg
+                    className={`w-7 h-7 rounded flex items-center justify-center text-[10px] font-black shrink-0 ${isPdf
+                      ? 'bg-rose-100 text-rose-700'
+                      : isImg
                         ? 'bg-purple-100 text-purple-700'
                         : 'bg-blue-100 text-blue-700'
-                    }`}
+                      }`}
                   >
                     {isPdf ? 'PDF' : isImg ? 'IMG' : 'DOC'}
                   </div>
@@ -291,13 +289,15 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
   const [selectedPolicy, setSelectedPolicy] = useState<InsurancePolicy | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState<'financials' | 'endorsements' | 'documents' | 'history'>('financials');
+  const handledInitialPolicyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (initialPolicyId && policies.length > 0) {
+    if (initialPolicyId && policies.length > 0 && handledInitialPolicyIdRef.current !== initialPolicyId) {
       const found = policies.find(
         (p) => p.id === initialPolicyId || p.policyNumber === initialPolicyId
       );
       if (found) {
+        handledInitialPolicyIdRef.current = initialPolicyId;
         setSelectedPolicy(found);
         setShowDetailModal(true);
         loadPolicyHistory(found.id);
@@ -357,6 +357,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
   const [collateralSearchQuery, setCollateralSearchQuery] = useState('');
   const [wizardColId, setWizardColId] = useState('');
   const [wizardExposure, setWizardExposure] = useState<ExposureAdequacySummary | null>(null);
+  const [wizardAdequacy, setWizardAdequacy] = useState<any | null>(null);
   const [loadingWizardExposure, setLoadingWizardExposure] = useState(false);
   const [wizardCompliance, setWizardCompliance] = useState<InsuranceComplianceDto | null>(null);
   const [loadingCompliance, setLoadingCompliance] = useState(false);
@@ -465,8 +466,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
   const derivedCustomer = wizardCol
     ? customers.find(
-        (cu) => (cu.id && cu.id === wizardCol.customerId) || (cu.cif && cu.cif === wizardCol.customerId)
-      )
+      (cu) => (cu.id && cu.id === wizardCol.customerId) || (cu.cif && cu.cif === wizardCol.customerId)
+    )
     : selectedCustomer;
 
   const availableCollaterals = collaterals.filter((c) => {
@@ -500,98 +501,140 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
   const filteredCollaterals = wizardCustomerId
     ? collaterals.filter(
-        (c) =>
-          (c.customerId === wizardCustomerId || (selectedCustomer && (c.customerId === selectedCustomer.cif || c.customerId === selectedCustomer.id))) &&
-          c.status !== 'Released' &&
-          c.status !== 'Draft'
-      )
+      (c) =>
+        (c.customerId === wizardCustomerId || (selectedCustomer && (c.customerId === selectedCustomer.cif || c.customerId === selectedCustomer.id))) &&
+        c.status !== 'Released' &&
+        c.status !== 'Draft'
+    )
     : availableCollaterals;
 
-  // Determine standard mandatory insurance coverage type by collateral category using configured taxonomies
-  const getStandardCoverageForCategory = (cat?: string): string => {
+  // Determine standard mandatory insurance coverage type by collateral category AND subtype using configured taxonomies
+  const getStandardCoverageForCollateral = (cat?: string, subType?: string): string => {
+    if (wizardCompliance?.requiredCoverageType) {
+      return wizardCompliance.requiredCoverageType;
+    }
     if (taxonomies && taxonomies.length > 0 && cat) {
-      const match = taxonomies.find(
+      const activeTax = taxonomies.filter((t) => t.active !== false);
+      if (subType) {
+        const subMatch = activeTax.find(
+          (t) => t.category?.toLowerCase() === cat.toLowerCase() &&
+            t.subCategory?.toLowerCase() === subType.toLowerCase() &&
+            t.mandatoryCoverageType && t.mandatoryCoverageType.trim().length > 0
+        );
+        if (subMatch?.mandatoryCoverageType) return subMatch.mandatoryCoverageType;
+      }
+      const match = activeTax.find(
         (t) => t.category?.toLowerCase() === cat.toLowerCase() && t.mandatoryCoverageType && t.mandatoryCoverageType.trim().length > 0
       );
       if (match?.mandatoryCoverageType) return match.mandatoryCoverageType;
     }
     const c = (cat || '').toLowerCase();
+    const st = (subType || '').toLowerCase();
+    if (st.includes('land') || c.includes('land')) {
+      return 'None';
+    }
     if (c.includes('immovable') || c.includes('building') || c.includes('real')) {
-      return 'Fire & Allied Perils';
+      return 'Fire & Lightning';
     }
     if (c.includes('movable') || c.includes('vehicle') || c.includes('motor')) {
       return 'Comprehensive Motor';
     }
     if (c.includes('machin') || c.includes('business mortgage') || c.includes('equipment')) {
-      return 'All-Risk Comprehensive Machinery Breakdown';
+      return 'Machinery Breakdown & Fire';
     }
     if (c.includes('inventory') || c.includes('merchandise') || c.includes('warehouse')) {
       return 'Fire, Lightning, Burglary & Spontaneous Combustion';
     }
     if (c.includes('financial') || c.includes('cash') || c.includes('guarantee')) {
-      return 'No Insurance Required (Exempt Category)';
+      return 'None';
     }
-    return 'Fire & Allied Perils';
+    return 'Fire & Lightning';
   };
 
-  // Dynamically configured coverage types from taxonomy
-  const availableCoverageTypes = React.useMemo(() => {
-    const list = new Set<string>();
-    if (taxonomies && wizardCol) {
-      taxonomies
-        .filter((t) => t.category?.toLowerCase() === wizardCol.category?.toLowerCase())
-        .forEach((t) => {
-          if (t.mandatoryCoverageType && t.mandatoryCoverageType.trim()) {
-            list.add(t.mandatoryCoverageType.trim());
-          }
-        });
+  // Authoritative mandatory-insurance check resolving specific collateral subtype
+  const isInsuranceMandatoryForCollateral = (col?: Collateral | null): boolean => {
+    if (!col) return true;
+    if (wizardCompliance?.insuranceRequired !== undefined) {
+      return wizardCompliance.insuranceRequired;
     }
-    if (wizardCompliance?.requiredCoverageType) {
-      list.add(wizardCompliance.requiredCoverageType.trim());
-    }
-    if (wizardPolicy.coverageType && wizardPolicy.coverageType.trim()) {
-      list.add(wizardPolicy.coverageType.trim());
-    }
-    (taxonomies || []).forEach((t) => {
-      if (t.mandatoryCoverageType && t.mandatoryCoverageType.trim()) {
-        list.add(t.mandatoryCoverageType.trim());
+    if (taxonomies && taxonomies.length > 0) {
+      const activeTax = taxonomies.filter((t) => t.active !== false);
+      if (col.type) {
+        const subMatch = activeTax.find(
+          (t) => t.category?.toLowerCase() === col.category?.toLowerCase() &&
+            t.subCategory?.toLowerCase() === col.type?.toLowerCase()
+        );
+        if (subMatch !== undefined && subMatch.insuranceMandatory !== undefined) {
+          return !!subMatch.insuranceMandatory;
+        }
       }
-    });
-    [
-      'Fire & Allied Perils',
-      'Fire, Lightning & Burglary',
-      'Comprehensive Motor',
-      'All-Risk Comprehensive Machinery Breakdown',
-      'Fire, Lightning, Burglary & Spontaneous Combustion',
-      'Burglary & Housebreaking',
-      'All Risks',
-      'Goods in Transit',
-    ].forEach((t) => list.add(t));
-    return Array.from(list);
-  }, [taxonomies, wizardCol, wizardCompliance, wizardPolicy.coverageType]);
-
-  const isInsuranceMandatoryForCategory = (cat?: string): boolean => {
-    const c = (cat || '').toLowerCase();
-    if (c.includes('financial') || c.includes('cash') || c.includes('guarantee') || c.includes('blocked')) {
+      const catMatch = activeTax.find(
+        (t) => t.category?.toLowerCase() === col.category?.toLowerCase()
+      );
+      if (catMatch !== undefined && catMatch.insuranceMandatory !== undefined) {
+        return !!catMatch.insuranceMandatory;
+      }
+    }
+    const c = (col.category || '').toLowerCase();
+    const st = (col.type || '').toLowerCase();
+    if (st.includes('land') || c.includes('land') || c.includes('financial') || c.includes('cash') || c.includes('guarantee') || c.includes('blocked')) {
       return false;
     }
     return true;
   };
 
-  // Required Insurance = MAX(Outstanding Exposure, Collateral Value)
+  // Backward-compatible alias helpers for category & subType parameter calls
+  const getStandardCoverageForCategory = (cat?: string, subType?: string): string =>
+    getStandardCoverageForCollateral(cat, subType);
+  const isInsuranceMandatoryForCategory = (cat?: string, subType?: string): boolean =>
+    isInsuranceMandatoryForCollateral(cat ? ({ category: cat, type: subType } as Collateral) : null);
+
+  // Dynamically configured coverage types strictly relevant to the selected collateral
+  const availableCoverageTypes = React.useMemo(() => {
+    const list = new Set<string>();
+    if (taxonomies && wizardCol) {
+      const activeTax = taxonomies.filter((t) => t.active !== false);
+      // Filter strictly by the selected collateral category
+      activeTax
+        .filter((t) => t.category?.toLowerCase() === wizardCol.category?.toLowerCase())
+        .forEach((t) => {
+          if (t.mandatoryCoverageType && t.mandatoryCoverageType.trim() && t.mandatoryCoverageType.trim().toLowerCase() !== 'none') {
+            list.add(t.mandatoryCoverageType.trim());
+          }
+        });
+    }
+    if (wizardCompliance?.requiredCoverageType && wizardCompliance.requiredCoverageType.toLowerCase() !== 'none') {
+      list.add(wizardCompliance.requiredCoverageType.trim());
+    }
+    if (wizardPolicy.coverageType && wizardPolicy.coverageType.trim()) {
+      list.add(wizardPolicy.coverageType.trim());
+    }
+    if (list.size === 0) {
+      const fallback = getStandardCoverageForCollateral(wizardCol?.category, wizardCol?.type);
+      if (fallback && fallback.toLowerCase() !== 'none') {
+        list.add(fallback);
+      }
+    }
+    return Array.from(list);
+  }, [taxonomies, wizardCol, wizardCompliance, wizardPolicy.coverageType]);
+
+  // Required Insurance derived from Authoritative Insurance Adequacy Assessment
   const collateralMarketVal = wizardCol?.valuationAmount || 0;
-  const outstandingExposure = wizardExposure?.totalOutstandingExposure || 0;
-  const requiredInsuranceAmount = isInsuranceMandatoryForCategory(wizardCol?.category)
-    ? Math.max(outstandingExposure, collateralMarketVal)
-    : 0;
+  const insurableStructureVal = wizardAdequacy?.bankAssessedInsurableValue || wizardCol?.insurableValue || collateralMarketVal;
+  const outstandingExposure = wizardAdequacy?.aggregateSecuredExposure ?? (wizardExposure?.totalOutstandingExposure || 0);
+  const requiredInsuranceAmount = wizardAdequacy?.requiredCoverageAmount ?? (
+    isInsuranceMandatoryForCollateral(wizardCol) ? insurableStructureVal : 0
+  );
+  const existingActiveInsurance = wizardAdequacy?.totalInsuredAmount || 0;
 
   const wizardInsAmount = Number(wizardPolicy.insuredAmount || 0);
+  const totalActiveCoverage = existingActiveInsurance + wizardInsAmount;
   const wizardCoveragePct =
     requiredInsuranceAmount > 0
-      ? (wizardInsAmount / requiredInsuranceAmount) * 100
+      ? (totalActiveCoverage / requiredInsuranceAmount) * 100
       : wizardInsAmount > 0
-      ? 100
-      : 0;
+        ? 100
+        : 0;
 
   const isUnderinsured = requiredInsuranceAmount > 0 && wizardCoveragePct < coverageThreshold;
 
@@ -629,21 +672,31 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
         console.warn('Backend compliance evaluation fallback:', e);
       }
 
-      const stdCoverage = mandatoryCov || getStandardCoverageForCategory(chosenCol?.category);
-      const exposureAmt = summary?.totalOutstandingExposure || 0;
-      const colVal = chosenCol?.valuationAmount || 0;
-      const isMandatory = isInsuranceMandatoryForCategory(chosenCol?.category);
-      const requiredAmt = isMandatory ? Math.max(exposureAmt, colVal) : 0;
+      // Query authoritative Insurance Adequacy Service for Primary (asset) & Secondary (exposure) rules
+      let adequacyData: any = null;
+      try {
+        adequacyData = await cimsApi.getInsuranceAdequacy(colId);
+        if (adequacyData) {
+          setWizardAdequacy(adequacyData);
+        }
+      } catch (e) {
+        console.warn('Authoritative adequacy assessment query fallback:', e);
+      }
+
+      const stdCoverage = mandatoryCov || getStandardCoverageForCollateral(chosenCol?.category, chosenCol?.type);
+      const isMandatory = isInsuranceMandatoryForCollateral(chosenCol);
+      const requiredAmt = adequacyData?.requiredCoverageAmount ?? (
+        isMandatory ? (chosenCol?.insurableValue || chosenCol?.valuationAmount || 0) : 0
+      );
+      const existingActive = adequacyData?.totalInsuredAmount || 0;
+      const coverageDeficit = Math.max(0, requiredAmt - existingActive);
 
       setWizardPolicy((prev) => ({
         ...prev,
         coverageType: stdCoverage || prev.coverageType || 'Fire & Allied Perils',
-        insuredAmount: prev.insuredAmount && prev.insuredAmount > 0 ? prev.insuredAmount : requiredAmt,
-        premium: prev.premium && prev.premium > 0 ? prev.premium : Math.round(requiredAmt * 0.005),
-        policyNumber:
-          prev.policyNumber && prev.policyNumber.trim().length > 0
-            ? prev.policyNumber
-            : `POL-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
+        insuredAmount: prev.insuredAmount && prev.insuredAmount > 0 ? prev.insuredAmount : (coverageDeficit > 0 ? coverageDeficit : requiredAmt),
+        premium: prev.premium && prev.premium > 0 ? prev.premium : 0,
+        policyNumber: prev.policyNumber || '',
         insurerId: prev.insurerId || activeApprovedInsurers[0]?.id || '',
         insurerName: prev.insurerName || activeApprovedInsurers[0]?.name || '',
       }));
@@ -838,9 +891,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
     setPreValidationResult(null);
     setShowExceptionModal(false);
 
-    const initialPolicyNo = `POL-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
     setWizardPolicy({
-      policyNumber: initialPolicyNo,
+      policyNumber: '',
       insurerId: activeApprovedInsurers[0]?.id || '',
       insurerName: activeApprovedInsurers[0]?.name || '',
       coverageType: 'Fire & Allied Perils',
@@ -872,7 +924,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
         id: `doc-pol-${Date.now()}-2`,
         name: '',
         type: 'Premium Payment Receipt',
-        expiryDate: defaultExpiryDate,
+        expiryDate: '', // Finding 67: Premium payment receipt is proof of payment with no policy-tied expiry
         remarks: 'Annual premium payment settlement confirmation receipt',
         fileName: '',
         fileSize: '',
@@ -980,7 +1032,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
     } else {
       const isApproved = activeApprovedInsurers.some(
         (i) => (wizardPolicy.insurerId && i.id === wizardPolicy.insurerId) ||
-               i.name.trim().toLowerCase() === (wizardPolicy.insurerName || '').trim().toLowerCase()
+          i.name.trim().toLowerCase() === (wizardPolicy.insurerName || '').trim().toLowerCase()
       );
       if (!isApproved) errors.push('Selected insurer is not an active approved insurance company.');
     }
@@ -1005,8 +1057,19 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
         errors.push('Expiry Date must be strictly after Effective Date.');
       }
       const days = Math.ceil((exp.getTime() - eff.getTime()) / (1000 * 3600 * 24));
-      if (days < 360) {
-        errors.push('Standard policy validity must be at least 1 year (365 days).');
+      const covType = (wizardPolicy.coverageType || '').toLowerCase();
+      const isShortTermOrMerchandise =
+        covType.includes('cargo') || covType.includes('marine') || covType.includes('merchandise') ||
+        covType.includes('transit') || covType.includes('shipment') || covType.includes('goods') ||
+        wizardExposure?.facilityBreakdowns?.some((f: any) =>
+          (f.facilityType || '').toLowerCase().includes('short') ||
+          (f.facilityType || '').toLowerCase().includes('merchandise') ||
+          (f.facilityType || '').toLowerCase().includes('advance') ||
+          (f.facilityType || '').toLowerCase().includes('lc')
+        );
+
+      if (!isShortTermOrMerchandise && days < 365) {
+        errors.push('Term-loan and standard property policies require at least one year (365 days) validity. Short-term/merchandise policies must cover the facility tenor.');
       }
     }
     return errors;
@@ -1014,10 +1077,14 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
 
   const getStep5Errors = (): string[] => {
     const errors: string[] = [];
-    if (requiredInsuranceAmount > 0 && wizardInsAmount < requiredInsuranceAmount) {
-      errors.push(
-        `Under-insurance is strictly prohibited. Insured amount (${defaultCurrency} ${wizardInsAmount.toLocaleString()}) must be at least ${defaultCurrency} ${requiredInsuranceAmount.toLocaleString()} (deficit: ${defaultCurrency} ${(requiredInsuranceAmount - wizardInsAmount).toLocaleString()}).`
-      );
+    const totalActive = existingActiveInsurance + wizardInsAmount;
+    if (requiredInsuranceAmount > 0 && totalActive < requiredInsuranceAmount) {
+      const hasActiveException = wizardAdequacy?.hasActiveException;
+      if (!hasActiveException) {
+        errors.push(
+          `Under-insurance is prohibited. Combined active insurance (${defaultCurrency} ${totalActive.toLocaleString()}) does not meet required coverage (${defaultCurrency} ${requiredInsuranceAmount.toLocaleString()}). Remaining deficit: ${defaultCurrency} ${(requiredInsuranceAmount - totalActive).toLocaleString()}. Please adjust policy sum insured or request an authorized insurance exception.`
+        );
+      }
     }
     if (missingPolicyDocs.length > 0) {
       errors.push(
@@ -1054,8 +1121,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
     if (missingPolicyDocs.length > 0) {
       alert(
         `Cannot submit: Missing uploaded files for mandatory policy document(s):\n\n• ` +
-          missingPolicyDocs.map((m) => m.type).join('\n• ') +
-          `\n\nPlease attach valid digital files before submitting.`
+        missingPolicyDocs.map((m) => m.type).join('\n• ') +
+        `\n\nPlease attach valid digital files before submitting.`
       );
       setWizardStep(5);
       return;
@@ -1199,10 +1266,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
             p.status === 'Active'
               ? 'success'
               : p.status === 'Pending Approval' || p.status === 'Pending Renewal'
-              ? 'warning'
-              : p.status === 'Draft' || p.status === 'Returned'
-              ? 'neutral'
-              : 'danger'
+                ? 'warning'
+                : p.status === 'Draft' || p.status === 'Returned'
+                  ? 'neutral'
+                  : 'danger'
           }
         />
       ),
@@ -1240,10 +1307,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
   const policyEndorsements = selectedPolicy ? endorsements.filter((e) => e.policyId === selectedPolicy.id) : [];
   const policyDocs = selectedPolicy
     ? documents.filter(
-        (d) =>
-          d.entityId === selectedPolicy.id ||
-          (selectedPolicy.collateralId && d.collateralId === selectedPolicy.collateralId)
-      )
+      (d) =>
+        d.entityId === selectedPolicy.id ||
+        (selectedPolicy.collateralId && d.collateralId === selectedPolicy.collateralId)
+    )
     : [];
 
   return (
@@ -1278,7 +1345,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
         <div className="fixed inset-0 bg-[#102E4A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
             {/* Modal Header */}
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start">
+            <div className="p-4 sm:p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0 min-w-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold">
@@ -1290,8 +1357,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       selectedPolicy.status === 'Active'
                         ? 'success'
                         : selectedPolicy.status === 'Pending Approval' || selectedPolicy.status === 'Pending Renewal'
-                        ? 'warning'
-                        : 'danger'
+                          ? 'warning'
+                          : 'danger'
                     }
                   />
                   <StatusChip
@@ -1454,34 +1521,31 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
             </div>
 
             {/* Modal Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-6 gap-2 pt-2">
+            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-6 gap-2 pt-2 overflow-x-auto shrink-0 scrollbar-thin">
               <button
                 onClick={() => setActiveDetailTab('financials')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors ${
-                  activeDetailTab === 'financials'
-                    ? 'border-[#102E4A] text-[#102E4A]'
-                    : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === 'financials'
+                  ? 'border-[#102E4A] text-[#102E4A]'
+                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 Policy Financials & Governance
               </button>
               <button
                 onClick={() => setActiveDetailTab('endorsements')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors ${
-                  activeDetailTab === 'endorsements'
-                    ? 'border-[#102E4A] text-[#102E4A]'
-                    : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === 'endorsements'
+                  ? 'border-[#102E4A] text-[#102E4A]'
+                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 Endorsements ({policyEndorsements.length})
               </button>
               <button
                 onClick={() => setActiveDetailTab('documents')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors ${
-                  activeDetailTab === 'documents'
-                    ? 'border-[#102E4A] text-[#102E4A]'
-                    : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeDetailTab === 'documents'
+                  ? 'border-[#102E4A] text-[#102E4A]'
+                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 Attached Documents ({policyDocs.length})
               </button>
@@ -1490,11 +1554,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   setActiveDetailTab('history');
                   if (selectedPolicy) loadPolicyHistory(selectedPolicy.id);
                 }}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
-                  activeDetailTab === 'history'
-                    ? 'border-[#102E4A] text-[#102E4A]'
-                    : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeDetailTab === 'history'
+                  ? 'border-[#102E4A] text-[#102E4A]'
+                  : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 <History className="w-3.5 h-3.5" />
                 Lifecycle & History
@@ -1502,7 +1565,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4 min-w-0 max-w-full">
               {activeDetailTab === 'financials' && (
                 <div className="space-y-4">
                   {/* Live Compliance & Exposure Adequacy Evaluation Card */}
@@ -1519,24 +1582,24 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           detailCompliance?.coverageStatus === 'ADEQUATELY_INSURED'
                             ? 'Adequately Insured'
                             : detailCompliance?.coverageStatus === 'UNDERINSURED'
-                            ? 'Underinsured'
-                            : detailCompliance?.coverageStatus === 'EXCESS_INSURANCE'
-                            ? 'Excess Insurance'
-                            : detailCompliance?.coverageStatus === 'NOT_REQUIRED'
-                            ? 'Insurance Not Required'
-                            : detailCompliance?.coverageStatus || 'Evaluating…'
+                              ? 'Underinsured'
+                              : detailCompliance?.coverageStatus === 'EXCESS_INSURANCE'
+                                ? 'Excess Insurance'
+                                : detailCompliance?.coverageStatus === 'NOT_REQUIRED'
+                                  ? 'Insurance Not Required'
+                                  : detailCompliance?.coverageStatus || 'Evaluating…'
                         }
                         variant={
                           detailCompliance?.coverageStatus === 'ADEQUATELY_INSURED' || detailCompliance?.coverageStatus === 'EXCESS_INSURANCE'
                             ? 'success'
                             : detailCompliance?.coverageStatus === 'UNDERINSURED'
-                            ? 'danger'
-                            : 'neutral'
+                              ? 'danger'
+                              : 'neutral'
                         }
                       />
                     </div>
 
-                    <div className="grid grid-cols-4 gap-3 text-xs">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div>
                         <span className="text-[#5B6472] block text-[10px] font-semibold">REQUIRED SUM INSURED</span>
                         <strong className="text-[#102E4A] font-mono text-sm">
@@ -1552,11 +1615,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       <div>
                         <span className="text-[#5B6472] block text-[10px] font-semibold">COVERAGE ADEQUACY</span>
                         <strong
-                          className={`text-sm ${
-                            (detailCompliance?.coveragePercentage ?? 0) < 100
-                              ? 'text-red-700 font-bold'
-                              : 'text-emerald-700 font-bold'
-                          }`}
+                          className={`text-sm ${(detailCompliance?.coveragePercentage ?? 0) < 100
+                            ? 'text-red-700 font-bold'
+                            : 'text-emerald-700 font-bold'
+                            }`}
                         >
                           {(detailCompliance?.coveragePercentage ?? 0).toFixed(1)}%
                         </strong>
@@ -1564,9 +1626,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       <div>
                         <span className="text-[#5B6472] block text-[10px] font-semibold">COVERAGE GAP / SHORTFALL</span>
                         <strong
-                          className={`text-sm ${
-                            (detailCompliance?.coverageGap ?? 0) > 0 ? 'text-red-700 font-mono' : 'text-emerald-700'
-                          }`}
+                          className={`text-sm ${(detailCompliance?.coverageGap ?? 0) > 0 ? 'text-red-700 font-mono' : 'text-emerald-700'
+                            }`}
                         >
                           {(detailCompliance?.coverageGap ?? 0) > 0
                             ? `ETB ${detailCompliance?.coverageGap.toLocaleString()}`
@@ -1578,9 +1639,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#B9D3EB]/50 text-[11px]">
                       <div className="flex items-center gap-1.5">
                         <CheckCircle
-                          className={`w-3.5 h-3.5 ${
-                            detailCompliance?.approvedInsurerStatus === 'APPROVED' ? 'text-emerald-600' : 'text-amber-500'
-                          }`}
+                          className={`w-3.5 h-3.5 ${detailCompliance?.approvedInsurerStatus === 'APPROVED' ? 'text-emerald-600' : 'text-amber-500'
+                            }`}
                         />
                         <span>
                           Approved Insurer: <strong>{detailCompliance?.approvedInsurerStatus || 'Verified'}</strong>
@@ -1588,9 +1648,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       </div>
                       <div className="flex items-center gap-1.5">
                         <CheckCircle
-                          className={`w-3.5 h-3.5 ${
-                            detailCompliance?.policyValidityStatus === 'VALID' ? 'text-emerald-600' : 'text-amber-500'
-                          }`}
+                          className={`w-3.5 h-3.5 ${detailCompliance?.policyValidityStatus === 'VALID' ? 'text-emerald-600' : 'text-amber-500'
+                            }`}
                         />
                         <span>
                           Term Validity: <strong>{detailCompliance?.policyValidityStatus || 'Valid (365+ Days)'}</strong>
@@ -1598,9 +1657,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       </div>
                       <div className="flex items-center gap-1.5">
                         <CheckCircle
-                          className={`w-3.5 h-3.5 ${
-                            detailCompliance?.mandatoryDocumentStatus === 'SATISFIED' ? 'text-emerald-600' : 'text-amber-500'
-                          }`}
+                          className={`w-3.5 h-3.5 ${detailCompliance?.mandatoryDocumentStatus === 'SATISFIED' ? 'text-emerald-600' : 'text-amber-500'
+                            }`}
                         />
                         <span>
                           Mandatory Documents: <strong>{detailCompliance?.mandatoryDocumentStatus || 'Verified'}</strong>
@@ -1712,8 +1770,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       </button>
                     )}
                   </div>
-                  <div className="cims-card overflow-hidden">
-                    <table className="w-full text-left text-xs">
+                  <div className="cims-card overflow-x-auto w-full max-w-full">
+                    <table className="w-full text-left text-xs min-w-[600px]">
                       <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                         <tr>
                           <th className="p-2">Endorsement No.</th>
@@ -1759,8 +1817,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       </button>
                     )}
                   </div>
-                  <div className="cims-card overflow-hidden">
-                    <table className="w-full text-left text-xs">
+                  <div className="cims-card overflow-x-auto w-full max-w-full">
+                    <table className="w-full text-left text-xs min-w-[600px]">
                       <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                         <tr>
                           <th className="p-2.5">Document Title</th>
@@ -1926,20 +1984,20 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           const badgeColor = isReject
                             ? 'bg-red-100 text-red-800 border-red-300'
                             : isCancel
-                            ? 'bg-red-50 text-red-700 border-red-200'
-                            : isReg
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : isAmend
-                            ? 'bg-amber-50 text-amber-800 border-amber-300'
-                            : isEndorse
-                            ? 'bg-purple-50 text-purple-800 border-purple-300'
-                            : isRenew
-                            ? 'bg-teal-50 text-teal-800 border-teal-300'
-                            : isReplace
-                            ? 'bg-blue-50 text-blue-800 border-blue-300'
-                            : isReopen
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : 'bg-slate-100 text-slate-800 border-slate-300';
+                              ? 'bg-red-50 text-red-700 border-red-200'
+                              : isReg
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : isAmend
+                                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                  : isEndorse
+                                    ? 'bg-purple-50 text-purple-800 border-purple-300'
+                                    : isRenew
+                                      ? 'bg-teal-50 text-teal-800 border-teal-300'
+                                      : isReplace
+                                        ? 'bg-blue-50 text-blue-800 border-blue-300'
+                                        : isReopen
+                                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                          : 'bg-slate-100 text-slate-800 border-slate-300';
 
                           return (
                             <div key={idx} className="relative group">
@@ -2128,18 +2186,16 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         <button
                           type="button"
                           onClick={() => setUninsuredFilterOnly(false)}
-                          className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${
-                            !uninsuredFilterOnly ? 'bg-[#102E4A] text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                          }`}
+                          className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${!uninsuredFilterOnly ? 'bg-[#102E4A] text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
                         >
                           All Eligible ({collaterals.filter(c => c.status !== 'Released' && c.status !== 'Draft').length})
                         </button>
                         <button
                           type="button"
                           onClick={() => setUninsuredFilterOnly(true)}
-                          className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${
-                            uninsuredFilterOnly ? 'bg-amber-700 text-white font-bold shadow-2xs' : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
-                          }`}
+                          className={`px-2.5 py-1 rounded font-medium transition-colors cursor-pointer ${uninsuredFilterOnly ? 'bg-amber-700 text-white font-bold shadow-2xs' : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                            }`}
                         >
                           Needs Insurance ({collaterals.filter(c => c.status !== 'Released' && c.status !== 'Draft' && (!c.insuranceStatus || c.insuranceStatus === 'Uninsured' || c.insuranceStatus === 'Expired')).length})
                         </button>
@@ -2171,11 +2227,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                 setWizardCustomerId(c.customerId || '');
                                 loadWizardExposure(c.id);
                               }}
-                              className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                                isSelected
-                                  ? 'bg-[#EFF5FB] border-[#1F4E7A] border-l-4 border-l-[#1F4E7A] shadow-md ring-2 ring-[#1F4E7A]/20'
-                                  : 'bg-white border-[#E2E8F0] hover:bg-slate-50'
-                              }`}
+                              className={`p-3 rounded-lg border cursor-pointer transition-all ${isSelected
+                                ? 'bg-[#EFF5FB] border-[#1F4E7A] border-l-4 border-l-[#1F4E7A] shadow-md ring-2 ring-[#1F4E7A]/20'
+                                : 'bg-white border-[#E2E8F0] hover:bg-slate-50'
+                                }`}
                             >
                               <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2.5">
@@ -2311,11 +2366,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       <span className="font-bold text-[#102E4A] text-xs uppercase tracking-wide">
                         Collateral Taxonomy Insurance Mandate
                       </span>
-                      <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
-                        isInsuranceMandatoryForCategory(wizardCol.category)
-                          ? 'bg-blue-200 text-blue-900'
-                          : 'bg-slate-200 text-slate-800'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${isInsuranceMandatoryForCategory(wizardCol.category)
+                        ? 'bg-blue-200 text-blue-900'
+                        : 'bg-slate-200 text-slate-800'
+                        }`}>
                         {isInsuranceMandatoryForCategory(wizardCol.category) ? 'Mandatory Insurance Required' : 'Insurance Exempt'}
                       </span>
                     </div>
@@ -2344,7 +2398,7 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                       Step 3: Secured Credit Facilities &amp; Exposure Allocation
                     </h4>
                     <p className="text-[#5B6472] text-[11px]">
-                      Required Insurance Rule: <strong>MAX(Total Outstanding Loan Balance, Collateral Market Valuation)</strong>
+                      Required Insurance Rule: <strong>Authoritative Credit Policy Rule &amp; Aggregate Secured Facility Exposure</strong>
                     </p>
                   </div>
 
@@ -2394,32 +2448,39 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3 text-xs pt-1">
+                        <div className="grid grid-cols-4 gap-3 text-xs pt-1">
                           <div>
-                            <span className="text-[#5B6472] block text-[10px]">TOTAL OUTSTANDING EXPOSURE</span>
+                            <span className="text-[#5B6472] block text-[10px]">BANK-ASSESSED INSURABLE VALUE</span>
+                            <strong className="font-mono text-[#102E4A] text-sm">ETB {insurableStructureVal.toLocaleString()}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[#5B6472] block text-[10px]">REQUIRED PRIMARY COVERAGE</span>
+                            <strong className="font-mono text-emerald-700 text-sm font-bold">ETB {requiredInsuranceAmount.toLocaleString()}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[#5B6472] block text-[10px]">TOTAL SECURED EXPOSURE</span>
                             <strong className="font-mono text-red-700 text-sm">ETB {outstandingExposure.toLocaleString()}</strong>
                           </div>
                           <div>
-                            <span className="text-[#5B6472] block text-[10px]">COLLATERAL MARKET VALUATION</span>
-                            <strong className="font-mono text-[#102E4A] text-sm">ETB {collateralMarketVal.toLocaleString()}</strong>
-                          </div>
-                          <div>
-                            <span className="text-[#5B6472] block text-[10px]">REQUIRED SUM INSURED</span>
-                            <strong className="font-mono text-emerald-700 text-sm font-bold">
-                              ETB {requiredInsuranceAmount.toLocaleString()}
-                            </strong>
+                            <span className="text-[#5B6472] block text-[10px]">EXISTING ACTIVE INSURANCE</span>
+                            <strong className="font-mono text-blue-700 text-sm">ETB {existingActiveInsurance.toLocaleString()}</strong>
                           </div>
                         </div>
 
                         <div className="p-2.5 bg-white border border-[#DCE9F5] rounded text-[11px] text-[#102E4A] space-y-1">
                           <div>
-                            Rule: Required Insurance = <code>MAX(Outstanding Loan Balance, Collateral Valuation)</code>
+                            <strong>Primary Adequacy Test:</strong> Bank-assessed Insurable Value (excluding land for buildings) × Required Coverage % = <strong>ETB {requiredInsuranceAmount.toLocaleString()}</strong>
                           </div>
-                          <div className="text-[#5B6472]">
-                            = MAX(ETB {outstandingExposure.toLocaleString()}, ETB {collateralMarketVal.toLocaleString()}) = <strong>ETB {requiredInsuranceAmount.toLocaleString()}</strong>
+                          <div>
+                            <strong>Secondary Adequacy Test:</strong> Combined Active Insurance across policies must secure Aggregate Outstanding Facility Exposure = <strong>ETB {outstandingExposure.toLocaleString()}</strong>
                           </div>
+                          {wizardAdequacy?.applicableRuleDescription && (
+                            <div className="text-slate-600 text-[10px] font-mono">
+                              Applicable Rule: {wizardAdequacy.applicableRuleDescription}
+                            </div>
+                          )}
                           <div className="text-blue-900 text-[10px] font-semibold pt-1">
-                            ℹ Standard credit risk policy requires 100% coverage. Under-insurance is strictly prohibited.
+                            ℹ Evaluated via authoritative InsuranceAdequacyService. Multiple active valid policies combine toward required adequacy.
                           </div>
                         </div>
                       </div>
@@ -2543,13 +2604,13 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         type="number"
                         min="1"
                         placeholder="e.g. 15000000"
-                        value={wizardPolicy.insuredAmount || ''}
+                        value={wizardPolicy.insuredAmount ?? ''}
                         onChange={(e) => {
-                          const val = Number(e.target.value);
+                          const val = e.target.value === '' ? undefined : Number(e.target.value);
                           setWizardPolicy((prev) => ({
                             ...prev,
                             insuredAmount: val,
-                            premium: (!prev.premium || prev.premium === 0) ? Math.round(val * 0.0045) : prev.premium,
+                            premium: val !== undefined && (!prev.premium || prev.premium === 0) ? Math.round(val * 0.0045) : prev.premium,
                           }));
                         }}
                         className="w-full p-2 border border-[#E2E8F0] rounded font-bold tabular-nums text-emerald-700"
@@ -2563,26 +2624,13 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         <label className="font-semibold text-[#101828]">
                           Annual Premium ({defaultCurrency}) <span className="text-red-500">*</span>
                         </label>
-                        {wizardInsAmount > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const est = Math.round(wizardInsAmount * 0.0045);
-                              setWizardPolicy((prev) => ({ ...prev, premium: est }));
-                            }}
-                            className="text-[10px] text-blue-700 hover:text-blue-900 underline font-semibold cursor-pointer"
-                            title="Recalculate 0.45% market rate"
-                          >
-                            Est (0.45%)
-                          </button>
-                        )}
                       </div>
                       <input
                         type="number"
                         min="0"
                         placeholder="e.g. 67500"
-                        value={wizardPolicy.premium || ''}
-                        onChange={(e) => setWizardPolicy({ ...wizardPolicy, premium: Number(e.target.value) })}
+                        value={wizardPolicy.premium ?? ''}
+                        onChange={(e) => setWizardPolicy({ ...wizardPolicy, premium: e.target.value === '' ? undefined : Number(e.target.value) })}
                         className="w-full p-2 border border-[#E2E8F0] rounded font-bold tabular-nums"
                       />
                     </div>
@@ -2726,11 +2774,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                           handleBatchDropFiles(e.dataTransfer.files);
                         }
                       }}
-                      className={`p-4 border-2 border-dashed rounded-xl text-center transition-all ${
-                        batchDragOver
-                          ? 'border-[#1F4E7A] bg-blue-50/80 scale-[1.01]'
-                          : 'border-slate-300 bg-slate-50/70 hover:bg-slate-50 hover:border-[#1F4E7A]/50'
-                      }`}
+                      className={`p-4 border-2 border-dashed rounded-xl text-center transition-all ${batchDragOver
+                        ? 'border-[#1F4E7A] bg-blue-50/80 scale-[1.01]'
+                        : 'border-slate-300 bg-slate-50/70 hover:bg-slate-50 hover:border-[#1F4E7A]/50'
+                        }`}
                     >
                       <div className="flex flex-col items-center justify-center gap-1.5">
                         <UploadCloud className={`w-7 h-7 ${batchDragOver ? 'text-[#1F4E7A] animate-bounce' : 'text-slate-400'}`} />
@@ -2782,22 +2829,20 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                 handleFileForSlot(e.dataTransfer.files[0], idx);
                               }
                             }}
-                            className={`p-3 rounded-lg border space-y-2 transition-all ${
-                              isSlotDragging
-                                ? 'bg-blue-50/80 border-[#1F4E7A] ring-2 ring-[#1F4E7A]/40'
-                                : hasFile
+                            className={`p-3 rounded-lg border space-y-2 transition-all ${isSlotDragging
+                              ? 'bg-blue-50/80 border-[#1F4E7A] ring-2 ring-[#1F4E7A]/40'
+                              : hasFile
                                 ? 'bg-white border-emerald-300 shadow-2xs'
                                 : doc.isMandatory
-                                ? 'bg-amber-50/50 border-amber-300'
-                                : 'bg-white border-[#E2E8F0]'
-                            }`}
+                                  ? 'bg-amber-50/50 border-amber-300'
+                                  : 'bg-white border-[#E2E8F0]'
+                              }`}
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-2.5 flex-1">
                                 <Paperclip
-                                  className={`w-4 h-4 flex-shrink-0 ${
-                                    hasFile ? 'text-emerald-600' : doc.isMandatory ? 'text-amber-600' : 'text-slate-400'
-                                  }`}
+                                  className={`w-4 h-4 flex-shrink-0 ${hasFile ? 'text-emerald-600' : doc.isMandatory ? 'text-amber-600' : 'text-slate-400'
+                                    }`}
                                 />
                                 <div className="flex-1 grid grid-cols-3 gap-2">
                                   <div>
@@ -2887,13 +2932,12 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                 />
                                 <label
                                   htmlFor={`file-pol-wizard-${doc.id}`}
-                                  className={`cursor-pointer py-1 px-3 rounded font-semibold flex items-center gap-1.5 text-xs shadow-2xs transition-colors ${
-                                    hasFile
-                                      ? 'bg-white border border-emerald-400 text-emerald-900 hover:bg-emerald-50'
-                                      : doc.isMandatory
+                                  className={`cursor-pointer py-1 px-3 rounded font-semibold flex items-center gap-1.5 text-xs shadow-2xs transition-colors ${hasFile
+                                    ? 'bg-white border border-emerald-400 text-emerald-900 hover:bg-emerald-50'
+                                    : doc.isMandatory
                                       ? 'bg-[#102E4A] text-white hover:bg-[#173F63]'
                                       : 'bg-slate-700 text-white hover:bg-slate-800'
-                                  }`}
+                                    }`}
                                 >
                                   <UploadCloud className="w-3.5 h-3.5" />
                                   {hasFile ? 'Replace File' : 'Attach Digital File (or Drag & Drop)'}
@@ -3024,9 +3068,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                                     </div>
                                     <div className="text-[#5B6472] pl-2">{c.message}</div>
                                   </div>
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${
-                                    c.overrideable ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-red-100 text-red-800 border border-red-200'
-                                  }`}>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${c.overrideable ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-red-100 text-red-800 border border-red-200'
+                                    }`}>
                                     {c.overrideable ? 'Overrideable' : 'Hard Block'}
                                   </span>
                                 </div>
@@ -3120,9 +3163,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         {wizardDocuments.map((d, i) => {
                           const has = Boolean(d.fileContent || d.fileName);
                           return (
-                            <span key={i} className={`px-2 py-0.5 rounded border text-[10px] font-semibold flex items-center gap-1 ${
-                              has ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : d.isMandatory ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-slate-50 border-slate-200 text-slate-600'
-                            }`}>
+                            <span key={i} className={`px-2 py-0.5 rounded border text-[10px] font-semibold flex items-center gap-1 ${has ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : d.isMandatory ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-slate-50 border-slate-200 text-slate-600'
+                              }`}>
                               {has ? '✓' : '⚠️'} {d.type}: {d.fileName || '(No file attached)'}
                             </span>
                           );
@@ -3217,10 +3259,10 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                         preValidationResult && !preValidationResult.valid
                           ? 'Submission blocked: Mandatory requirements not satisfied. Either upload missing documents or submit as an exception.'
                           : isUnderinsured
-                          ? 'Submission blocked: Under-insurance is strictly prohibited.'
-                          : missingPolicyDocs.length > 0
-                          ? 'Submission blocked: Attach digital files for all mandatory documents.'
-                          : 'Submit for Checker Authorization'
+                            ? 'Submission blocked: Under-insurance is strictly prohibited.'
+                            : missingPolicyDocs.length > 0
+                              ? 'Submission blocked: Attach digital files for all mandatory documents.'
+                              : 'Submit for Checker Authorization'
                       }
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -3644,8 +3686,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <input
                       type="number"
                       min="1"
-                      value={amendData.insuredAmount ?? selectedPolicy.insuredAmount}
-                      onChange={(e) => setAmendData({ ...amendData, insuredAmount: Number(e.target.value) })}
+                      value={amendData.insuredAmount !== undefined ? amendData.insuredAmount : (selectedPolicy.insuredAmount ?? '')}
+                      onChange={(e) => setAmendData({ ...amendData, insuredAmount: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
                       className="w-full p-1.5 border border-[#E2E8F0] rounded font-bold tabular-nums text-xs"
                     />
                   </div>
@@ -3662,8 +3704,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                     <input
                       type="number"
                       min="0"
-                      value={amendData.premium ?? selectedPolicy.premium}
-                      onChange={(e) => setAmendData({ ...amendData, premium: Number(e.target.value) })}
+                      value={amendData.premium !== undefined ? amendData.premium : (selectedPolicy.premium ?? '')}
+                      onChange={(e) => setAmendData({ ...amendData, premium: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
                       className="w-full p-1.5 border border-[#E2E8F0] rounded font-bold tabular-nums text-xs"
                     />
                   </div>
@@ -3778,8 +3820,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <input
                   type="number"
                   min="1"
-                  value={renewAmount || selectedPolicy.insuredAmount}
-                  onChange={(e) => setRenewAmount(Number(e.target.value))}
+                  value={renewAmount !== undefined ? renewAmount : (selectedPolicy.insuredAmount ?? '')}
+                  onChange={(e) => setRenewAmount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
                   className="w-full p-2 border border-[#E2E8F0] rounded font-bold tabular-nums"
                 />
               </div>
@@ -3788,8 +3830,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                 <input
                   type="number"
                   min="0"
-                  value={renewPremium || selectedPolicy.premium}
-                  onChange={(e) => setRenewPremium(Number(e.target.value))}
+                  value={renewPremium !== undefined ? renewPremium : (selectedPolicy.premium ?? '')}
+                  onChange={(e) => setRenewPremium(e.target.value === '' ? ('' as any) : Number(e.target.value))}
                   className="w-full p-2 border border-[#E2E8F0] rounded font-bold tabular-nums"
                 />
               </div>
@@ -4031,8 +4073,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <input
                     type="number"
                     min="1"
-                    value={replacementPolicy.insuredAmount || selectedPolicy.insuredAmount}
-                    onChange={(e) => setReplacementPolicy({ ...replacementPolicy, insuredAmount: Number(e.target.value) })}
+                    value={replacementPolicy.insuredAmount !== undefined ? replacementPolicy.insuredAmount : (selectedPolicy.insuredAmount ?? '')}
+                    onChange={(e) => setReplacementPolicy({ ...replacementPolicy, insuredAmount: e.target.value === '' ? undefined : Number(e.target.value) })}
                     className="w-full p-2 border border-[#E2E8F0] rounded font-bold tabular-nums"
                   />
                 </div>
@@ -4041,8 +4083,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
                   <input
                     type="number"
                     min="0"
-                    value={replacementPolicy.premium ?? selectedPolicy.premium}
-                    onChange={(e) => setReplacementPolicy({ ...replacementPolicy, premium: Number(e.target.value) })}
+                    value={replacementPolicy.premium !== undefined ? replacementPolicy.premium : (selectedPolicy.premium ?? '')}
+                    onChange={(e) => setReplacementPolicy({ ...replacementPolicy, premium: e.target.value === '' ? undefined : Number(e.target.value) })}
                     className="w-full p-2 border border-[#E2E8F0] rounded font-bold tabular-nums"
                   />
                 </div>

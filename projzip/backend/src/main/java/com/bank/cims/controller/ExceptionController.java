@@ -60,6 +60,15 @@ public class ExceptionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    private String resolveVerifiedUser(String headerUserId, String fallbackUserId) {
+        String eff = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId.trim()
+                : (fallbackUserId != null && !fallbackUserId.isBlank() ? fallbackUserId.trim() : null);
+        if (eff == null || eff.isBlank() || "SYSTEM".equalsIgnoreCase(eff)) {
+            throw new IllegalArgumentException("Authentication required: A valid user identity (X-User-Id) is required. SYSTEM identity is not permitted for client requests.");
+        }
+        return eff;
+    }
+
     @PostMapping("/{id}/resolve")
     public ResponseEntity<Map<String, Object>> resolveException(
             @PathVariable String id,
@@ -96,11 +105,8 @@ public class ExceptionController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Corrective action selection is mandatory."));
         }
 
-        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId :
-                (req.getUserId() != null ? req.getUserId() : userId);
-        if (effUserId == null || effUserId.isBlank()) effUserId = "SYSTEM";
-
         try {
+            String effUserId = resolveVerifiedUser(headerUserId, req.getUserId() != null ? req.getUserId() : userId);
             cimsService.resolveException(id, req, effUserId);
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -133,16 +139,21 @@ public class ExceptionController {
             req.setAssignedUserId(assignedUserId);
         }
 
-        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId :
-                (req.getUserId() != null ? req.getUserId() : userId);
-        if (effUserId == null || effUserId.isBlank()) effUserId = "SYSTEM";
-
-        cimsService.assignException(id, req, effUserId);
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Exception " + id + " has been assigned successfully.",
-                "exceptionId", id
-        ));
+        try {
+            String effUserId = resolveVerifiedUser(headerUserId, req.getUserId() != null ? req.getUserId() : userId);
+            cimsService.assignException(id, req, effUserId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Exception " + id + " has been assigned successfully.",
+                    "exceptionId", id
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage(),
+                    "exceptionId", id
+            ));
+        }
     }
 
     @PostMapping("/{id}/escalate")
@@ -162,16 +173,21 @@ public class ExceptionController {
             req.setReason(reason);
         }
 
-        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId :
-                (req.getUserId() != null ? req.getUserId() : userId);
-        if (effUserId == null || effUserId.isBlank()) effUserId = "SYSTEM";
-
-        cimsService.escalateException(id, req, effUserId);
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Exception " + id + " has been escalated successfully.",
-                "exceptionId", id
-        ));
+        try {
+            String effUserId = resolveVerifiedUser(headerUserId, req.getUserId() != null ? req.getUserId() : userId);
+            cimsService.escalateException(id, req, effUserId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Exception " + id + " has been escalated successfully.",
+                    "exceptionId", id
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage(),
+                    "exceptionId", id
+            ));
+        }
     }
 
     @PostMapping("/{id}/investigation")
@@ -188,15 +204,21 @@ public class ExceptionController {
             @RequestBody ExceptionInvestigationNoteRequest body,
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
 
-        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : body.getUserId();
-        if (effUserId == null || effUserId.isBlank()) effUserId = "SYSTEM";
-
-        cimsService.addInvestigationNote(id, body, effUserId);
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Investigation note added successfully.",
-                "exceptionId", id
-        ));
+        try {
+            String effUserId = resolveVerifiedUser(headerUserId, body != null ? body.getUserId() : null);
+            cimsService.addInvestigationNote(id, body, effUserId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Investigation note added successfully.",
+                    "exceptionId", id
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage(),
+                    "exceptionId", id
+            ));
+        }
     }
 
     @PostMapping("/{id}/evidence")
@@ -205,15 +227,21 @@ public class ExceptionController {
             @RequestBody ExceptionEvidenceRequest body,
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
 
-        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : body.getUserId();
-        if (effUserId == null || effUserId.isBlank()) effUserId = "SYSTEM";
-
-        cimsService.addExceptionEvidence(id, body, effUserId);
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Supporting evidence associated successfully.",
-                "exceptionId", id
-        ));
+        try {
+            String effUserId = resolveVerifiedUser(headerUserId, body != null ? body.getUserId() : null);
+            cimsService.addExceptionEvidence(id, body, effUserId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Supporting evidence associated successfully.",
+                    "exceptionId", id
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage(),
+                    "exceptionId", id
+            ));
+        }
     }
 
     @PostMapping("/{id}/corrective-action")
@@ -222,15 +250,21 @@ public class ExceptionController {
             @RequestBody ExceptionCorrectiveActionRequest body,
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
 
-        String effUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : body.getUserId();
-        if (effUserId == null || effUserId.isBlank()) effUserId = "SYSTEM";
-
-        cimsService.recordExceptionCorrectiveAction(id, body, effUserId);
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Corrective action recorded successfully.",
-                "exceptionId", id
-        ));
+        try {
+            String effUserId = resolveVerifiedUser(headerUserId, body != null ? body.getUserId() : null);
+            cimsService.recordExceptionCorrectiveAction(id, body, effUserId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Corrective action recorded successfully.",
+                    "exceptionId", id
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage(),
+                    "exceptionId", id
+            ));
+        }
     }
 
     @GetMapping("/{id}/investigation-notes")
@@ -258,10 +292,12 @@ public class ExceptionController {
     @PostMapping("/submit-request")
     public ResponseEntity<?> submitExceptionRequest(
             @RequestBody EntryTimeExceptionRequest request,
-            @RequestParam(defaultValue = "CRO_USER") String userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String userId) {
         try {
-            return ResponseEntity.ok(cimsService.submitEntryTimeException(request, userId));
-        } catch (IllegalArgumentException e) {
+            String effUserId = resolveVerifiedUser(headerUserId, userId);
+            return ResponseEntity.ok(cimsService.submitEntryTimeException(request, effUserId));
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage() != null ? e.getMessage() : "Exception request submission failed"));

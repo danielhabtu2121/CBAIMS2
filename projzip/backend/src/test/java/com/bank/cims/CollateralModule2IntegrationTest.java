@@ -49,6 +49,9 @@ public class CollateralModule2IntegrationTest {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private Customer testCustomerA;
     private Customer testCustomerB;
     private LoanAccount testLoanA1;
@@ -57,6 +60,33 @@ public class CollateralModule2IntegrationTest {
 
     @BeforeEach
     public void setup() {
+        if (userRepository.findByUsername("RO_MAKER").isEmpty()) {
+            User roMaker = new User();
+            roMaker.setId("usr-ro-maker");
+            roMaker.setUsername("RO_MAKER");
+            roMaker.setPassword("password123");
+            roMaker.setFullName("Relationship Officer Maker");
+            roMaker.setRole("CRO");
+            roMaker.setBranch("Addis Ababa Main Branch");
+            roMaker.setSegment("Corporate Banking");
+            roMaker.setSegmentIds("[\"Corporate Banking\", \"Commercial Banking\"]");
+            roMaker.setActive(true);
+            userRepository.save(roMaker);
+        }
+
+        if (userRepository.findByUsername("CRO_OFFICER").isEmpty()) {
+            User croOfficer = new User();
+            croOfficer.setId("usr-cro-officer");
+            croOfficer.setUsername("CRO_OFFICER");
+            croOfficer.setPassword("password123");
+            croOfficer.setFullName("Credit Risk Officer");
+            croOfficer.setRole("CRO");
+            croOfficer.setBranch("Addis Ababa Main Branch");
+            croOfficer.setSegment("Corporate Banking");
+            croOfficer.setActive(true);
+            userRepository.save(croOfficer);
+        }
+
         String uid = UUID.randomUUID().toString().substring(0, 6);
 
         testCustomerA = new Customer();
@@ -164,13 +194,24 @@ public class CollateralModule2IntegrationTest {
         return collateralRepository.save(col);
     }
 
+    private void addAndApproveLink(String loanId, String collateralId, double amount, String makerId) {
+        cimsService.addLink(loanId, collateralId, amount, makerId);
+        List<WorkflowTask> pendingTasks = workflowTaskRepository.findAll().stream()
+                .filter(t -> "Pending".equalsIgnoreCase(t.getStatus()) &&
+                        ("LoanCollateralLink".equalsIgnoreCase(t.getEntityType()) || "CollateralFacilityLink".equalsIgnoreCase(t.getEntityType())))
+                .toList();
+        for (WorkflowTask task : pendingTasks) {
+            workflowExecutionService.approveWorkflowTask(task.getId(), "brmgr_user", "BRMGR", "Approved link by checker");
+        }
+    }
+
     @Test
     @DisplayName("Test 1: Single Facility Link & Allocation (1 Collateral -> 1 Loan)")
     public void test1_singleFacilityLinkAndAllocation() {
         Collateral col = createTestCollateral("COL-MOD2-T1", 80_000_000.0, 20.0, "Abyssinia Trading", "Borrower-owned");
         // NSV = 80M * 0.8 = 64M
 
-        cimsService.addLink(testLoanA1.getId(), col.getId(), 35_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col.getId(), 35_000_000.0, "RO_MAKER");
 
         List<LoanCollateralLink> links = loanCollateralLinkRepository.findByCollateralId(col.getId());
         assertEquals(1, links.size());
@@ -192,8 +233,8 @@ public class CollateralModule2IntegrationTest {
         Collateral col1 = createTestCollateral("COL-MOD2-T2-A", 40_000_000.0, 20.0, "Abyssinia Trading", "Borrower-owned");
         Collateral col2 = createTestCollateral("COL-MOD2-T2-B", 30_000_000.0, 20.0, "Abyssinia Trading", "Borrower-owned");
 
-        cimsService.addLink(testLoanA1.getId(), col1.getId(), 20_000_000.0, "RO_MAKER");
-        cimsService.addLink(testLoanA1.getId(), col2.getId(), 15_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col1.getId(), 20_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col2.getId(), 15_000_000.0, "RO_MAKER");
 
         List<LoanCollateralLink> linksForLoan = loanCollateralLinkRepository.findByLoanAccountId(testLoanA1.getId());
         assertEquals(2, linksForLoan.size());
@@ -208,8 +249,8 @@ public class CollateralModule2IntegrationTest {
         Collateral col = createTestCollateral("COL-MOD2-T3-CROSS", 100_000_000.0, 20.0, "Abyssinia Trading", "Borrower-owned");
         // NSV = 80M. Facility A1 takes 30M, Facility A2 takes 20M -> Total 50M <= 80M
 
-        cimsService.addLink(testLoanA1.getId(), col.getId(), 30_000_000.0, "RO_MAKER");
-        cimsService.addLink(testLoanA2.getId(), col.getId(), 20_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col.getId(), 30_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA2.getId(), col.getId(), 20_000_000.0, "RO_MAKER");
 
         Collateral360Dto dto360 = cimsService.getCollateral360(col.getId());
         assertTrue(dto360.isCrossCollateralized(), "Collateral securing multiple facilities must be flagged as cross-collateralized");
@@ -231,7 +272,7 @@ public class CollateralModule2IntegrationTest {
         collateralRepository.save(col);
 
         // Third party collateral can secure testLoanA1
-        cimsService.addLink(testLoanA1.getId(), col.getId(), 35_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col.getId(), 35_000_000.0, "RO_MAKER");
 
         Collateral360Dto dto360 = cimsService.getCollateral360(col.getId());
         assertEquals("Third Party", dto360.getCollateral().getOwnerType());
@@ -284,7 +325,7 @@ public class CollateralModule2IntegrationTest {
         Collateral col = createTestCollateral("COL-MOD2-T6-DUP", 50_000_000.0, 20.0, "Abyssinia Trading", "Borrower-owned");
 
         // First link succeeds
-        cimsService.addLink(testLoanA1.getId(), col.getId(), 20_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col.getId(), 20_000_000.0, "RO_MAKER");
 
         // Second identical active link must be rejected
         Exception ex = assertThrows(IllegalArgumentException.class, () -> {
@@ -298,7 +339,7 @@ public class CollateralModule2IntegrationTest {
     @DisplayName("Test 7: Collateral Release Blocked When Active Exposure Remains, Allowed Once Settled")
     public void test7_collateralReleaseBlockedWhenActiveExposureRemains() {
         Collateral col = createTestCollateral("COL-MOD2-T7-REL", 60_000_000.0, 20.0, "Abyssinia Trading", "Borrower-owned");
-        cimsService.addLink(testLoanA1.getId(), col.getId(), 25_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col.getId(), 25_000_000.0, "RO_MAKER");
 
         // loanA1 has outstandingBalance = 35_000_000.0 > 0 -> Release must be blocked
         Map<String, Object> validationRes = cimsService.validateCollateralRelease(col.getId());
@@ -358,7 +399,7 @@ public class CollateralModule2IntegrationTest {
         // NSV = 80,000,000.0
 
         // Allocate 50M -> Success
-        cimsService.addLink(testLoanA1.getId(), col.getId(), 50_000_000.0, "RO_MAKER");
+        addAndApproveLink(testLoanA1.getId(), col.getId(), 50_000_000.0, "RO_MAKER");
 
         // Attempt to allocate another 40M (Total 90M > 80M NSV) -> Rejected
         Exception ex = assertThrows(IllegalArgumentException.class, () -> {
@@ -385,6 +426,8 @@ public class CollateralModule2IntegrationTest {
         newCol.setOwnerType("Borrower-owned");
         newCol.setOwningSegment("Corporate Banking");
         newCol.setBranch("Addis Ababa Main Branch");
+        newCol.setLocationAddress("Bole Road, Addis Ababa");
+        newCol.setTitleDeedNumber("TD-WF-" + uid);
 
         CollateralOwner owner = new CollateralOwner("own-wf-" + uid, testCustomerA.getName(), "+251911000000", newCol.getId(), "Borrower", 100.0);
         owner.setStatus("Active");
@@ -396,7 +439,8 @@ public class CollateralModule2IntegrationTest {
 
         List<Map<String, Object>> documents = List.of(
                 Map.of("name", "Commercial Building Plan", "type", "Approved Building Plan", "fileContent", "JVBERi0xLjQK..."),
-                Map.of("name", "Title Deed Certificate", "type", "Title Deed / Ownership Certificate", "fileContent", "JVBERi0xLjQK...")
+                Map.of("name", "Title Deed Certificate", "type", "Title Deed / Ownership Certificate", "fileContent", "JVBERi0xLjQK..."),
+                Map.of("name", "Valuation Report", "type", "Valuation Report", "fileContent", "JVBERi0xLjQK...")
         );
 
         // 1. Submit Collateral with allocations and mandatory documents

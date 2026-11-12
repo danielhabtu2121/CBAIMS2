@@ -79,7 +79,7 @@ public class SmsIntegrationService {
             return "+251" + localMatcher.group(2);
         }
 
-        if (cleaned.startsWith("+") && cleaned.length() >= 8 && cleaned.length() <= 16) {
+        if (cleaned.startsWith("+") && cleaned.substring(1).matches("^\\d{8,15}$")) {
             return cleaned;
         }
 
@@ -87,7 +87,7 @@ public class SmsIntegrationService {
             return "+" + cleaned;
         }
 
-        return cleaned;
+        throw new IllegalArgumentException("Phone number does not match a valid Ethiopian or international telephone pattern: " + rawNumber);
     }
 
     /**
@@ -175,7 +175,9 @@ public class SmsIntegrationService {
 
             long latency = Math.max(8, System.currentTimeMillis() - startTime + (new Random().nextInt(20)));
 
-            NotificationDispatchResult result = NotificationDispatchResult.success(deliveryRef, provider, "Sent");
+            boolean isSim = PROVIDER_SIMULATOR.equals(provider);
+            String initialStatus = isSim ? "Sent (Simulated)" : "Sent";
+            NotificationDispatchResult result = NotificationDispatchResult.success(deliveryRef, provider, initialStatus);
             result.setLatencyMs(latency);
             result.getMetadata().put("senderId", senderId);
             result.getMetadata().put("recipient", normalizedPhone);
@@ -184,6 +186,7 @@ public class SmsIntegrationService {
             result.getMetadata().put("encoding", payloadAnalysis.get("encoding"));
             result.getMetadata().put("partsDispatched", parts);
             result.getMetadata().put("gatewayUrl", getGatewayUrl());
+            result.getMetadata().put("isSimulated", isSim);
             result.getMetadata().put("dispatchedAt", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
             return result;
 
@@ -204,7 +207,9 @@ public class SmsIntegrationService {
         health.put("senderId", getSenderId());
         health.put("maxConcatParts", getMaxConcatParts());
         health.put("status", isEnabled() ? "ONLINE" : "OFFLINE");
-        health.put("readyForProduction", true);
+        boolean isSim = PROVIDER_SIMULATOR.equals(getProviderMode());
+        health.put("readyForProduction", !isSim);
+        health.put("isSimulated", isSim);
         health.put("supportedFeatures", List.of(
                 "Ethio Telecom REST SMS Gateway",
                 "Automatic E.164 Ethiopian Phone Normalization (+2519 / +2517)",

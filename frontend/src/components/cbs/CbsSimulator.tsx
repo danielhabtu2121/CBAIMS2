@@ -370,13 +370,12 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
           <div className="mt-2">
             <div className="flex items-center gap-2">
               <span
-                className={`w-2.5 h-2.5 rounded-full ${
-                  liveStatus?.connectionStatus === 'AVAILABLE'
+                className={`w-2.5 h-2.5 rounded-full ${liveStatus?.connectionStatus === 'AVAILABLE'
                     ? 'bg-emerald-500'
                     : liveStatus?.connectionStatus === 'NOT_CONFIGURED'
-                    ? 'bg-amber-500'
-                    : 'bg-rose-500'
-                }`}
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`}
               />
               <span className="text-xs font-bold text-[#101828]">
                 {liveStatus?.connectionStatus || 'AVAILABLE'}
@@ -470,36 +469,32 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
       <div className="flex border-b border-slate-200 gap-2 bg-white px-4 pt-3 rounded-t-xl shadow-2xs">
         <button
           onClick={() => setActiveTab('customers')}
-          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'customers' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'customers' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Users className="w-4 h-4 text-[#EAA023]" />
           Customer Master ({customers.length})
         </button>
         <button
           onClick={() => setActiveTab('facilities')}
-          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'facilities' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'facilities' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <CreditCard className="w-4 h-4 text-[#00205B]" />
           Facility Master ({facilities.length})
         </button>
         <button
           onClick={() => setActiveTab('collaterals')}
-          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'collaterals' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'collaterals' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Building2 className="w-4 h-4 text-[#00205B]" />
           Collateral Master ({collaterals.length})
         </button>
         <button
           onClick={() => setActiveTab('logs')}
-          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'logs' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'logs' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Clock className="w-4 h-4 text-slate-500" />
           Sync Log ({syncLogs.length})

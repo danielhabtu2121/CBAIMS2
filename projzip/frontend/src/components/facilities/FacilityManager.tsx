@@ -27,6 +27,7 @@ interface FacilityManagerProps {
   initialFacilityId?: string | null;
   currentUser?: UserSession;
   onNavigate?: (page: string, params?: Record<string, any>) => void;
+  onRefreshData?: () => void | Promise<void>;
 }
 
 export const FacilityManager: React.FC<FacilityManagerProps> = ({
@@ -38,6 +39,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
   initialFacilityId,
   currentUser,
   onNavigate,
+  onRefreshData,
 }) => {
   const [selectedFacility, setSelectedFacility] = useState<LoanAccount | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -217,13 +219,13 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
   // Linked collateral items for the selected facility (matching by id, lineCode, and loanReference)
   const facilityLinks = selectedFacility
     ? links.filter((l) =>
-        l.loanAccountId === selectedFacility.id ||
-        l.facilityId === selectedFacility.id ||
-        l.loanAccountId === selectedFacility.lineCode ||
-        l.facilityId === selectedFacility.lineCode ||
-        l.loanAccountId === selectedFacility.loanReference ||
-        l.facilityId === selectedFacility.loanReference
-      )
+      l.loanAccountId === selectedFacility.id ||
+      l.facilityId === selectedFacility.id ||
+      l.loanAccountId === selectedFacility.lineCode ||
+      l.facilityId === selectedFacility.lineCode ||
+      l.loanAccountId === selectedFacility.loanReference ||
+      l.facilityId === selectedFacility.loanReference
+    )
     : [];
 
   const linkedColIds = facilityLinks.map((l) => l.collateralId);
@@ -267,7 +269,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
       {showDetailModal && selectedFacility && (
         <div className="fixed inset-0 bg-[#102E4A]/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden text-xs">
-            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start">
+            <div className="p-5 bg-[#102E4A] text-white flex justify-between items-start shrink-0 min-w-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold">{selectedFacility.lineCode} — {selectedFacility.facilityType}</h2>
@@ -301,35 +303,32 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-6 gap-2 pt-2">
+            <div className="flex border-b border-[#E2E8F0] bg-[#EFF5FB] px-6 gap-2 pt-2 overflow-x-auto shrink-0 scrollbar-thin">
               <button
                 onClick={() => setActiveTab('details')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors ${
-                  activeTab === 'details' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'details' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 Facility Details (CBS Core)
               </button>
               <button
                 onClick={() => setActiveTab('collateral')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors ${
-                  activeTab === 'collateral' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'collateral' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 Linked Collateral Securities ({linkedCollaterals.length})
               </button>
               <button
                 onClick={() => setActiveTab('policies')}
-                className={`pb-2.5 px-3 font-semibold border-b-2 transition-colors ${
-                  activeTab === 'policies' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
-                }`}
+                className={`pb-2.5 px-3 font-semibold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'policies' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#102E4A]'
+                  }`}
               >
                 Securing Insurance Policies ({linkedPolicies.length})
               </button>
             </div>
 
             {/* Tab Contents */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-4 text-xs">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4 text-xs min-w-0 max-w-full">
               {activeTab === 'details' && (() => {
                 const linkedCust = customers.find(c => c.id === selectedFacility.customerId || c.cif === selectedFacility.customerId);
                 return (
@@ -568,11 +567,10 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                            (securingSummary?.adequacyStatus === 'ADEQUATE' || (!securingSummary && coveragePct >= 100))
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-bold ${(securingSummary?.adequacyStatus === 'ADEQUATE' || (!securingSummary && coveragePct >= 100))
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
                         >
                           {securingSummary?.adequacyStatus || (coveragePct >= 100 ? 'Adequately Insured' : 'Underinsured')}
                         </span>
@@ -603,7 +601,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                   </div>
 
                   {/* Securing Collateral Grid */}
-                  <div className="cims-card overflow-x-auto">
+                  <div className="cims-card overflow-x-auto w-full max-w-full">
                     <table className="w-full text-left text-xs min-w-[950px]">
                       <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                         <tr>
@@ -664,23 +662,21 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                                     {c.legalOwnerNames || (c.thirdParty ? 'Third-Party Pledgor' : 'Borrower')}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                      (c.thirdParty || c.collateralOwnerType === 'Third-party-owned')
-                                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                        : 'bg-slate-100 text-slate-700'
-                                    }`}>
-                                      {(c.thirdParty || c.collateralOwnerType === 'Third-party-owned')
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${(c.relationshipContext === 'Third-party' || c.thirdParty)
+                                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                      : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                      }`}>
+                                      {(c.relationshipContext === 'Third-party' || c.thirdParty)
                                         ? `Third-Party${c.relationshipToBorrower ? `: ${c.relationshipToBorrower}` : ''}`
-                                        : (c.collateralOwnerType || 'Borrower-owned')}
+                                        : 'Borrower-owned'}
                                     </span>
                                     {c.ownershipVerificationStatus && (
-                                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
-                                        c.ownershipVerificationStatus === 'Verified'
-                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                          : c.ownershipVerificationStatus === 'Rejected'
+                                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${c.ownershipVerificationStatus === 'Verified'
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : c.ownershipVerificationStatus === 'Rejected'
                                           ? 'bg-rose-50 text-rose-700 border border-rose-200'
                                           : 'bg-amber-50 text-amber-700 border border-amber-200'
-                                      }`}>
+                                        }`}>
                                         {c.ownershipVerificationStatus}
                                       </span>
                                     )}
@@ -759,6 +755,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                                       try {
                                         await cimsApi.endCollateralFacilityLink(c.id, reason);
                                         loadSecuringCollaterals(selectedFacility.id);
+                                        onRefreshData?.();
                                       } catch (err: any) {
                                         alert(`Failed to end relationship: ${err.message || 'Error'}`);
                                       }
@@ -923,6 +920,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
           }}
           onSuccess={() => {
             loadSecuringCollaterals(selectedFacility.id);
+            onRefreshData?.();
           }}
           currentUser={currentUser}
           mode={linkModalMode}

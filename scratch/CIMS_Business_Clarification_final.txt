@@ -1,0 +1,234 @@
+﻿Collateral Insurance Management System (CIMS)
+Business Clarification Log
+1. Admin Configuration Items (BR-18)
+BR Ref
+Gap / Undefined Item
+What the BRD Says
+Clarification Required
+Business Response
+BR-18 / BR-09
+Insurance reminder periods
+“Generate configurable reminder schedules” / “Reminder intervals shall be configurable without system customization.”
+What are the reminder intervals before policy expiry? Do they vary by business segment or collateral type?
+Reminder intervals before policy expiry:
+The standard reminder schedule shall be as follows:
+30 working days before expiry: First reminder.
+25 working days before expiry: Second reminder.
+20 working days before expiry: Third reminder.
+Every other working day thereafter: Continue sending reminders until the policy is renewed or otherwise resolved.
+The reminder intervals shall be standardized across all business segments and collateral types, unless a different schedule is explicitly configured through the system.
+To avoid multiple notifications on the same day, the system shall send a maximum of Two reminder notification per day. One at the beginning of the day and the other at mid-day. 
+Where multiple policies/items are due for reminder on the same day, they shall be consolidated into a single notification containing a summary list, categorized by the applicable reminder stage.
+The customer shall receive notifications via SMS and/or email every five (5) days, starting 30 days before the policy expiry date, and continuing until the policy is renewed or otherwise resolved.
+The system shall ensure that no more than one customer notification is sent per day. Notifications shall be automatically discontinued once the policy has been renewed or otherwise resolved.
+BR-18 / BR-07 / BR-09
+Escalation timelines
+“Escalate overdue renewals with define escalation Metrix” 
+What is the actual escalation matrix — who escalates to whom, and after how many days overdue?
+Escalation Sequence:
+The system shall implement the following escalation sequence for policies that have not been renewed:
+First Escalation – 10 Days Before Expiry
+If the policy has not been renewed by 10 calendar days before the expiry date, the system shall escalate the matter to the Relationship Manager (RM), with the owning Relationship Officer (RO) copied on the notification.
+Second Escalation – 5 Days Later
+If the policy remains unresolved for a further 5 days, the system shall escalate the matter to the Branch Manager or Corporate Center Manager, as applicable.
+Further Escalation – Every 15 days
+the system shall escalate more than ten days’ overdue cases to the respective District Business Manager or Area Manager copied the respective manager. With a summary per area office and branch including how long they are overdue.
+Further escalations shall occur every 15 days thereafter, with all policies due for escalation consolidated into a single summary report.
+The system shall ensure that escalation notifications are sent no more than once per day and that multiple policies reaching the same escalation stage on the same day are consolidated into a single notification or summary report.
+BR-18 / BR-07
+Workflow hierarchy
+Approval hierarchy configurable based on: Branch / District office / Head Office Front Office Departments / Exception type
+What are the actual hierarchy levels, and which transaction/exception types route to which level?
+Branch level and Corporate Center Maker: RO/ Corporate RO
+Checker: RM/Branch Manager, Corporate Center Manager, Corporate RM
+For Corporate Sector: 
+Maker: Relationship Officer 
+Checker: Corporate Relationship Manager In the event of an exception, the RO shall select the “Exception” checkbox, after which the system shall provide a document upload field for the RO to attach the relevant exception supporting document. The request shall then proceed through the normal workflow.
+BR-18 / BR-07
+Approval matrix
+“The workflow shall support: Policy registration approval, Policy amendment approval, Renewal approval, Exception approval, Policy cancellation approval, Policy reopening”
+What loan or exposure thresholds determine which approval level (Branch / District / Head Office) is required?
+Branch level and Corporate Center Maker: RO/ Corporate RO
+Checker: RM/Branch Manager, Corporate Center Manager, Corporate RM
+For Corporate Sector: 
+Maker: Relationship Officer 
+Checker: Corporate Relationship Manager 
+BR-18 / BR-10
+Notification templates
+“Notification templates shall be configurable by administrators.”
+What is the required content, tone and variables for each notification type (expiry, rejection, escalation, etc.)?
+Required Variables 
+(Customer Name}, {Loan Account Number}, {Collateral ID}, {Policy Number}, {Expiry Date}, {RM Name}, {RM Phone}, {Days Overdue}.
+Content & Tone:
+Expiry Reminder: "Dear {Customer Name}, your insurance policy {Policy Number} for collateral {Collateral ID} expires on {Expiry Date}. Please renew to avoid breach of contract."
+Rejection: "Your submitted policy has been rejected due to {Rejection Reason}. Please contact {RM Name} at {RM Phone}.
+Urgent: Policy {Policy Number} is {Days Overdue} days overdue. Immediate action required."
+Templates must support both SMS (short, 160 chars) and Email (detailed, HTML supported) formats.
+BR-18 / BR-06
+Insurance companies
+“Insurance company is approved by the Bank”
+What is the current approved-insurer list, or the criteria used to approve an insurer?
+Add the currently available list, along with the addition and restriction functionality.
+Ethiopian Insurance Corporation
+Awash Insurance S.C.,
+Abay Insurance S.C., 
+Africa Insurance Company (S.C.), 
+Bunna Insurance S.C., 
+Ethio Life and General Insurance S.C., 
+Global Insurance Company (S.C.), 
+Hibret Insurance S.C.,
+Lion Insurance Company (S.C.), 
+Berhan Insurance S.C., 
+Lucy Insurance S.C., 
+Nile Insurance Company S.C., 
+Nib Insurance Company S.C., 
+Nyala Insurance S.C., 
+Oromia Insurance Company S.C., 
+The United Insurance Company S.C., 
+Tsehay Insurance S.C., 
+Zemen Insurance S.C)
+BR-18 / BR-04
+Collateral types
+No formal list; only implied by which ownership document applies to which asset (Title Deed, Vehicle Registration, Machinery Certificate, etc.)
+What is the Bank's official collateral type taxonomy (e.g. Real Estate, Vehicle, Machinery, Inventory, Shares)?
+The official taxonomy includes:
+1. Immovable Properties: Buildings (Commercial, Residential, Mixed-use), Coffee Sites, Land Use Rights.
+2. Movable Properties: Vehicles, Construction Machineries, 
+3. Business Mortgages (Industrial/Office machinery, Furniture).
+4. Financial Assets: Marketable Shares (Banks, Insurance companies), Negotiable bills of payments, Cash and Cash Substitutes (Blocked accounts, Treasury bills).
+5. Agricultural/Other: Livestock, Farm Products, Warehouse Receipts, Intellectual Property Rights.
+6. Guarantees: Personal Guarantee.
+BR-18 / BR-06
+Coverage rules
+“Coverage amount satisfies Bank policy”
+What coverage threshold is required (e.g. 100% of outstanding loan balance, or of collateral value)?
+The insurance should cover 100% of Collateral ValueUnder-insurance is not allowed (Sum Insured >= Max (Outstanding Balance, Collateral Value)).
+BR-18
+Business rules
+Listed only as a configuration category, no specifics given anywhere in the BRD
+Which specific business rules need to be configurable, beyond those already captured elsewhere in this log?
+BR-18 / BR-15
+User roles — permission matrix
+Roles are named (BR-15) but “The system shall control: Screen access, Menu access, Data visibility, Transaction authorization, Approval authority, Report access, Document access” with no matrix
+What is the permission matrix — which role gets which screen, data, approval, and report access?
+Permission Matrix Overview:
+- Relationship Officer (RO): Maker access. Can register policies, upload documents, generate reminders. No approval rights.
+- Relationship Manager (RM)/ Branch Manager: Checker access. Verifies RO entries, approves, views segment portfolio, authorizes policy cancellations.
+- District/Operations Manager/ Area Manager: Views district portfolio, approves district-level exceptions, monitors renewals.
+- Risk/Compliance/Auditor: Read-only access to all dashboards, compliance reports and audit trails.
+- System Admin: Full configuration access, user management, no transactional approval rights.
+BR-18
+Branch hierarchy
+Listed as a configuration category; the Bank's structure is not described anywhere in the BRD
+What is the Bank's branch / district / region structure to be reflected in the system?
+Bank Structure Hierarchy:
+1.Head Office 
+Corporate Banking (Corporate Center, Institutional Banking, Domestic and Trade Service, Import & Export, Agriculture and Manufacturing),  
+Retail Banking Director 
+MSME Banking Director
+2.District 
+Addis Ababa – West, East, South, North
+Upcountry – Adama, Bahirdar, Hawassa, Jimma, Dessie, Wolaita, South West, Nekemte, Mekelle, Diredawa. 
+Area Office1.West(Kolfe Keraniyo Area, Merkato Area, West Addis Surrounding), 
+East (Bole Area, Gerji Area, Lemi Kura Area), 
+South (Akaki Kality - Dukem Area, Kirkos Area, Nifas Silk Area)  
+North (Arada Yeka Area, Gullele Area), 
+Adama (Adama Area, Assela Area), 
+Bahirdar , (Bahir Dar Area, Debre Markos Area, Gondar Area), 
+Hawassa (Arsi-Robe Area, Hawassa-Dilla Area),  
+Jimma (Jimma Area), 
+Dessie (Debrebrhan Area, Dessie Area), 
+Wolaita (Arbaminch Area, Hossana Area), 
+South West (Bonga Area), 
+Nekemte, (Nekemte District Office), 
+Mekelle (Mekelle Area, Shire Area), 
+Diredawa (Dire Dawa Area, Harar Area)
+4.Branches 
+(Individual branch offices under each district)
+5. IFB
+IFB Corporate Banking Director 
+IFB Retail Banking Director 
+IFB MSME and Agency Banking Director.
+District Business Director-IFB
+IFB Area Business managers for all 14 districts mentioned above.
+BR-18
+Holiday calendar
+Listed as a configuration category, no detail given
+It should use the banks calendar 
+BR-18
+System parameters
+Listed only as a generic configuration category
+What specific system parameters need to be configurable, beyond those already captured elsewhere in this log?
+Configurable System Parameters:
+1. Reminder intervals (e.g., 30, 25, 20 days).
+2. Escalation timelines (e.g., 10 days before, 5 days after, every 15 days).
+3. Maximum notifications per day per user (2).
+4. Customer notification frequency (e.g., every 5 days).
+5. Insurance coverage threshold percentage (100%).
+6. Minimum policy validity period (1 year).
+7. Document expiry warning days (e.g., 30 days before document expiry).
+2. Additional Clarifications Required (Outside BR-18)
+BR Ref
+Gap / Undefined Item
+What the BRD Says
+Clarification Required
+Business Response
+BR-04
+Mandatory ownership/legal documents
+“The system shall prevent collateral registration or insurance policy activation where mandatory ownership or legal documents are missing...” — 12 document types are listed as “including but not limited to,” with none marked as mandatory
+Which of the listed document types are mandatory, and does the mandatory set vary by collateral type?
+Yes, the mandatory Security documents vary by collateral type:
+- Real Estate/Buildings: Title Deed/Property Ownership Certificate, Approved Building Plan. (Bill of Quantity if under construction).
+- Vehicles: Vehicle Registration Certificate.
+- Machinery/Business Mortgage: Machinery Ownership Certificate, Purchase Document.
+- Leased Property: Lease Agreement, Lease Payment Receipt.
+- Third-Party Collateral: Third-Party Consent and Pledge Agreement, Letter of Consent.
+-Live Stock: Plastic Ear tag should be registered & TIN-  Farm Product: Land Holding Certificate & TIN-Ware House Receipt: Ware House Receipt- Intellectual Property Rights: Intellectual Property Rights Registration Certificate 
+These must be marked as mandatory in the system; the system should block activation if any are missing.
+BR-04
+Additional supporting legal documents
+“Any additional supporting legal documents required by the Bank”
+What additional document types, if any, should be added to the list?
+ Add the following to the list:
+1. Mortgage Registration Confirmation Letter: Proof of registration at the appropriate government registry.
+2. Valuation Report: Engineering estimation report from the Bank's valuator.
+3. Collateral Custody Agreement: For dual-control arrangements (e.g., merchandise).
+BR-06
+Mandatory insurance by collateral type
+“Insurance is mandatory based on collateral type”
+For which collateral types is insurance mandatory?
+Insurance is mandatory for almost all tangible collateral types:
+1. Buildings/Real Estate: Fire and Lightning insurance is mandatory.
+2. Vehicles: Comprehensive Motor Insurance is mandatory.
+3. Construction Machinery: All-risk comprehensive insurance is mandatory.
+4. Merchandise/Inventory: Fire, lightning, burglary, and spontaneous combustion insurance is mandatory.
+5. Movable Properties: Comprehensive insurance cover is mandatory before EMCR registration.
+For financial assets/cash, insurance is generally not required as the asset itself is the cover
+BR-06
+Policy validity vs. lending requirements
+“Policy validity period meets lending requirements”
+What is the minimum policy validity period relative to the loan tenor?
+As per the Credit Processing Procedure Manual (Section 12.4.4):
+1. General Rule: The insurance policy coverage shall not be less than one (1) year.
+2. Short-term Loans (Merchandise/Shipments): The policy validity period shall not be less than the loan tenor, which depends on the nature of the items.3. Policy validity period must be >= 1 year for term loans, or equal to loan tenor for short-term loans (merchandise/shipments).
+BR-06
+Regulatory requirements
+“Regulatory requirements are satisfied”
+Which specific regulations or directives (e.g. National Bank of Ethiopia) must the system validate against?
+The system must validate against the following NBE directives and regulations:1. NBE Asset Classification and Provisioning Directive (SBB/90/2024): Ensuring collateral insurance is maintained to prevent unsecured provisioning.2. Movable Property Security Right Proclamation (No. 1147/2019) & EMCR Directive (MCR/02/2020): Ensuring movable collaterals are registered in the EMCR system and insured.3. ESG Exclusion List: Ensuring collateral does not violate environmental and social governance policies.
+BR-08
+Supporting evidence (document category)
+“Supporting evidence” listed as a document type with no further definition
+What does “supporting evidence” cover in this context?
+Supporting evidence covers documents that prove the authenticity or status of an insurance policy or collateral, including:
+1. Premium Payment Receipts: Proof that the insurance premium has been paid in full.
+2. Insurance Claim Documents: Documents related to any claims made on the collateral (e.g., accident reports, fire reports).
+3. Correspondence with Insurance Companies: Emails or letters regarding policy renewals.
+BR-10
+Expired-policy notification interval
+“Expired policies with predefined interval” — the interval itself is never given
+What is the notification interval/frequency for expired policies?
+For policies that have already expired:
+1. Internal Staff (RM/RO/Branch Manager): The system shall send daily notifications for the first 5 days after expiry, and then weekly summaries until resolved.
+2. Customers: The system shall send notifications every 5 days (as per the first item in the log) via SMS and/or email until the policy is renewed or the collateral is substituted.
+3. Escalations: District/Area Managers shall receive consolidated escalation reports every 15 days for policies overdue by more than 10 days.

@@ -9,7 +9,7 @@ public class CollateralOwner {
     @Id
     private String id;
 
-    @Column(name = "collateral_id", nullable = false)
+    @Column(name = "collateral_id")
     private String collateralId;
 
     @Column(nullable = false)
@@ -104,6 +104,13 @@ public class CollateralOwner {
     private int modNo = 1;
 
     public CollateralOwner() {}
+
+    @PrePersist
+    public void ensureId() {
+        if (this.id == null || this.id.isBlank()) {
+            this.id = "own-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        }
+    }
 
     public CollateralOwner(String id, String name, String phone, String collateralId, String relationship, double percentage) {
         this.id = id;

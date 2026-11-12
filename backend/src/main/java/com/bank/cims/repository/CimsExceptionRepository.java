@@ -25,6 +25,8 @@ public interface CimsExceptionRepository extends JpaRepository<CimsException, St
     List<CimsException> findByBranch(String branch);
     List<CimsException> findByBranchIn(Collection<String> branches);
     List<CimsException> findByExceptionType(String exceptionType);
+    List<CimsException> findByCollateralId(String collateralId);
+    List<CimsException> findByCollateralIdAndStatusIn(String collateralId, Collection<String> statuses);
 
     Optional<CimsException> findFirstByEntityTypeAndEntityIdAndExceptionType(String entityType, String entityId, String exceptionType);
     Optional<CimsException> findFirstByEntityTypeAndEntityIdAndExceptionTypeAndStatusIn(String entityType, String entityId, String exceptionType, Collection<String> statuses);

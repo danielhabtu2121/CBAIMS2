@@ -99,10 +99,23 @@ public class NotificationService {
         return sendNotification(channel, templateCode, recipient, recipientName, subject, messageBody, entityType, entityId, Collections.emptyMap());
     }
 
+    public int getMaxRetries() {
+        if (systemParameterRepository == null) return 3;
+        return systemParameterRepository.findById("notification_max_retries")
+                .map(p -> {
+                    try { return Integer.parseInt(p.getParamValue()); } catch (Exception e) { return 3; }
+                }).orElse(3);
+    }
+
     @Transactional
     public Notification retryNotification(String notificationId, String operatorId) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found: " + notificationId));
+
+        int maxRetries = getMaxRetries();
+        if (n.getRetryCount() >= maxRetries) {
+            throw new IllegalStateException("Maximum retry attempts (" + maxRetries + ") reached for notification: " + notificationId);
+        }
 
         n.setRetryCount(n.getRetryCount() + 1);
 

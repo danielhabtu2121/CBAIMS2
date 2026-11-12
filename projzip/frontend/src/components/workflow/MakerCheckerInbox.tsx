@@ -23,7 +23,6 @@ import {
   Layers,
   CheckCircle2,
   History,
-  AlertOctagon,
   ChevronDown,
   Info,
   ArrowRight,
@@ -212,13 +211,26 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
         return 'Policy Renewal';
       case 'NEW_POLICY':
       case 'REGISTER_POLICY':
-        return 'New Policy Registration';
+      case 'POLICY_REGISTRATION':
+        return 'Policy Registration';
       case 'AMEND_POLICY':
       case 'POLICY_AMENDMENT':
         return 'Policy Amendment';
+      case 'ENDORSE_POLICY':
+      case 'POLICY_ENDORSEMENT':
+        return 'Policy Endorsement';
+      case 'REPLACE_POLICY':
+      case 'POLICY_REPLACEMENT':
+        return 'Policy Replacement';
+      case 'CANCEL_POLICY':
+      case 'POLICY_CANCELLATION':
+        return 'Policy Cancellation';
       case 'CLOSE_POLICY':
       case 'POLICY_CLOSURE':
         return 'Policy Closure';
+      case 'REOPEN_POLICY':
+      case 'POLICY_REOPEN':
+        return 'Policy Reopening';
       case 'COLLATERAL_REGISTRATION':
       case 'REGISTER_COLLATERAL':
         return 'Collateral Registration';
@@ -303,12 +315,16 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
       policy = policies.find((p) => p.collateralId === collateral?.id || p.collateralId === collateral?.code);
     }
 
-    // Match Preceding Policy for Renewals
+    // Match Preceding Policy for Renewals and Replacements
     let previousPolicy: InsurancePolicy | undefined = undefined;
     if (policy?.renewedFromPolicyId) {
       previousPolicy = policies.find((p) => p.id === policy?.renewedFromPolicyId || p.policyNumber === policy?.renewedFromPolicyId);
+    } else if (policy?.replacesPolicyId) {
+      previousPolicy = policies.find((p) => p.id === policy?.replacesPolicyId || p.policyNumber === policy?.replacesPolicyId);
     } else if (payload.renewedFromPolicyId) {
       previousPolicy = policies.find((p) => p.id === payload.renewedFromPolicyId || p.policyNumber === payload.renewedFromPolicyId);
+    } else if (payload.replacesPolicyId) {
+      previousPolicy = policies.find((p) => p.id === payload.replacesPolicyId || p.policyNumber === payload.replacesPolicyId);
     }
 
     // Match Customer
@@ -398,18 +414,25 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
     };
   };
 
+  // Helper: check if task was created by the current user (Four-Eyes Principle)
+  const isMakerSelfTask = (taskOrMakerId?: WorkflowTask | string | null): boolean => {
+    if (!taskOrMakerId || !currentUser) return false;
+    const maker = (typeof taskOrMakerId === 'string' ? taskOrMakerId : taskOrMakerId.makerId || '')
+      .trim()
+      .toLowerCase()
+      .replace(/_user$/, '');
+    const uname = (currentUser.username || '').trim().toLowerCase().replace(/_user$/, '');
+    const uid = (currentUser.userId || '').trim().toLowerCase().replace(/_user$/, '');
+    return Boolean(maker && (maker === uname || (uid !== '' && maker === uid)));
+  };
+
   // Helper: Evaluate Understandable 4-Part Validations (§Requirement 5)
   const evaluateUnderstandableValidations = (task: WorkflowTask): UnderstandableValidation[] => {
     const ctx = resolveTaskContext(task);
     const checks: UnderstandableValidation[] = [];
 
     // 1. Maker-Checker Segregation of Duties (Four-Eyes Principle)
-    const isMakerSelf = Boolean(
-      task.makerId?.toLowerCase() === currentUser.username?.toLowerCase() ||
-      task.makerId?.toLowerCase() === currentUser.userId?.toLowerCase() ||
-      (task.makerId?.toLowerCase() + '_user') === currentUser.username?.toLowerCase() ||
-      (currentUser.username?.toLowerCase() + '_user') === task.makerId?.toLowerCase()
-    );
+    const isMakerSelf = isMakerSelfTask(task);
 
     checks.push({
       title: 'Maker-Checker Segregation of Duties',
@@ -657,6 +680,12 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
   // Filter Tasks based on user input
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
+      // Four-Eyes Segregation: If viewing pending approvals, exclude maker's own submissions
+      // (Maker's own submissions are tracked under "My Submissions" tab)
+      if (statusFilter === 'Pending' && isMakerSelfTask(t)) {
+        return false;
+      }
+
       // Status Filter
       if (statusFilter !== 'ALL') {
         if (statusFilter === 'Pending' && t.status !== 'Pending') return false;
@@ -707,40 +736,18 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
 
       return true;
     });
-  }, [tasks, statusFilter, priorityFilter, typeFilter, branchFilter, slaFilter, searchQuery]);
+  }, [tasks, statusFilter, priorityFilter, typeFilter, branchFilter, slaFilter, searchQuery, currentUser]);
 
   // Submissions by Current User (Maker view)
   const mySubmissions = useMemo(() => {
-    return tasks.filter(
-      (t) =>
-        t.makerId?.toLowerCase() === currentUser.username?.toLowerCase() ||
-        t.makerId?.toLowerCase() === currentUser.userId?.toLowerCase()
-    );
+    return tasks.filter((t) => isMakerSelfTask(t));
   }, [tasks, currentUser]);
 
-  // High-level KPI counts
-  const kpis = useMemo(() => {
-    const pendingTotal = tasks.filter((t) => t.status === 'Pending').length;
-    const highPriority = tasks.filter((t) => t.status === 'Pending' && t.priority === 'High').length;
-    const overdueTotal = tasks.filter((t) => {
-      if (t.status !== 'Pending') return false;
-      const wait = getWaitingTimeInfo(t.submittedAt);
-      return wait.isOverdue;
-    }).length;
-    const returnedTotal = tasks.filter((t) => t.status === 'Returned').length;
 
-    return { pendingTotal, highPriority, overdueTotal, returnedTotal };
-  }, [tasks]);
 
   // Segregation of Duties Check for currently selected task
   const isSelectedTaskMakerSelf = useMemo(() => {
-    if (!selectedTask) return false;
-    return Boolean(
-      selectedTask.makerId?.toLowerCase() === currentUser.username?.toLowerCase() ||
-      selectedTask.makerId?.toLowerCase() === currentUser.userId?.toLowerCase() ||
-      (selectedTask.makerId?.toLowerCase() + '_user') === currentUser.username?.toLowerCase() ||
-      (currentUser.username?.toLowerCase() + '_user') === selectedTask.makerId?.toLowerCase()
-    );
+    return isMakerSelfTask(selectedTask);
   }, [selectedTask, currentUser]);
 
   // Context for Selected Task
@@ -770,30 +777,54 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
     setActionLoading(true);
     setDecisionError(null);
     try {
-      if (confirmationAction === 'Approve') {
-        await onApproveTask(selectedTask.id, checkerRemarks.trim() || 'Approved by Checker');
+      const targetTaskId = selectedTask.id;
+      const targetAction = confirmationAction;
+      const newStatus = targetAction === 'Approve' ? 'Approved' : targetAction === 'Reject' ? 'Rejected' : 'Returned';
+
+      if (targetAction === 'Approve') {
+        await onApproveTask(targetTaskId, checkerRemarks.trim() || 'Approved by Checker');
         setPersistedOutcome({
           type: 'success',
-          message: `Request ${selectedTask.id} successfully APPROVED and recorded in immutable dual-control audit ledger.`,
+          message: `Request ${targetTaskId} successfully APPROVED and recorded in immutable dual-control audit ledger.`,
         });
-      } else if (confirmationAction === 'Reject') {
-        await onRejectTask(selectedTask.id, checkerRemarks.trim());
+      } else if (targetAction === 'Reject') {
+        await onRejectTask(targetTaskId, checkerRemarks.trim());
         setPersistedOutcome({
           type: 'success',
-          message: `Request ${selectedTask.id} REJECTED with recorded justification.`,
+          message: `Request ${targetTaskId} REJECTED with recorded justification.`,
         });
-      } else if (confirmationAction === 'Return') {
-        await onReturnTask(selectedTask.id, checkerRemarks.trim());
+      } else if (targetAction === 'Return') {
+        await onReturnTask(targetTaskId, checkerRemarks.trim());
         setPersistedOutcome({
           type: 'success',
-          message: `Request ${selectedTask.id} RETURNED to maker for correction with instructions.`,
+          message: `Request ${targetTaskId} RETURNED to maker for correction with instructions.`,
         });
       }
+
+      // Immediately reflect new status on the inspected task
+      setSelectedTask((prev) => (prev && prev.id === targetTaskId ? { ...prev, status: newStatus as any } : prev));
+
+      // Remove from selected task IDs (for bulk selection)
+      setSelectedTaskIds((prev) => prev.filter((id) => id !== targetTaskId));
+
       setConfirmationAction(null);
+
       // Refresh task history
-      const updatedHistory = await cimsApi.getTaskHistory(selectedTask.id);
-      setTaskHistory(updatedHistory);
+      try {
+        const updatedHistory = await cimsApi.getTaskHistory(targetTaskId);
+        setTaskHistory(updatedHistory);
+      } catch (err) {
+        console.warn('Could not fetch updated task history', err);
+      }
+
       if (onReload) await onReload();
+
+      // Auto-dismiss modal after 1.2s to smoothly return checker to work queue
+      setTimeout(() => {
+        setShowDetailScreen(false);
+        setSelectedTask(null);
+        setPersistedOutcome(null);
+      }, 1200);
     } catch (err: any) {
       setDecisionError(err?.message || 'Dual-control action failed to persist.');
       setPersistedOutcome({
@@ -905,64 +936,7 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
         </div>
       </div>
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div
-          onClick={() => { setStatusFilter('Pending'); setActiveTab('pending'); }}
-          className="cims-card p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Action</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-[#102E4A] mt-2">{kpis.pendingTotal}</div>
-          <div className="text-[11px] text-slate-500 mt-1">Awaiting Checker Seal</div>
-        </div>
 
-        <div
-          onClick={() => { setStatusFilter('Pending'); setPriorityFilter('High'); setActiveTab('pending'); }}
-          className="cims-card p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-amber-400 transition shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">High Priority</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-700 mt-2">{kpis.highPriority}</div>
-          <div className="text-[11px] text-amber-800/80 mt-1">Expedited Processing</div>
-        </div>
-
-        <div
-          onClick={() => { setStatusFilter('Pending'); setSlaFilter('OVERDUE'); setActiveTab('pending'); }}
-          className="cims-card p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-rose-400 transition shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overdue (&gt;24h)</span>
-            <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center">
-              <AlertOctagon className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-rose-700 mt-2">{kpis.overdueTotal}</div>
-          <div className="text-[11px] text-rose-800/80 mt-1">Exceeded SLA Horizon</div>
-        </div>
-
-        <div
-          onClick={() => { setStatusFilter('Returned'); setActiveTab('pending'); }}
-          className="cims-card p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-purple-400 transition shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Returned to Maker</span>
-            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
-              <RotateCcw className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-purple-700 mt-2">{kpis.returnedTotal}</div>
-          <div className="text-[11px] text-purple-800/80 mt-1">Correction Required</div>
-        </div>
-      </div>
 
       {/* Tabs Row */}
       <div className="flex border-b border-slate-200 bg-white px-5 pt-3 rounded-t-xl justify-between items-center shadow-sm">
@@ -1519,7 +1493,11 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
               </div>
 
               <button
-                onClick={() => setShowDetailScreen(false)}
+                onClick={() => {
+                  setShowDetailScreen(false);
+                  setSelectedTask(null);
+                  setPersistedOutcome(null);
+                }}
                 className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
                 title="Close Screen"
               >
@@ -2089,19 +2067,37 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                   </div>
                 )}
 
-                {/* Case G: Policy Closure / Cancellation */}
-                {(selectedTask.actionType?.includes('CLOSE') || selectedTask.actionType?.includes('CANCEL')) && (
+                {/* Case G: Policy Closure / Cancellation / Reopen */}
+                {(selectedTask.actionType?.includes('CLOSE') || selectedTask.actionType?.includes('CANCEL') || selectedTask.actionType?.includes('REOPEN')) && (
                   <div className="space-y-3">
-                    <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-xl space-y-2 text-xs">
-                      <div className="flex items-center gap-2 text-rose-900 font-bold">
-                        <XCircle className="w-4 h-4 text-rose-700" />
-                        <span>{selectedTask.actionType?.includes('CANCEL') ? 'Policy Cancellation Request' : 'Policy Closure Request'}</span>
+                    <div className={`p-3.5 border rounded-xl space-y-2 text-xs ${
+                      selectedTask.actionType?.includes('REOPEN')
+                        ? 'bg-emerald-50 border-emerald-300'
+                        : 'bg-rose-50 border-rose-300'
+                    }`}>
+                      <div className={`flex items-center gap-2 font-bold ${
+                        selectedTask.actionType?.includes('REOPEN') ? 'text-emerald-900' : 'text-rose-900'
+                      }`}>
+                        {selectedTask.actionType?.includes('REOPEN') ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-700" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-rose-700" />
+                        )}
+                        <span>
+                          {selectedTask.actionType?.includes('CANCEL')
+                            ? 'Policy Cancellation Request'
+                            : selectedTask.actionType?.includes('REOPEN')
+                            ? 'Policy Reopening Request'
+                            : 'Policy Closure Request'}
+                        </span>
                       </div>
                       <div className="text-slate-800">
                         Policy: <strong className="text-[#102E4A]">{selectedContext.policy?.policyNumber || selectedTask.entityId}</strong> ({selectedContext.policy?.coverageType}) | Insurer: {selectedContext.policy?.insurerName}
                       </div>
-                      <div className="text-slate-700 italic bg-white p-2.5 rounded-lg border border-rose-200">
-                        Maker Rationale: "{selectedContext.payload?.reason || selectedContext.policy?.closureReason || selectedContext.policy?.cancellationReason || selectedTask.remarks || 'No reason provided'}"
+                      <div className={`text-slate-700 italic bg-white p-2.5 rounded-lg border ${
+                        selectedTask.actionType?.includes('REOPEN') ? 'border-emerald-200' : 'border-rose-200'
+                      }`}>
+                        Maker Rationale: "{selectedContext.payload?.reason || selectedContext.policy?.reopeningReason || selectedContext.policy?.closureReason || selectedContext.policy?.cancellationReason || selectedTask.remarks || 'No reason provided'}"
                       </div>
                     </div>
                   </div>
@@ -2125,7 +2121,73 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                   </div>
                 )}
 
-                {/* Case I: Standard Policy Registration (when not renewal, amend, close, endorse, or collateral) */}
+                {/* Case J: Policy Replacement */}
+                {selectedTask.actionType?.includes('REPLACE') && (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 flex items-center gap-2">
+                      <Info className="w-4 h-4 text-blue-700 shrink-0" />
+                      <span>
+                        <strong>Policy Replacement Review:</strong> Comparing proposed replacement policy against the predecessor policy being replaced.
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+                        <thead className="bg-[#EFF5FB] text-[#102E4A] font-bold">
+                          <tr>
+                            <th className="p-2.5">Attribute</th>
+                            <th className="p-2.5">Predecessor Policy (Replaced)</th>
+                            <th className="p-2.5">New Replacement Policy</th>
+                            <th className="p-2.5">Lineage / Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          <tr>
+                            <td className="p-2.5 font-semibold text-slate-600">Policy Number</td>
+                            <td className="p-2.5 font-mono text-slate-700">
+                              {selectedContext.previousPolicy?.policyNumber || selectedContext.payload?.previousPolicyNumber || 'Predecessor'}
+                            </td>
+                            <td className="p-2.5 font-mono font-bold text-[#102E4A]">
+                              {selectedContext.policy?.policyNumber || selectedContext.payload?.policyNumber || selectedTask.entityId}
+                            </td>
+                            <td className="p-2.5 text-blue-700 font-semibold">Active Chain</td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 font-semibold text-slate-600">Underwriting Insurer</td>
+                            <td className="p-2.5 text-slate-700">
+                              {selectedContext.previousPolicy?.insurerName || 'N/A'}
+                            </td>
+                            <td className="p-2.5 font-bold text-[#102E4A]">
+                              {selectedContext.policy?.insurerName || selectedContext.payload?.insurerName || 'N/A'}
+                            </td>
+                            <td className="p-2.5 text-slate-700">
+                              {selectedContext.policy?.insurerName !== selectedContext.previousPolicy?.insurerName ? 'New Underwriter' : 'Same Insurer'}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="p-2.5 font-semibold text-slate-600">Sum Insured</td>
+                            <td className="p-2.5 font-semibold text-slate-700">
+                              ETB {Number(selectedContext.previousPolicy?.insuredAmount || 0).toLocaleString()}
+                            </td>
+                            <td className="p-2.5 font-bold text-emerald-700">
+                              ETB {Number(selectedContext.policy?.insuredAmount || selectedContext.payload?.insuredAmount || 0).toLocaleString()}
+                            </td>
+                            <td className="p-2.5 text-slate-700 font-semibold">
+                              {Number(selectedContext.policy?.insuredAmount || 0) >= Number(selectedContext.previousPolicy?.insuredAmount || 0) ? 'Adequate' : 'Review Sum'}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    {selectedTask.remarks && (
+                      <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 italic text-xs">
+                        Replacement Reason: "{selectedTask.remarks}"
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Case I: Standard Policy Registration (when not renewal, amend, close, endorse, replace, reopen, or collateral) */}
                 {!selectedTask.actionType?.includes('RENEW') &&
                   !selectedTask.actionType?.includes('AMEND') &&
                   !selectedTask.actionType?.includes('DIFF') &&
@@ -2139,6 +2201,8 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
                   selectedTask.entityType !== 'Collateral' &&
                   !selectedTask.actionType?.includes('CLOSE') &&
                   !selectedTask.actionType?.includes('CANCEL') &&
+                  !selectedTask.actionType?.includes('REOPEN') &&
+                  !selectedTask.actionType?.includes('REPLACE') &&
                   !selectedTask.actionType?.includes('ENDORSE') && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -2428,73 +2492,105 @@ export const MakerCheckerInbox: React.FC<MakerCheckerInboxProps> = ({
             <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
               <button
                 type="button"
-                onClick={() => setShowDetailScreen(false)}
+                onClick={() => {
+                  setShowDetailScreen(false);
+                  setSelectedTask(null);
+                  setPersistedOutcome(null);
+                }}
                 className="btn-secondary py-2 px-4 text-xs border-slate-200 hover:bg-slate-50"
               >
                 Close & Return to Queue
               </button>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleInitiateDecision('Reject')}
-                  disabled={
-                    isSelectedTaskMakerSelf ||
-                    selectedTask.status !== 'Pending' ||
-                    actionLoading ||
-                    currentUser.canApprove === false
-                  }
-                  className="btn-destructive py-2 px-4 text-xs bg-rose-700 hover:bg-rose-800 text-white rounded-lg font-semibold disabled:opacity-40"
-                  title={
-                    isSelectedTaskMakerSelf
-                      ? 'Maker cannot reject their own submission.'
-                      : 'Reject this request'
-                  }
-                >
-                  <XCircle className="w-4 h-4 inline mr-1" />
-                  Reject Request
-                </button>
+              {selectedTask.status !== 'Pending' ? (
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${
+                      selectedTask.status === 'Approved'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : selectedTask.status === 'Rejected'
+                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Transaction {selectedTask.status}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDetailScreen(false);
+                      setSelectedTask(null);
+                      setPersistedOutcome(null);
+                    }}
+                    className="btn-primary py-2 px-4 text-xs bg-[#102E4A] hover:bg-[#102E4A]/90 text-white rounded-lg font-semibold"
+                  >
+                    Return to Queue
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleInitiateDecision('Reject')}
+                    disabled={
+                      isSelectedTaskMakerSelf ||
+                      selectedTask.status !== 'Pending' ||
+                      actionLoading ||
+                      currentUser.canApprove === false
+                    }
+                    className="btn-destructive py-2 px-4 text-xs bg-rose-700 hover:bg-rose-800 text-white rounded-lg font-semibold disabled:opacity-40"
+                    title={
+                      isSelectedTaskMakerSelf
+                        ? 'Maker cannot reject their own submission.'
+                        : 'Reject this request'
+                    }
+                  >
+                    <XCircle className="w-4 h-4 inline mr-1" />
+                    Reject Request
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleInitiateDecision('Return')}
-                  disabled={
-                    isSelectedTaskMakerSelf ||
-                    selectedTask.status !== 'Pending' ||
-                    actionLoading ||
-                    currentUser.canApprove === false
-                  }
-                  className="btn-secondary py-2 px-4 text-xs bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 rounded-lg font-semibold disabled:opacity-40"
-                  title="Return to Maker for specific correction"
-                >
-                  <RotateCcw className="w-4 h-4 inline mr-1 text-amber-700" />
-                  Return for Correction
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInitiateDecision('Return')}
+                    disabled={
+                      isSelectedTaskMakerSelf ||
+                      selectedTask.status !== 'Pending' ||
+                      actionLoading ||
+                      currentUser.canApprove === false
+                    }
+                    className="btn-secondary py-2 px-4 text-xs bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 rounded-lg font-semibold disabled:opacity-40"
+                    title="Return to Maker for specific correction"
+                  >
+                    <RotateCcw className="w-4 h-4 inline mr-1 text-amber-700" />
+                    Return for Correction
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleInitiateDecision('Approve')}
-                  disabled={
-                    isSelectedTaskMakerSelf ||
-                    selectedTask.status !== 'Pending' ||
-                    actionLoading ||
-                    currentUser.canApprove === false
-                  }
-                  className="btn-primary py-2 px-5 text-xs bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-semibold shadow-sm disabled:opacity-40"
-                  title={
-                    isSelectedTaskMakerSelf
-                      ? 'Self-approval prohibited (Four-Eyes Principle)'
-                      : 'Authorize and seal transaction'
-                  }
-                >
-                  <CheckCircle className="w-4 h-4 inline mr-1.5" />
-                  {isSelectedTaskMakerSelf
-                    ? 'Self-Approval Prohibited'
-                    : currentUser.canApprove === false
-                    ? 'Authorization Restricted'
-                    : 'Approve & Advance'}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => handleInitiateDecision('Approve')}
+                    disabled={
+                      isSelectedTaskMakerSelf ||
+                      selectedTask.status !== 'Pending' ||
+                      actionLoading ||
+                      currentUser.canApprove === false
+                    }
+                    className="btn-primary py-2 px-5 text-xs bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-semibold shadow-sm disabled:opacity-40"
+                    title={
+                      isSelectedTaskMakerSelf
+                        ? 'Self-approval prohibited (Four-Eyes Principle)'
+                        : 'Authorize and seal transaction'
+                    }
+                  >
+                    <CheckCircle className="w-4 h-4 inline mr-1.5" />
+                    {isSelectedTaskMakerSelf
+                      ? 'Self-Approval Prohibited'
+                      : currentUser.canApprove === false
+                      ? 'Authorization Restricted'
+                      : 'Approve & Advance'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

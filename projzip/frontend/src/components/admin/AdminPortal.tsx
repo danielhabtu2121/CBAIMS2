@@ -41,6 +41,7 @@ import {
   SystemParameter,
   UserSession,
   NotificationTemplate,
+  InsuranceCoverageRule,
 } from '../../types';
 import { StatusChip } from '../layout/StatusChip';
 import { cimsApi } from '../../api/cimsApi';
@@ -125,7 +126,75 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     | 'parameters'
     | 'holidays'
     | 'templates'
+    | 'coverage-rules'
   >('overview');
+
+  // Coverage Rules State (BR-18 Credit Policy)
+  const [coverageRules, setCoverageRules] = useState<InsuranceCoverageRule[]>([]);
+  const [loadingCoverageRules, setLoadingCoverageRules] = useState(false);
+  const [showCoverageRuleModal, setShowCoverageRuleModal] = useState(false);
+  const [editingCoverageRule, setEditingCoverageRule] = useState<Partial<InsuranceCoverageRule> | null>(null);
+  const [coverageRuleSaving, setCoverageRuleSaving] = useState(false);
+
+  const loadCoverageRules = async () => {
+    setLoadingCoverageRules(true);
+    try {
+      const list = await cimsApi.getInsuranceCoverageRules();
+      setCoverageRules(list || []);
+    } catch (err) {
+      console.warn('Failed to load coverage rules:', err);
+    } finally {
+      setLoadingCoverageRules(false);
+    }
+  };
+
+  const handleSaveCoverageRule = async () => {
+    if (!editingCoverageRule) return;
+    setCoverageRuleSaving(true);
+    setModalError(null);
+    try {
+      if (!editingCoverageRule.collateralType?.trim()) {
+        setModalError('Collateral Type is mandatory.');
+        setCoverageRuleSaving(false);
+        return;
+      }
+      const covPct = editingCoverageRule.requiredCoveragePercentage ?? editingCoverageRule.requiredCoveragePct;
+      if (covPct === undefined || covPct < 0 || covPct > 200) {
+        setModalError('Required coverage percentage must be between 0% and 200%.');
+        setCoverageRuleSaving(false);
+        return;
+      }
+      const isNew = !editingCoverageRule.id;
+      const ruleToSave = {
+        ...editingCoverageRule,
+        id: editingCoverageRule.id || editingCoverageRule.ruleCode || `cov-rule-${Date.now().toString().slice(-6)}`,
+        businessSegment: editingCoverageRule.businessSegment || editingCoverageRule.customerSegment || 'ALL',
+        requiredCoveragePercentage: covPct,
+        requiredCoveragePct: covPct,
+        status: isNew ? 'Pending Approval' : (editingCoverageRule.active !== false ? (editingCoverageRule.status || 'Active') : 'Inactive'),
+        creditPolicyApproved: isNew ? false : (editingCoverageRule.creditPolicyApproved === true),
+      };
+      await cimsApi.saveInsuranceCoverageRule(ruleToSave);
+      await loadCoverageRules();
+      setShowCoverageRuleModal(false);
+      setEditingCoverageRule(null);
+      showToast('Credit Policy Insurance Coverage Rule saved successfully!');
+    } catch (err: any) {
+      setModalError(err?.message || 'Failed to save coverage rule');
+    } finally {
+      setCoverageRuleSaving(false);
+    }
+  };
+
+  const handleToggleCoverageRule = async (ruleId: string) => {
+    try {
+      await cimsApi.toggleInsuranceCoverageRule(ruleId);
+      await loadCoverageRules();
+      showToast('Coverage rule active status updated.');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to toggle rule');
+    }
+  };
 
   // Health and Trigger state
   const [healthData, setHealthData] = useState<{ status: string; healthyCount: number; warningCount: number; warnings: string[]; healthyChecks: string[] } | null>(null);
@@ -137,7 +206,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [templateDraft, setTemplateDraft] = useState<NotificationTemplate | null>(null);
   const [templatePreview, setTemplatePreview] = useState('');
-  const [usageMap, setUsageMap] = useState<Record<string,string>>({});
+  const [usageMap, setUsageMap] = useState<Record<string, string>>({});
   const [dependencyHealth, setDependencyHealth] = useState<any>(null);
   const [districts, setDistricts] = useState<any[]>([]);
   const [runningEscalations, setRunningEscalations] = useState(false);
@@ -357,115 +426,111 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="flex border-b border-[#E2E8F0] bg-white px-4 pt-3 rounded-t-lg gap-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'overview' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           ⚡ Control Center
         </button>
         <button
           onClick={() => setActiveTab('runtime')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'runtime' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'runtime' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           Runtime Configuration
         </button>
         <button
           onClick={() => setActiveTab('segments')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'segments' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'segments' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           1. Business Segments ({segments.length})
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'users' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'users' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           2. Users ({allUsers.length})
         </button>
         <button
           onClick={() => setActiveTab('permissions')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'permissions' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'permissions' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           3. Role Permissions Matrix ({localPermissions.length})
         </button>
         <button
           onClick={() => setActiveTab('branches')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'branches' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'branches' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           4. Branch Hierarchy ({branches.length})
         </button>
         <button
           onClick={() => setActiveTab('approval-configs')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'approval-configs' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'approval-configs' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           5. Approval Workflows ({approvalConfigs.length})
         </button>
         <button
           onClick={() => setActiveTab('reminders')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'reminders' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'reminders' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           6. Reminder Schedules ({reminderSchedules.length})
         </button>
         <button
           onClick={() => setActiveTab('insurers')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'insurers' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'insurers' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           7. Approved Insurers ({insurers.length})
         </button>
         <button
           onClick={() => setActiveTab('taxonomy')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'taxonomy' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'taxonomy' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           8. Collateral Taxonomy ({taxonomies.length})
         </button>
         <button
           onClick={() => setActiveTab('doc-rules')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'doc-rules' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'doc-rules' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           9. Document Rules ({mandatoryDocRules.length})
         </button>
         <button
           onClick={() => setActiveTab('templates')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'templates' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'templates' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           Notification Templates ({templates.length})
         </button>
         <button
           onClick={() => setActiveTab('parameters')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'parameters' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'parameters' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           10. System Parameters ({systemParameters.length})
         </button>
         <button
           onClick={() => setActiveTab('holidays')}
-          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${
-            activeTab === 'holidays' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
-          }`}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'holidays' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
         >
           11. Holiday Calendar ({holidayCalendars.length})
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('coverage-rules');
+            loadCoverageRules();
+          }}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'coverage-rules' ? 'border-[#102E4A] text-[#102E4A]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
+        >
+          12. Insurance Coverage Rules (BR-18) ({coverageRules.length})
         </button>
       </div>
 
@@ -478,14 +543,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button onClick={handleScanExceptions} disabled={scanningExceptions} className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-xs font-bold disabled:opacity-50">{scanningExceptions ? 'Scanning…' : 'Scan exceptions now'}</button>
           </div>
           {/* Health & Diagnostic Banner */}
-          <div className={`p-5 rounded-lg border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
-            healthData?.status === 'HEALTHY' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'
-          }`}>
+          <div className={`p-5 rounded-lg border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${healthData?.status === 'HEALTHY' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'
+            }`}>
             <div>
               <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${
-                  healthData?.status === 'HEALTHY' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'
-                }`}>
+                <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${healthData?.status === 'HEALTHY' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'
+                  }`}>
                   {healthData?.status || 'HEALTHY'}
                 </span>
                 <h3 className="text-base font-bold">Runtime Configuration Health & System Diagnostics</h3>
@@ -718,7 +781,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
           <div className="cims-card overflow-hidden">
             <table className="w-full text-left text-xs"><thead className="bg-[#EFF5FB] border-b border-[#E2E8F0]"><tr><th className="p-3">Name</th><th className="p-3">Channel</th><th className="p-3">Trigger</th><th className="p-3">Status</th><th className="p-3 text-right">Action</th></tr></thead>
-            <tbody className="divide-y divide-[#E2E8F0]">{templates.map(t => <tr key={t.id} className="hover:bg-[#EFF5FB]"><td className="p-3 font-semibold">{t.name}</td><td className="p-3">{t.type || t.channel}</td><td className="p-3">{t.triggerDaysBefore || 0} working days</td><td className="p-3"><StatusChip label={t.active === false ? 'Inactive' : 'Active'} /></td><td className="p-3 text-right"><button onClick={() => setTemplateDraft(t)} className="text-[#1F4E7A] font-semibold hover:underline">Edit</button></td></tr>)}</tbody></table>
+              <tbody className="divide-y divide-[#E2E8F0]">{templates.map(t => <tr key={t.id} className="hover:bg-[#EFF5FB]"><td className="p-3 font-semibold">{t.name}</td><td className="p-3">{t.type || t.channel}</td><td className="p-3">{t.triggerDaysBefore || 0} working days</td><td className="p-3"><StatusChip label={t.active === false ? 'Inactive' : 'Active'} /></td><td className="p-3 text-right"><button onClick={() => setTemplateDraft(t)} className="text-[#1F4E7A] font-semibold hover:underline">Edit</button></td></tr>)}</tbody></table>
           </div>
           {templateDraft && (
             <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -741,14 +804,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <label className="block text-[11px] font-semibold text-[#5B6472] mb-1">Template Name *</label>
-                    <input className="input-field w-full" placeholder="e.g. Policy Expiry 30-Day Reminder" value={templateDraft.name} onChange={e => setTemplateDraft({...templateDraft, name:e.target.value})}/>
+                    <input className="input-field w-full" placeholder="e.g. Policy Expiry 30-Day Reminder" value={templateDraft.name} onChange={e => setTemplateDraft({ ...templateDraft, name: e.target.value })} />
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-[#5B6472] mb-1">Event Type *</label>
                     <select
                       className="input-field w-full font-semibold text-[#102E4A]"
                       value={templateDraft.eventType || 'Expiry Reminder'}
-                      onChange={e => setTemplateDraft({...templateDraft, eventType: e.target.value})}
+                      onChange={e => setTemplateDraft({ ...templateDraft, eventType: e.target.value })}
                     >
                       <option value="Expiry Reminder">Expiry Reminder</option>
                       <option value="Expired Policy">Expired Policy</option>
@@ -764,14 +827,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-[#5B6472] mb-1">Channel *</label>
-                    <select className="input-field w-full" value={templateDraft.channel || templateDraft.type || 'Email'} onChange={e => setTemplateDraft({...templateDraft, type:e.target.value, channel:e.target.value as any})}>
+                    <select className="input-field w-full" value={templateDraft.channel || templateDraft.type || 'Email'} onChange={e => setTemplateDraft({ ...templateDraft, type: e.target.value, channel: e.target.value as any })}>
                       <option value="Email">Email</option>
                       <option value="SMS">SMS</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-[#5B6472] mb-1">Trigger (Working Days Before Expiry)</label>
-                    <input className="input-field w-full" type="number" min="0" placeholder="e.g. 30" value={templateDraft.triggerDaysBefore ?? 0} onChange={e => setTemplateDraft({...templateDraft, triggerDaysBefore:Number(e.target.value)})}/>
+                    <input className="input-field w-full" type="number" min="0" placeholder="e.g. 30" value={templateDraft.triggerDaysBefore ?? ''} onChange={e => setTemplateDraft({ ...templateDraft, triggerDaysBefore: e.target.value === '' ? ('' as any) : Number(e.target.value) })} />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-[11px] font-semibold text-[#5B6472] mb-1">
@@ -781,7 +844,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       className="input-field w-full"
                       placeholder="e.g. Action Required: Insurance Expiry for {PolicyNumber}"
                       value={templateDraft.subject || ''}
-                      onChange={e => setTemplateDraft({...templateDraft, subject:e.target.value})}
+                      onChange={e => setTemplateDraft({ ...templateDraft, subject: e.target.value })}
                     />
                   </div>
                 </div>
@@ -818,21 +881,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       </button>
                     ))}
                   </div>
-                  <textarea 
-                    className="input-field w-full font-mono text-xs" 
-                    rows={6} 
-                    placeholder="Dear {CustomerName},\n\nPlease be advised that policy {PolicyNumber} covering collateral {CollateralID} (Loan Ref: {LoanAccountNumber}) will expire in {DaysRemaining} days on {ExpiryDate}. Please contact your Relationship Manager {RMName} ({RMPhone})..." 
-                    value={templateDraft.body} 
-                    onChange={e => setTemplateDraft({...templateDraft, body:e.target.value})}
+                  <textarea
+                    className="input-field w-full font-mono text-xs"
+                    rows={6}
+                    placeholder="Dear {CustomerName},\n\nPlease be advised that policy {PolicyNumber} covering collateral {CollateralID} (Loan Ref: {LoanAccountNumber}) will expire in {DaysRemaining} days on {ExpiryDate}. Please contact your Relationship Manager {RMName} ({RMPhone})..."
+                    value={templateDraft.body}
+                    onChange={e => setTemplateDraft({ ...templateDraft, body: e.target.value })}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <label className="text-xs flex items-center gap-2 cursor-pointer font-medium text-[#102E4A]">
-                    <input type="checkbox" checked={templateDraft.active !== false} onChange={e => setTemplateDraft({...templateDraft, active:e.target.checked})}/> 
+                    <input type="checkbox" checked={templateDraft.active !== false} onChange={e => setTemplateDraft({ ...templateDraft, active: e.target.checked })} />
                     Template Active (Participates in automated schedule dispatch)
                   </label>
-                  <button 
+                  <button
                     type="button"
                     onClick={async () => {
                       setModalError(null);
@@ -856,7 +919,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       } catch (e: any) {
                         setModalError(e.message || 'Failed to generate preview with the given placeholders.');
                       }
-                    }} 
+                    }}
                     className="btn-secondary text-xs"
                   >
                     Preview Template
@@ -872,7 +935,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-[#E2E8F0]">
                   <button onClick={() => { setTemplateDraft(null); setModalError(null); }} className="btn-secondary text-xs">Cancel</button>
-                  <button 
+                  <button
                     onClick={() => {
                       if (!templateDraft.name || !templateDraft.name.trim()) {
                         setModalError('Template name is required.');
@@ -896,7 +959,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         'Notification template saved and validated against runtime schema!',
                         () => setTemplateDraft(null)
                       );
-                    }} 
+                    }}
                     disabled={modalSaving}
                     className="btn-primary text-xs"
                   >
@@ -1050,35 +1113,35 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     return terms.every((t) => userText.includes(t));
                   })
                   .map((u) => (
-                  <tr key={u.id || u.userId} className="hover:bg-[#EFF5FB]">
-                    <td className="p-3 font-semibold text-[#102E4A]">{u.username}</td>
-                    <td className="p-3">{u.name || u.fullName}</td>
-                    <td className="p-3 font-bold text-[#1F4E7A]">{u.role}</td>
-                    <td className="p-3">{u.branch}</td>
-                    <td className="p-3">{u.segment}</td>
-                    <td className="p-3"><StatusChip label={u.active !== false ? 'Active' : 'Locked'} /></td>
-                    <td className="p-3 text-right space-x-3">
-                      <button
-                        onClick={() => {
-                          setEditingUser(u);
-                          setShowUserModal(true);
-                        }}
-                        className="text-[#1F4E7A] hover:underline font-semibold"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={async () => {
-                          await onToggleUserStatus(u.id || u.userId, u.active === false);
-                          showToast(`User account ${u.username} is now ${u.active === false ? 'Active' : 'Locked'}`);
-                        }}
-                        className="text-amber-700 hover:underline font-semibold"
-                      >
-                        {u.active !== false ? 'Lock' : 'Unlock'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                    <tr key={u.id || u.userId} className="hover:bg-[#EFF5FB]">
+                      <td className="p-3 font-semibold text-[#102E4A]">{u.username}</td>
+                      <td className="p-3">{u.name || u.fullName}</td>
+                      <td className="p-3 font-bold text-[#1F4E7A]">{u.role}</td>
+                      <td className="p-3">{u.branch}</td>
+                      <td className="p-3">{u.segment}</td>
+                      <td className="p-3"><StatusChip label={u.active !== false ? 'Active' : 'Locked'} /></td>
+                      <td className="p-3 text-right space-x-3">
+                        <button
+                          onClick={() => {
+                            setEditingUser(u);
+                            setShowUserModal(true);
+                          }}
+                          className="text-[#1F4E7A] hover:underline font-semibold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await onToggleUserStatus(u.id || u.userId, u.active === false);
+                            showToast(`User account ${u.username} is now ${u.active === false ? 'Active' : 'Locked'}`);
+                          }}
+                          className="text-amber-700 hover:underline font-semibold"
+                        >
+                          {u.active !== false ? 'Lock' : 'Unlock'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -1136,7 +1199,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <tr key={p.id} className="hover:bg-[#EFF5FB]">
                     <td className="p-3 font-bold text-[#173F63]">{p.roleCode}</td>
                     <td className="p-3 font-semibold text-[#101828]">{p.screenName}</td>
-                    
+
                     {/* View Checkbox */}
                     <td className="p-3 text-center">
                       <input
@@ -1671,7 +1734,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <tr key={param.paramKey} className="hover:bg-[#EFF5FB]">
                       <td className="p-3 font-mono font-bold text-[#102E4A]">{param.paramKey}</td>
                       <td className="p-3 font-semibold text-emerald-800">{param.paramValue}</td>
-                      <td className="p-3"><StatusChip label={['min_coverage_adequacy_pct','max_insurer_concentration_pct','policy_expiry_grace_period_days','dual_control_strict_mode','default_currency','cbs_sync_mode','cbs_sync_interval_minutes'].includes(param.paramKey) ? 'Runtime' : 'Configured'} /></td>
+                      <td className="p-3"><StatusChip label={['min_coverage_adequacy_pct', 'max_insurer_concentration_pct', 'policy_expiry_grace_period_days', 'dual_control_strict_mode', 'default_currency', 'cbs_sync_mode', 'cbs_sync_interval_minutes'].includes(param.paramKey) ? 'Runtime' : 'Configured'} /></td>
                       <td className="p-3 text-[#5B6472]">{param.description}</td>
                       <td className="p-3 text-right">
                         <button
@@ -1761,6 +1824,130 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* --- Tab 12: Credit Policy Insurance Coverage Rules (BR-18) --- */}
+      {activeTab === 'coverage-rules' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-[#E2E8F0]">
+            <div>
+              <h3 className="text-sm font-bold text-[#101828] flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#1F4E7A]" />
+                Credit Policy Insurance Coverage Rules (BR-18)
+              </h3>
+              <p className="text-xs text-[#5B6472]">
+                Configure required coverage percentages and over-insurance tolerances by collateral type and business segment.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setModalError(null);
+                setEditingCoverageRule({
+                  ruleCode: `ICR-${Date.now().toString().slice(-4)}`,
+                  collateralType: 'Buildings',
+                  customerSegment: 'ALL',
+                  requiredCoveragePct: 100,
+                  overInsuranceTolerancePct: 20,
+                  effectiveFrom: new Date().toISOString().substring(0, 10),
+                  active: true,
+                  approvalStatus: 'Approved',
+                });
+                setShowCoverageRuleModal(true);
+              }}
+              className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              + Add Coverage Rule
+            </button>
+          </div>
+
+          <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-lg text-xs flex items-start gap-2.5 text-amber-950">
+            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <strong className="block text-[11px] text-amber-900">
+                Credit Policy Mandate &amp; Non-Assumed Defaults
+              </strong>
+              <p className="text-[11px] text-amber-800 mt-0.5">
+                Coverage thresholds must be explicitly configured according to Bank Credit Policy. Proposed default of 100% is tentative pending Credit Committee confirmation. Over-insurance tolerance is informational and does not block facility processing. Recalculation is triggered automatically upon rule changes.
+              </p>
+            </div>
+          </div>
+
+          <div className="cims-card overflow-hidden">
+            {loadingCoverageRules ? (
+              <div className="p-8 text-center text-xs text-[#5B6472]">Loading Credit Policy coverage rules…</div>
+            ) : coverageRules.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[#5B6472] space-y-2">
+                <p>No insurance coverage rules defined.</p>
+                <button
+                  onClick={loadCoverageRules}
+                  className="btn-secondary text-xs px-3 py-1.5"
+                >
+                  Refresh Rules
+                </button>
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
+                  <tr>
+                    <th className="p-3">Rule Code</th>
+                    <th className="p-3">Collateral Type</th>
+                    <th className="p-3">Customer Segment</th>
+                    <th className="p-3">Required Coverage %</th>
+                    <th className="p-3">Over-Insurance Tolerance %</th>
+                    <th className="p-3">Effective Period</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Approval</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0]">
+                  {coverageRules.map((rule) => (
+                    <tr key={rule.id} className="hover:bg-[#EFF5FB]">
+                      <td className="p-3 font-mono font-bold text-[#102E4A]">{rule.ruleCode}</td>
+                      <td className="p-3 font-semibold text-[#1F4E7A]">{rule.collateralType}</td>
+                      <td className="p-3">{rule.customerSegment || 'ALL'}</td>
+                      <td className="p-3 font-bold text-slate-800">
+                        {rule.requiredCoveragePct != null ? `${rule.requiredCoveragePct}%` : 'Unconfigured'}
+                      </td>
+                      <td className="p-3 font-medium text-slate-600">
+                        {rule.overInsuranceTolerancePct != null ? `+${rule.overInsuranceTolerancePct}%` : 'Not Set'}
+                      </td>
+                      <td className="p-3 text-[11px] text-[#5B6472]">
+                        {rule.effectiveFrom || 'Immediate'}
+                        {rule.effectiveTo ? ` to ${rule.effectiveTo}` : ' (Indefinite)'}
+                      </td>
+                      <td className="p-3">
+                        <StatusChip label={rule.active !== false ? 'Active' : 'Disabled'} />
+                      </td>
+                      <td className="p-3">
+                        <StatusChip label={rule.approvalStatus || 'Approved'} />
+                      </td>
+                      <td className="p-3 text-right space-x-2">
+                        <button
+                          onClick={() => {
+                            setModalError(null);
+                            setEditingCoverageRule(rule);
+                            setShowCoverageRuleModal(true);
+                          }}
+                          className="text-[#1F4E7A] hover:underline font-semibold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleToggleCoverageRule(rule.id)}
+                          className={`hover:underline font-semibold ${rule.active !== false ? 'text-amber-700' : 'text-emerald-700'}`}
+                        >
+                          {rule.active !== false ? 'Disable' : 'Enable'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       )}
@@ -1934,14 +2121,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </select>
               </div>
               <div>
-                <label className="font-semibold text-[#5B6472] block mb-1">Password</label>
+                <label className="font-semibold text-[#5B6472] block mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
-                  placeholder="Leave blank to keep password123"
+                  placeholder={editingUser.id ? "Leave blank to keep current password" : "Leave blank for default (password123)"}
                   value={editingUser.password || ''}
                   onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
                   className="input-field w-full"
                 />
+                <span className="text-[10px] text-gray-500 mt-0.5 block">
+                  Policy: min 8 chars, 1 uppercase, 1 digit, 1 special char.
+                </span>
               </div>
               <div className="col-span-2">
                 <label className="font-semibold text-[#5B6472] block mb-1">Authorized Business Segment(s) (Multi-Select)</label>
@@ -1991,7 +2183,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     setModalError('Username is mandatory.');
                     return;
                   }
-                  executeModalSave(() => onSaveUser(editingUser), 'User account saved successfully!', () => setShowUserModal(false));
+                  if (editingUser.password && editingUser.password.trim()) {
+                    const pwd = editingUser.password.trim();
+                    if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^A-Za-z0-9]/.test(pwd)) {
+                      setModalError('Password must be at least 8 characters long and contain at least one uppercase letter, one digit, and one special character.');
+                      return;
+                    }
+                  }
+                  const userPayload = {
+                    ...editingUser,
+                    fullName: editingUser.fullName || editingUser.name || editingUser.username,
+                    segmentIds: Array.isArray(editingUser.segmentIds)
+                      ? editingUser.segmentIds.join(',')
+                      : (editingUser.segmentIds || editingUser.segment || 'Corporate Banking'),
+                  };
+                  executeModalSave(() => onSaveUser(userPayload), 'User account saved successfully!', () => setShowUserModal(false));
                 }}
                 disabled={modalSaving}
                 className="btn-primary text-xs"
@@ -2100,11 +2306,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             : [...activeSegs, seg.id];
                           setEditingBranch({ ...editingBranch, segmentIds: JSON.stringify(next) });
                         }}
-                        className={`px-2 py-1 rounded text-xs font-semibold border transition-all ${
-                          isSelected
-                            ? 'bg-[#102E4A] text-white border-[#102E4A] shadow-xs'
-                            : 'bg-white text-[#5B6472] border-[#E2E8F0] hover:bg-slate-100'
-                        }`}
+                        className={`px-2 py-1 rounded text-xs font-semibold border transition-all ${isSelected
+                          ? 'bg-[#102E4A] text-white border-[#102E4A] shadow-xs'
+                          : 'bg-white text-[#5B6472] border-[#E2E8F0] hover:bg-slate-100'
+                          }`}
                       >
                         {isSelected ? '✓ ' : '+ '}{seg.name}
                       </button>
@@ -2302,8 +2507,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   type="number"
                   min="1"
                   max="720"
-                  value={editingApproval.slaHours || 24}
-                  onChange={(e) => setEditingApproval({ ...editingApproval, slaHours: Number(e.target.value) })}
+                  value={editingApproval.slaHours !== undefined ? editingApproval.slaHours : 24}
+                  onChange={(e) => setEditingApproval({ ...editingApproval, slaHours: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
                   className="input-field w-full"
                 />
               </div>
@@ -2399,8 +2604,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     type="number"
                     min="1"
                     max="365"
-                    value={editingReminder.daysBeforeExpiry || ''}
-                    onChange={(e) => setEditingReminder({ ...editingReminder, daysBeforeExpiry: Number(e.target.value) })}
+                    value={editingReminder.daysBeforeExpiry ?? ''}
+                    onChange={(e) => setEditingReminder({ ...editingReminder, daysBeforeExpiry: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
                     className="input-field w-full font-bold text-[#102E4A]"
                     disabled={Boolean(editingReminder.id)}
                   />
@@ -2988,6 +3193,179 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 className="btn-primary text-xs"
               >
                 {modalSaving ? 'Saving...' : 'Save Holiday'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coverage Rule Modal (BR-18) */}
+      {showCoverageRuleModal && editingCoverageRule && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+              <h3 className="text-base font-bold text-[#102E4A] flex items-center gap-2">
+                <Shield className="w-5 h-5 text-[#1F4E7A]" />
+                {editingCoverageRule.id ? 'Edit Insurance Coverage Rule (BR-18)' : 'Add Insurance Coverage Rule (BR-18)'}
+              </h3>
+              <button
+                onClick={() => setShowCoverageRuleModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {modalError && (
+              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded flex items-start gap-1.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Rule Code *</label>
+                  <input
+                    type="text"
+                    value={editingCoverageRule.ruleCode || ''}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, ruleCode: e.target.value })}
+                    className="input-field w-full font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Collateral Type *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Buildings, Vehicles, Machinery"
+                    value={editingCoverageRule.collateralType || ''}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, collateralType: e.target.value })}
+                    className="input-field w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Customer / Business Segment</label>
+                  <select
+                    value={editingCoverageRule.customerSegment || 'ALL'}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, customerSegment: e.target.value })}
+                    className="input-field w-full"
+                  >
+                    <option value="ALL">ALL — Universal Application</option>
+                    {segments.map((s) => (
+                      <option key={s.id} value={s.name}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Required Coverage Percentage (%) *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="200"
+                    step="1"
+                    placeholder="e.g. 100"
+                    value={editingCoverageRule.requiredCoveragePct ?? ''}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, requiredCoveragePct: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                    className="input-field w-full font-bold"
+                  />
+                  <span className="text-[10px] text-amber-700 italic">Per Credit Policy (e.g. 100% of structure value)</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Over-Insurance Tolerance (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    placeholder="e.g. 20"
+                    value={editingCoverageRule.overInsuranceTolerancePct ?? ''}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, overInsuranceTolerancePct: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                    className="input-field w-full"
+                  />
+                  <span className="text-[10px] text-[#5B6472]">Informational threshold; non-blocking</span>
+                </div>
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Approval Status</label>
+                  <select
+                    value={editingCoverageRule.approvalStatus || 'Approved'}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, approvalStatus: e.target.value })}
+                    className="input-field w-full"
+                  >
+                    <option value="Approved">Approved (Credit Policy Committee)</option>
+                    <option value="Pending Approval">Pending Approval</option>
+                    <option value="Under Review">Under Review</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Effective From (Date)</label>
+                  <input
+                    type="date"
+                    value={editingCoverageRule.effectiveFrom || ''}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, effectiveFrom: e.target.value })}
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-[#5B6472] block mb-1">Effective To (Date - Optional)</label>
+                  <input
+                    type="date"
+                    value={editingCoverageRule.effectiveTo || ''}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, effectiveTo: e.target.value })}
+                    className="input-field w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-[#5B6472] block mb-1">Description / Credit Policy Reference</label>
+                <textarea
+                  rows={2}
+                  value={editingCoverageRule.description || ''}
+                  onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, description: e.target.value })}
+                  placeholder="e.g. Dashen Bank Credit Policy Section 4.2 - Standard commercial building coverage"
+                  className="input-field w-full"
+                />
+              </div>
+
+              <div className="pt-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingCoverageRule.active !== false}
+                    onChange={(e) => setEditingCoverageRule({ ...editingCoverageRule, active: e.target.checked })}
+                    className="rounded text-indigo-600"
+                  />
+                  <span className="font-semibold text-[#102E4A]">Active Rule in Insurance Adequacy Engine</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+              <button
+                onClick={() => setShowCoverageRuleModal(false)}
+                className="btn-secondary text-xs"
+                disabled={coverageRuleSaving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveCoverageRule}
+                disabled={coverageRuleSaving}
+                className="btn-primary text-xs flex items-center gap-1.5"
+              >
+                {coverageRuleSaving ? 'Saving Rule…' : 'Save Coverage Rule'}
               </button>
             </div>
           </div>

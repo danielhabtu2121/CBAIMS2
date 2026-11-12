@@ -99,18 +99,50 @@ public class RoleHierarchyService {
     public String resolveApproverRole(String transactionType, String actionType, String fallbackRole) {
         String tt = normalize(transactionType);
         String act = normalize(actionType);
-        for (ApprovalHierarchyConfig cfg : approvalHierarchyConfigRepository.findAll()) {
-            if (!cfg.isActive()) continue;
-            String cfgKey = normalize(cfg.getTransactionType());
-            if (cfgKey.isEmpty()) continue;
-            boolean matches = (cfg.getTransactionType() != null &&
-                    (cfg.getTransactionType().equalsIgnoreCase(transactionType) || cfg.getTransactionType().equalsIgnoreCase(actionType)))
-                    || (!tt.isEmpty() && (cfgKey.contains(tt) || tt.contains(cfgKey)))
-                    || (!act.isEmpty() && (cfgKey.contains(act) || act.contains(cfgKey)));
-            if (matches && cfg.getLevel1Role() != null && !cfg.getLevel1Role().isBlank()) {
-                return cfg.getLevel1Role();
+        List<ApprovalHierarchyConfig> allConfigs = approvalHierarchyConfigRepository.findAll()
+                .stream()
+                .filter(ApprovalHierarchyConfig::isActive)
+                .toList();
+
+        // 1. Exact case-insensitive match on transactionType or actionType
+        for (ApprovalHierarchyConfig cfg : allConfigs) {
+            String cfgTx = cfg.getTransactionType();
+            if (cfgTx != null) {
+                if (cfgTx.equalsIgnoreCase(transactionType) || (actionType != null && !actionType.isBlank() && cfgTx.equalsIgnoreCase(actionType))) {
+                    if (cfg.getLevel1Role() != null && !cfg.getLevel1Role().isBlank()) {
+                        return cfg.getLevel1Role();
+                    }
+                }
             }
         }
+
+        // 2. Normalized exact match
+        for (ApprovalHierarchyConfig cfg : allConfigs) {
+            String cfgKey = normalize(cfg.getTransactionType());
+            if (!cfgKey.isEmpty() && (cfgKey.equals(tt) || (!act.isEmpty() && cfgKey.equals(act)))) {
+                if (cfg.getLevel1Role() != null && !cfg.getLevel1Role().isBlank()) {
+                    return cfg.getLevel1Role();
+                }
+            }
+        }
+
+        // 3. Most specific prefix match (longest matching key wins)
+        ApprovalHierarchyConfig bestPrefixMatch = null;
+        int maxLen = -1;
+        for (ApprovalHierarchyConfig cfg : allConfigs) {
+            String cfgKey = normalize(cfg.getTransactionType());
+            if (cfgKey.isEmpty()) continue;
+            boolean prefixMatch = (!tt.isEmpty() && tt.startsWith(cfgKey)) || (!act.isEmpty() && act.startsWith(cfgKey));
+            if (prefixMatch && cfgKey.length() > maxLen) {
+                maxLen = cfgKey.length();
+                bestPrefixMatch = cfg;
+            }
+        }
+        if (bestPrefixMatch != null && bestPrefixMatch.getLevel1Role() != null && !bestPrefixMatch.getLevel1Role().isBlank()) {
+            return bestPrefixMatch.getLevel1Role();
+        }
+
+        // 4. Fallback role
         return (fallbackRole == null || fallbackRole.isBlank()) ? "BRMGR" : fallbackRole;
     }
 

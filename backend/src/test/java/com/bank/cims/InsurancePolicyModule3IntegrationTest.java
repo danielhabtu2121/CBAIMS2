@@ -72,18 +72,22 @@ public class InsurancePolicyModule3IntegrationTest {
         String uid = UUID.randomUUID().toString().substring(0, 8);
 
         // Ensure maker and checker users exist
-        if (userRepository.findById("cro_maker").isEmpty()) {
+        userRepository.findById("cro_maker").ifPresentOrElse(u -> {
+            u.setRole("CRO");
+            u.setActive(true);
+            userRepository.save(u);
+        }, () -> {
             User maker = new User();
             maker.setId("cro_maker");
             maker.setUsername("cro_maker");
             maker.setPassword("password");
             maker.setFullName("CRO Maker");
-            maker.setRole("CRO_USER");
+            maker.setRole("CRO");
             maker.setBranch("Central Corporate Branch");
             maker.setSegment("Corporate Banking");
             maker.setActive(true);
             userRepository.save(maker);
-        }
+        });
         if (userRepository.findById("brmgr_checker").isEmpty()) {
             User checker = new User();
             checker.setId("brmgr_checker");

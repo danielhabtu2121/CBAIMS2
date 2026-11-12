@@ -20,6 +20,10 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
         return findFirstByCifIgnoreCase(cif);
     }
 
+    Optional<Customer> findFirstByNationalIdIgnoreCase(String nationalId);
+    Optional<Customer> findFirstByTaxIdNoIgnoreCase(String taxIdNo);
+    Optional<Customer> findFirstByBusinessRegNoIgnoreCase(String businessRegNo);
+
     List<Customer> findByBranch(String branch);
     List<Customer> findByBranchIn(Collection<String> branches);
     List<Customer> findBySegment(String segment);

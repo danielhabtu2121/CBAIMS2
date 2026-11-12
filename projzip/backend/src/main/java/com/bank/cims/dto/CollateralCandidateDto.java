@@ -28,7 +28,12 @@ public class CollateralCandidateDto {
     private boolean thirdParty;
     private boolean thirdPartyValid;
     private boolean eligible;
+    private boolean requiresInformation;
+    private String candidateStatus = "ELIGIBLE"; // ELIGIBLE, REQUIRES_THIRD_PARTY_INFO, DUPLICATE, INELIGIBLE_STATUS, CAPACITY_EXCEEDED
     private String ineligibilityReason;
+
+    private int linkedFacilityCount;
+    private List<String> linkedFacilityCodes = new ArrayList<>();
 
     private List<String> legalOwners = new ArrayList<>();
 
@@ -105,6 +110,18 @@ public class CollateralCandidateDto {
 
     public String getIneligibilityReason() { return ineligibilityReason; }
     public void setIneligibilityReason(String ineligibilityReason) { this.ineligibilityReason = ineligibilityReason; }
+
+    public boolean isRequiresInformation() { return requiresInformation; }
+    public void setRequiresInformation(boolean requiresInformation) { this.requiresInformation = requiresInformation; }
+
+    public String getCandidateStatus() { return candidateStatus; }
+    public void setCandidateStatus(String candidateStatus) { this.candidateStatus = candidateStatus; }
+
+    public int getLinkedFacilityCount() { return linkedFacilityCount; }
+    public void setLinkedFacilityCount(int linkedFacilityCount) { this.linkedFacilityCount = linkedFacilityCount; }
+
+    public List<String> getLinkedFacilityCodes() { return linkedFacilityCodes; }
+    public void setLinkedFacilityCodes(List<String> linkedFacilityCodes) { this.linkedFacilityCodes = linkedFacilityCodes; }
 
     public List<String> getLegalOwners() { return legalOwners; }
     public void setLegalOwners(List<String> legalOwners) { this.legalOwners = legalOwners; }

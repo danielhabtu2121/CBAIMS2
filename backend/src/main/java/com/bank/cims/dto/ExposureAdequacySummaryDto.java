@@ -22,6 +22,22 @@ public class ExposureAdequacySummaryDto {
     private String calculationExplanation;
     private List<Map<String, Object>> facilityBreakdowns;
 
+    // First-degree and Second-degree Collateral Priority & Combined Exposure
+    private String collateralRank = "1st";
+    private boolean firstDegreeInternal = true;
+    private String firstDegreeCollateralId;
+    private String firstDegreeHolderName;
+    private String firstDegreeFacilityRef;
+    private double firstDegreeOutstandingBalance = 0.0;
+    private String firstDegreeBalanceAsOfDate;
+    private double secondDegreeExposure = 0.0;
+    private double combinedExposure = 0.0;
+    private boolean exposureWarning = false;
+    private String exposureWarningMessage;
+    private boolean bankNotedAsSecondMortgagee = false;
+    private boolean promotionEligible = false;
+    private String promotionStatus = "NONE";
+
     public ExposureAdequacySummaryDto() {}
 
     public String getCollateralId() { return collateralId; }
@@ -58,4 +74,33 @@ public class ExposureAdequacySummaryDto {
     public void setCalculationExplanation(String calculationExplanation) { this.calculationExplanation = calculationExplanation; }
     public List<Map<String, Object>> getFacilityBreakdowns() { return facilityBreakdowns; }
     public void setFacilityBreakdowns(List<Map<String, Object>> facilityBreakdowns) { this.facilityBreakdowns = facilityBreakdowns; }
+
+    public String getCollateralRank() { return collateralRank; }
+    public void setCollateralRank(String collateralRank) { this.collateralRank = collateralRank; }
+    public boolean isFirstDegreeInternal() { return firstDegreeInternal; }
+    public void setFirstDegreeInternal(boolean firstDegreeInternal) { this.firstDegreeInternal = firstDegreeInternal; }
+    public String getFirstDegreeCollateralId() { return firstDegreeCollateralId; }
+    public void setFirstDegreeCollateralId(String firstDegreeCollateralId) { this.firstDegreeCollateralId = firstDegreeCollateralId; }
+    public String getFirstDegreeHolderName() { return firstDegreeHolderName; }
+    public void setFirstDegreeHolderName(String firstDegreeHolderName) { this.firstDegreeHolderName = firstDegreeHolderName; }
+    public String getFirstDegreeFacilityRef() { return firstDegreeFacilityRef; }
+    public void setFirstDegreeFacilityRef(String firstDegreeFacilityRef) { this.firstDegreeFacilityRef = firstDegreeFacilityRef; }
+    public double getFirstDegreeOutstandingBalance() { return firstDegreeOutstandingBalance; }
+    public void setFirstDegreeOutstandingBalance(double firstDegreeOutstandingBalance) { this.firstDegreeOutstandingBalance = firstDegreeOutstandingBalance; }
+    public String getFirstDegreeBalanceAsOfDate() { return firstDegreeBalanceAsOfDate; }
+    public void setFirstDegreeBalanceAsOfDate(String firstDegreeBalanceAsOfDate) { this.firstDegreeBalanceAsOfDate = firstDegreeBalanceAsOfDate; }
+    public double getSecondDegreeExposure() { return secondDegreeExposure; }
+    public void setSecondDegreeExposure(double secondDegreeExposure) { this.secondDegreeExposure = secondDegreeExposure; }
+    public double getCombinedExposure() { return combinedExposure; }
+    public void setCombinedExposure(double combinedExposure) { this.combinedExposure = combinedExposure; }
+    public boolean isExposureWarning() { return exposureWarning; }
+    public void setExposureWarning(boolean exposureWarning) { this.exposureWarning = exposureWarning; }
+    public String getExposureWarningMessage() { return exposureWarningMessage; }
+    public void setExposureWarningMessage(String exposureWarningMessage) { this.exposureWarningMessage = exposureWarningMessage; }
+    public boolean isBankNotedAsSecondMortgagee() { return bankNotedAsSecondMortgagee; }
+    public void setBankNotedAsSecondMortgagee(boolean bankNotedAsSecondMortgagee) { this.bankNotedAsSecondMortgagee = bankNotedAsSecondMortgagee; }
+    public boolean isPromotionEligible() { return promotionEligible; }
+    public void setPromotionEligible(boolean promotionEligible) { this.promotionEligible = promotionEligible; }
+    public String getPromotionStatus() { return promotionStatus; }
+    public void setPromotionStatus(String promotionStatus) { this.promotionStatus = promotionStatus; }
 }

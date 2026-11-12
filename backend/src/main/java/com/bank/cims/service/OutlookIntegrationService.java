@@ -107,7 +107,9 @@ public class OutlookIntegrationService {
 
             long latency = Math.max(12, System.currentTimeMillis() - startTime + (new Random().nextInt(25)));
 
-            NotificationDispatchResult result = NotificationDispatchResult.success(deliveryRef, provider, "Sent");
+            boolean isSim = PROVIDER_SIMULATOR.equals(provider);
+            String initialStatus = isSim ? "Sent (Simulated)" : "Sent";
+            NotificationDispatchResult result = NotificationDispatchResult.success(deliveryRef, provider, initialStatus);
             result.setLatencyMs(latency);
             result.getMetadata().put("senderMailbox", sender);
             result.getMetadata().put("recipient", recipient);
@@ -115,6 +117,7 @@ public class OutlookIntegrationService {
             result.getMetadata().put("contentType", "text/html; charset=UTF-8");
             result.getMetadata().put("importance", "High");
             result.getMetadata().put("outlookActionable", true);
+            result.getMetadata().put("isSimulated", isSim);
             result.getMetadata().put("dispatchedAt", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
             return result;
 
@@ -137,7 +140,9 @@ public class OutlookIntegrationService {
         health.put("smtpHost", getSmtpHost());
         health.put("smtpPort", getSmtpPort());
         health.put("status", isEnabled() ? "ONLINE" : "OFFLINE");
-        health.put("readyForProduction", true);
+        boolean isSim = PROVIDER_SIMULATOR.equals(getProviderMode());
+        health.put("readyForProduction", !isSim);
+        health.put("isSimulated", isSim);
         health.put("authType", PROVIDER_MS_GRAPH.equals(getProviderMode()) ? "Azure AD OAuth 2.0" : "Office 365 Basic / App-Token");
         health.put("supportedFeatures", List.of(
                 "Microsoft Graph REST API v1.0",
@@ -183,8 +188,8 @@ public class OutlookIntegrationService {
             <body>
               <div class="container">
                 <div class="header">
-                  <h1>Commercial Bank of Ethiopia</h1>
-                  <p>Collateral &amp; Insurance Management System (CIMS) &bull; Enterprise Notification</p>
+                  <h1>Collateral &amp; Insurance Management System</h1>
+                  <p>Enterprise Notification Service</p>
                 </div>
                 <div class="content">
                   <div class="alert-pill">OUTLOOK &bull; HIGH IMPORTANCE &bull; DUAL-CONTROL ALERT</div>

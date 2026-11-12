@@ -1,9 +1,16 @@
 package com.bank.cims.model;
 
+import com.bank.cims.config.StringOrArrayDeserializer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cims_users")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
     @Id
     private String id;
@@ -12,6 +19,7 @@ public class User {
     private String username;
     
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     
     @Column(name = "full_name", nullable = false)
@@ -29,8 +37,31 @@ public class User {
     
     @Column(nullable = false)
     private String segment;
+
+    @Column(name = "district")
+    private String district;
     
     private boolean active = true;
+
+    @Column(name = "failed_attempts")
+    private Integer failedAttempts = 0;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    @Column(name = "reset_token")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
+    @Column(name = "segment_ids", columnDefinition = "TEXT")
+    @JsonDeserialize(using = StringOrArrayDeserializer.class)
+    private String segmentIds;
 
     public User() {}
 
@@ -65,14 +96,33 @@ public class User {
     public void setBranch(String branch) { this.branch = branch; }
     public String getBranchId() { return branch; }
     public String getName() { return fullName; }
+    public void setName(String name) {
+        if (this.fullName == null || this.fullName.isBlank()) {
+            this.fullName = name;
+        }
+    }
     public String getPasswordHash() { return password; }
     public String getSegment() { return segment; }
     public void setSegment(String segment) { this.segment = segment; }
-    @Column(name = "segment_ids", columnDefinition = "TEXT")
-    private String segmentIds;
-
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     public String getSegmentIds() { return segmentIds; }
     public void setSegmentIds(String segmentIds) { this.segmentIds = segmentIds; }
+    public String getDistrict() { return district; }
+    public void setDistrict(String district) { this.district = district; }
+
+    public Integer getFailedAttempts() { return failedAttempts != null ? failedAttempts : 0; }
+    public void setFailedAttempts(Integer failedAttempts) { this.failedAttempts = failedAttempts; }
+
+    public LocalDateTime getLockedUntil() { return lockedUntil; }
+    public void setLockedUntil(LocalDateTime lockedUntil) { this.lockedUntil = lockedUntil; }
+
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(LocalDateTime lastLoginAt) { this.lastLoginAt = lastLoginAt; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
 }

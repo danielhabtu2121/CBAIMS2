@@ -37,12 +37,36 @@ public class CollateralFacilityLinkDto {
     private String collateralOwnerCustomerId;
     private String collateralOwnerCif;
     private String legalOwnerNames;
+    private String relationshipContext = "Borrower-owned";
     private boolean thirdParty;
     private String relationshipToBorrower;
     private double ownershipPercentage = 100.0;
     private String ownershipVerificationStatus;
     private String pledgeAgreementRef;
     private String consentInfo;
+    private String consentDocumentRef;
+
+    // Link-Level Charge Priority & 1st-Degree Attributes
+    private String collateralRank = "1st";
+    private boolean isFirstDegreeInternal = true;
+    private String firstDegreeCollateralId;
+    private String firstDegreeHolderName;
+    private String firstDegreeFacilityRef;
+    private double firstDegreeOutstandingBalance;
+    private String firstDegreeBalanceAsOfDate;
+    private double registeredMortgageAmount;
+    private String mortgageRegistrationNumber;
+    private String mortgageRegistrationDate;
+    private String firstDegreePolicyNumber;
+    private String firstDegreeInsurer;
+    private String firstDegreePolicyExpiry;
+    private boolean bankNotedAsSecondMortgagee;
+    private String firstDegreeConfirmationDocId;
+    private String firstDegreeExtractDocId;
+    private String legalOwnerName;
+    private boolean ownerWithoutCif;
+    private double priorChargeDeduction;
+    private double availableSecurityForRank;
 
     // Facility Master Snapshot Details
     private String facilityType;
@@ -221,6 +245,12 @@ public class CollateralFacilityLinkDto {
     public String getRelationshipStatus() { return relationshipStatus; }
     public void setRelationshipStatus(String relationshipStatus) { this.relationshipStatus = relationshipStatus; }
 
+    public String getRelationshipContext() {
+        if (relationshipContext != null && !relationshipContext.isBlank()) return relationshipContext;
+        return isThirdParty() ? "Third-party" : "Borrower-owned";
+    }
+    public void setRelationshipContext(String relationshipContext) { this.relationshipContext = relationshipContext; }
+
     public String getReleaseStatus() { return releaseStatus; }
     public void setReleaseStatus(String releaseStatus) { this.releaseStatus = releaseStatus; }
 
@@ -298,4 +328,48 @@ public class CollateralFacilityLinkDto {
 
     public String getConsentInfo() { return consentInfo; }
     public void setConsentInfo(String consentInfo) { this.consentInfo = consentInfo; }
+
+    public String getConsentDocumentRef() { return consentDocumentRef; }
+    public void setConsentDocumentRef(String consentDocumentRef) { this.consentDocumentRef = consentDocumentRef; }
+
+    public String getCollateralRank() { return collateralRank != null ? collateralRank : "1st"; }
+    public void setCollateralRank(String collateralRank) { this.collateralRank = collateralRank; }
+    public boolean isFirstDegreeInternal() { return isFirstDegreeInternal; }
+    public void setFirstDegreeInternal(boolean firstDegreeInternal) { isFirstDegreeInternal = firstDegreeInternal; }
+    public String getFirstDegreeCollateralId() { return firstDegreeCollateralId; }
+    public void setFirstDegreeCollateralId(String firstDegreeCollateralId) { this.firstDegreeCollateralId = firstDegreeCollateralId; }
+    public String getFirstDegreeHolderName() { return firstDegreeHolderName; }
+    public void setFirstDegreeHolderName(String firstDegreeHolderName) { this.firstDegreeHolderName = firstDegreeHolderName; }
+    public String getFirstDegreeFacilityRef() { return firstDegreeFacilityRef; }
+    public void setFirstDegreeFacilityRef(String firstDegreeFacilityRef) { this.firstDegreeFacilityRef = firstDegreeFacilityRef; }
+    public double getFirstDegreeOutstandingBalance() { return firstDegreeOutstandingBalance; }
+    public void setFirstDegreeOutstandingBalance(double firstDegreeOutstandingBalance) { this.firstDegreeOutstandingBalance = firstDegreeOutstandingBalance; }
+    public String getFirstDegreeBalanceAsOfDate() { return firstDegreeBalanceAsOfDate; }
+    public void setFirstDegreeBalanceAsOfDate(String firstDegreeBalanceAsOfDate) { this.firstDegreeBalanceAsOfDate = firstDegreeBalanceAsOfDate; }
+    public double getRegisteredMortgageAmount() { return registeredMortgageAmount; }
+    public void setRegisteredMortgageAmount(double registeredMortgageAmount) { this.registeredMortgageAmount = registeredMortgageAmount; }
+    public String getMortgageRegistrationNumber() { return mortgageRegistrationNumber; }
+    public void setMortgageRegistrationNumber(String mortgageRegistrationNumber) { this.mortgageRegistrationNumber = mortgageRegistrationNumber; }
+    public String getMortgageRegistrationDate() { return mortgageRegistrationDate; }
+    public void setMortgageRegistrationDate(String mortgageRegistrationDate) { this.mortgageRegistrationDate = mortgageRegistrationDate; }
+    public String getFirstDegreePolicyNumber() { return firstDegreePolicyNumber; }
+    public void setFirstDegreePolicyNumber(String firstDegreePolicyNumber) { this.firstDegreePolicyNumber = firstDegreePolicyNumber; }
+    public String getFirstDegreeInsurer() { return firstDegreeInsurer; }
+    public void setFirstDegreeInsurer(String firstDegreeInsurer) { this.firstDegreeInsurer = firstDegreeInsurer; }
+    public String getFirstDegreePolicyExpiry() { return firstDegreePolicyExpiry; }
+    public void setFirstDegreePolicyExpiry(String firstDegreePolicyExpiry) { this.firstDegreePolicyExpiry = firstDegreePolicyExpiry; }
+    public boolean isBankNotedAsSecondMortgagee() { return bankNotedAsSecondMortgagee; }
+    public void setBankNotedAsSecondMortgagee(boolean bankNotedAsSecondMortgagee) { this.bankNotedAsSecondMortgagee = bankNotedAsSecondMortgagee; }
+    public String getFirstDegreeConfirmationDocId() { return firstDegreeConfirmationDocId; }
+    public void setFirstDegreeConfirmationDocId(String firstDegreeConfirmationDocId) { this.firstDegreeConfirmationDocId = firstDegreeConfirmationDocId; }
+    public String getFirstDegreeExtractDocId() { return firstDegreeExtractDocId; }
+    public void setFirstDegreeExtractDocId(String firstDegreeExtractDocId) { this.firstDegreeExtractDocId = firstDegreeExtractDocId; }
+    public String getLegalOwnerName() { return legalOwnerName != null ? legalOwnerName : legalOwnerNames; }
+    public void setLegalOwnerName(String legalOwnerName) { this.legalOwnerName = legalOwnerName; }
+    public boolean isOwnerWithoutCif() { return ownerWithoutCif; }
+    public void setOwnerWithoutCif(boolean ownerWithoutCif) { this.ownerWithoutCif = ownerWithoutCif; }
+    public double getPriorChargeDeduction() { return priorChargeDeduction; }
+    public void setPriorChargeDeduction(double priorChargeDeduction) { this.priorChargeDeduction = priorChargeDeduction; }
+    public double getAvailableSecurityForRank() { return availableSecurityForRank; }
+    public void setAvailableSecurityForRank(double availableSecurityForRank) { this.availableSecurityForRank = availableSecurityForRank; }
 }

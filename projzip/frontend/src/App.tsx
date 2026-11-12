@@ -317,9 +317,23 @@ export function App() {
   const [currentUser, setCurrentUser] = useState<UserSession | null>(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('cims.currentUser') || 'null');
-      if (stored?.role && stored?.username) return { ...stored, userId: stored.userId || stored.id || stored.username, name: stored.name || stored.fullName || stored.username, roleName: stored.roleName || stored.role, canApprove: stored.role === 'SYSADMIN' ? false : stored.canApprove };
-    } catch {}
-    return INITIAL_PERSONAS[0];
+      if (
+        stored?.role &&
+        stored?.username &&
+        stored?.token &&
+        typeof stored.token === 'string' &&
+        stored.token.startsWith('cims_tkn.')
+      ) {
+        return {
+          ...stored,
+          userId: stored.userId || stored.id || stored.username,
+          name: stored.name || stored.fullName || stored.username,
+          roleName: stored.roleName || stored.role,
+          canApprove: stored.role === 'SYSADMIN' ? false : stored.canApprove,
+        };
+      }
+    } catch { }
+    return null;
   });
   const [activePage, setActivePage] = useState<NavPageId>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -357,6 +371,15 @@ export function App() {
     if (params?.policyId || (targetPage === 'insurance' && (params?.id || params?.entityId))) {
       const polId = params.policyId || params.id || params.entityId;
       setTargetPolicyId(polId);
+      const pol = policies.find(p => p.id === polId || p.policyNumber === polId);
+      if (pol) {
+        const col = collaterals.find(c => c.id === pol.collateralId || c.code === pol.collateralId);
+        const cust = customers.find(c => c.id === pol.customerId || c.cif === pol.customerId);
+        const seg = col?.owningSegment || cust?.segment;
+        if (seg && effectiveSegment !== 'ALL' && seg.toLowerCase() !== effectiveSegment.toLowerCase()) {
+          setSelectedSegment('ALL');
+        }
+      }
     }
     if (params?.customerId || params?.cif || (targetPage === 'customers' && (params?.id || params?.selectedCif))) {
       const custId = params.customerId || params.cif || params.id || params.selectedCif;
@@ -406,10 +429,12 @@ export function App() {
   const [cbsCollaterals, setCbsCollaterals] = useState<CbsCollateral[]>([]);
   const [cbsSyncLogs, setCbsSyncLogs] = useState<CbsSyncLog[]>([]);
   const [allUsersList, setAllUsersList] = useState<UserSession[]>(INITIAL_PERSONAS);
+  const [dataLoadError, setDataLoadError] = useState<string | null>(null);
 
   // Fetch initial data
   const loadData = async () => {
     try {
+      setDataLoadError(null);
       const [
         custRes,
         facRes,
@@ -499,71 +524,132 @@ export function App() {
       setCbsSyncLogs(cbsLogRes);
 
       if (usersRes && usersRes.length > 0) {
-        const mappedUsers: UserSession[] = usersRes.map((u: any) => ({
-          userId: u.id || u.username,
-          username: u.username,
-          name: u.fullName || u.name || u.username,
-          role: u.role as RoleCode,
-          roleName: u.role,
-          branch: u.branch || 'Bole Special Branch',
-          branchCode: u.branchCode || 'BRN-001',
-          segment: u.segment || 'Corporate Banking',
-          segmentIds: [u.segment || 'Corporate Banking'],
-          canApprove: ['BRMGR', 'SRMGMT', 'HODEPT', 'DISTDIR', 'EXEC', 'MGRCOLLDOC'].includes(u.role),
-          canCreate: true,
-          canEdit: true,
-          canDelete: true,
-        }));
+        const mappedUsers: UserSession[] = usersRes.map((u: any) => {
+          const p = INITIAL_PERSONAS.find(
+            (persona) =>
+              persona.username.toLowerCase() === (u.username || '').toLowerCase() ||
+              persona.role === u.role
+          );
+          return {
+            userId: u.id || u.username,
+            username: u.username,
+            name: u.fullName || u.name || p?.name || u.username,
+            role: (u.role || p?.role || 'BRMGR') as RoleCode,
+            roleName: p?.roleName || u.role,
+            branch: u.branch || p?.branch || 'Bole Special Branch',
+            branchCode: u.branchCode || p?.branchCode || 'BRN-001',
+            segment: u.segment || p?.segment || 'Corporate Banking',
+            segmentIds: (u.segmentIds && u.segmentIds.length > 0) ? u.segmentIds : (p?.segmentIds || [u.segment || 'Corporate Banking']),
+            token: p?.token || `jwt-token-${u.username}`,
+            canApprove: p !== undefined ? p.canApprove : ['BRMGR', 'SRMGMT', 'HODEPT', 'DISTDIR', 'EXEC', 'MGRCOLLDOC', 'COMPLIANCE', 'SRM', 'BRM'].includes(u.role),
+            canCreate: p !== undefined ? p.canCreate : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
+            canEdit: p !== undefined ? p.canEdit : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
+            canDelete: p !== undefined ? p.canDelete : u.role === 'SYSADMIN',
+          };
+        });
         setAllUsersList(mappedUsers);
+        setCurrentUser((prev) => {
+          if (!prev) return null;
+          const match = mappedUsers.find(
+            (u) =>
+              u.username.toLowerCase() === prev.username.toLowerCase() ||
+              u.userId === prev.userId ||
+              u.role === prev.role
+          );
+          return match ? { ...prev, ...match } : prev;
+        });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Backend API communication error. Using localized fallback data.');
+      setDataLoadError(err?.message || 'Unable to communicate with CIMS backend services');
     }
   };
 
   useEffect(() => {
-    loadData();
+    if (currentUser) {
+      cimsApi.setCurrentUser(currentUser);
+      loadData();
+    }
   }, [currentUser]);
 
+  // Session Inactivity Timeout Tracking (Default 15 minutes or from backend policy)
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(15);
+  useEffect(() => {
+    cimsApi.getPasswordPolicy().then((p) => {
+      if (p?.sessionTimeoutMinutes) setSessionTimeoutMinutes(p.sessionTimeoutMinutes);
+    }).catch(() => { });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    let lastActivity = Date.now();
+    const updateActivity = () => { lastActivity = Date.now(); };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }));
+
+    const interval = setInterval(() => {
+      const idleMinutes = (Date.now() - lastActivity) / (60 * 1000);
+      const warningThreshold = Math.max(1, sessionTimeoutMinutes - 2);
+      if (idleMinutes >= sessionTimeoutMinutes) {
+        setShowSessionTimeout(false);
+        handleLogout();
+      } else if (idleMinutes >= warningThreshold) {
+        setShowSessionTimeout(true);
+      }
+    }, 15000);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, updateActivity));
+      clearInterval(interval);
+    };
+  }, [currentUser, sessionTimeoutMinutes]);
+
   // Auth Handlers
-  const handleLogin = async (user: string, pass: string) => {
+  const handleLogin = async (user: string, pass: string): Promise<boolean | { success: boolean; message?: string }> => {
     try {
       const authRes = await cimsApi.login(user, pass);
       if (authRes.success && authRes.user) {
         const u = authRes.user;
+        const p = INITIAL_PERSONAS.find(
+          (persona) =>
+            persona.username.toLowerCase() === (u.username || '').toLowerCase() ||
+            persona.role === u.role
+        );
         const session: UserSession = {
           userId: u.id || u.username,
           username: u.username,
-          name: u.fullName || u.name || u.username,
-          role: u.role as RoleCode,
-          roleName: u.role,
-          branch: u.branch || 'Bole Special Branch',
-          branchCode: u.branchCode || 'BRN-001',
-          segment: u.segment || 'Corporate Banking',
-          segmentIds: [u.segment || 'Corporate Banking'],
-          canApprove: ['BRMGR', 'SRMGMT', 'HODEPT', 'DISTDIR', 'EXEC', 'MGRCOLLDOC'].includes(u.role),
-          canCreate: true,
-          canEdit: true,
-          canDelete: true,
+          name: u.fullName || u.name || p?.name || u.username,
+          role: (u.role || p?.role || 'BRMGR') as RoleCode,
+          roleName: p?.roleName || u.role,
+          branch: u.branch || p?.branch || 'Bole Special Branch',
+          branchCode: u.branchCode || p?.branchCode || 'BRN-001',
+          segment: u.segment || p?.segment || 'Corporate Banking',
+          segmentIds: (u.segmentIds && u.segmentIds.length > 0) ? u.segmentIds : (p?.segmentIds || [u.segment || 'Corporate Banking']),
+          token: authRes.token || p?.token || `jwt-token-${u.username}`,
+          canApprove: p !== undefined ? p.canApprove : ['BRMGR', 'SRMGMT', 'HODEPT', 'DISTDIR', 'EXEC', 'MGRCOLLDOC', 'COMPLIANCE', 'SRM', 'BRM'].includes(u.role),
+          canCreate: p !== undefined ? p.canCreate : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
+          canEdit: p !== undefined ? p.canEdit : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
+          canDelete: p !== undefined ? p.canDelete : u.role === 'SYSADMIN',
         };
         setCurrentUser(session);
         cimsApi.setCurrentUser(session);
-        return true;
+        if (authRes.sessionTimeoutMinutes) setSessionTimeoutMinutes(authRes.sessionTimeoutMinutes);
+        return { success: true };
+      } else if (authRes && !authRes.success) {
+        return { success: false, message: authRes.message || 'Invalid username/email or password.' };
       }
-    } catch (e) {
-      console.warn('Backend login request error, checking local personas:', e);
+    } catch (e: any) {
+      console.warn('Backend login request error:', e);
+      return { success: false, message: e?.message || 'Authentication service error.' };
     }
-    const matched = allUsersList.find((p) => p.username.toLowerCase() === user.toLowerCase() || p.userId.toLowerCase() === user.toLowerCase()) ||
-                    INITIAL_PERSONAS.find((p) => p.username.toLowerCase() === user.toLowerCase() || p.userId.toLowerCase() === user.toLowerCase());
-    if (matched) {
-      setCurrentUser(matched);
-      cimsApi.setCurrentUser(matched);
-      return true;
-    }
-    return false;
+    return { success: false, message: 'Invalid credentials or account is locked.' };
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await cimsApi.logout();
+    } catch { }
     setCurrentUser(null);
     cimsApi.setCurrentUser(null);
   };
@@ -707,7 +793,22 @@ export function App() {
 
   const handleApproveTask = async (taskId: string, comments: string) => {
     try {
-      await cimsApi.approveWorkflowTask(taskId, comments, currentUser?.username || 'BRMGR_USER', currentUser?.role || 'BRMGR');
+      const res = await cimsApi.approveWorkflowTask(taskId, comments, currentUser?.username || 'BRMGR_USER', currentUser?.role || 'BRMGR');
+      // Optimistically update workflow tasks state immediately so the approved task immediately transitions out of the pending queue
+      setWorkflowTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? {
+              ...t,
+              status: (res?.workflowStatus || 'Approved') as any,
+              currentStep: res?.action === 'APPROVE_LEVEL1' ? 'Level 2 Review' : 'Completed',
+              candidateRole: res?.action === 'APPROVE_LEVEL1' ? (res?.candidateRole || t.candidateRole) : t.candidateRole,
+              completedAt: new Date().toISOString(),
+              remarks: comments || t.remarks,
+            }
+            : t
+        )
+      );
       await loadData();
     } catch (e: any) {
       alert(`Approval failed: ${e?.message || 'The approval could not be completed.'}`);
@@ -718,6 +819,13 @@ export function App() {
   const handleRejectTask = async (taskId: string, comments: string) => {
     try {
       await cimsApi.rejectWorkflowTask(taskId, comments, currentUser?.username || 'BRMGR_USER', currentUser?.role || 'BRMGR');
+      setWorkflowTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, status: 'Rejected' as any, currentStep: 'Rejected', remarks: comments || t.remarks }
+            : t
+        )
+      );
       await loadData();
     } catch (e: any) {
       alert(`Rejection failed: ${e?.message || 'The rejection could not be completed.'}`);
@@ -728,6 +836,13 @@ export function App() {
   const handleReturnTask = async (taskId: string, note: string) => {
     try {
       await cimsApi.returnWorkflowTask(taskId, note, currentUser?.username || 'BRMGR_USER', currentUser?.role || 'BRMGR');
+      setWorkflowTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, status: 'Returned' as any, currentStep: 'Returned to Maker', remarks: note || t.remarks }
+            : t
+        )
+      );
       await loadData();
     } catch (e: any) {
       alert(`Return failed: ${e?.message || 'The task could not be returned.'}`);
@@ -737,11 +852,26 @@ export function App() {
 
   const handleResubmitTask = async (taskId: string) => {
     await cimsApi.resubmitWorkflowTask(taskId, currentUser?.username || currentUser?.userId || 'CRO_USER');
+    setWorkflowTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? { ...t, status: 'Pending' as any, currentStep: 'Checker Review' }
+          : t
+      )
+    );
     await loadData();
   };
 
   const handleBulkApprove = async (taskIds: string[], comments: string) => {
+    const idSet = new Set(taskIds);
     await cimsApi.bulkApproveWorkflowTasks(taskIds, comments, currentUser?.username || 'BRMGR_USER', currentUser?.role || 'BRMGR');
+    setWorkflowTasks((prev) =>
+      prev.map((t) =>
+        idSet.has(t.id)
+          ? { ...t, status: 'Approved' as any, currentStep: 'Completed', completedAt: new Date().toISOString() }
+          : t
+      )
+    );
     await loadData();
   };
 
@@ -900,21 +1030,11 @@ export function App() {
     return true;
   }, [currentUser, activePage, activeScreenPermission]);
 
-  // If not logged in, render Login screen
-  if (!currentUser) {
-    return (
-      <LoginScreen
-        onLogin={handleLogin}
-        onSelectPersona={(persona) => { setCurrentUser(persona); cimsApi.setCurrentUser(persona); }}
-        availablePersonas={allUsersList}
-      />
-    );
-  }
-
   const unreadNotifs = notifications.filter((n) => n.status !== 'Sent').length;
 
   // Memoized Scoped Data Collections based on selectedSegment and currentUser role
   const effectiveSegment = useMemo(() => {
+    if (!currentUser) return selectedSegment || 'ALL';
     const isBankWideRole = ['EXEC', 'SRMGMT', 'SYSADMIN', 'AUDITOR', 'COMPLIANCE', 'RISK', 'MGRCOLLDOC', 'DISTDIR', 'BRMGR'].includes(currentUser.role);
     if (isBankWideRole) {
       return selectedSegment || 'ALL';
@@ -1004,6 +1124,15 @@ export function App() {
   const pendingApprovals = scopedWorkflowTasks.filter((t) => t.status === 'Pending').length;
   const openExceptions = scopedExceptions.filter((e) => e.status !== 'Resolved').length;
 
+  // If not logged in, render Login screen
+  if (!currentUser) {
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+      />
+    );
+  }
+
   return (
     <div className="h-screen bg-[#EFF5FB] flex flex-col font-sans text-[#101828] overflow-hidden">
       {/* TopBar */}
@@ -1057,6 +1186,19 @@ export function App() {
             <Breadcrumbs activePage={activePage} onNavigateHome={() => setActivePage('dashboard')} />
           </div>
 
+          {/* Data Load Error Banner (Audit Finding 68) */}
+          {dataLoadError && (
+            <div className="mx-6 mt-3 px-4 py-3 bg-red-50 border border-red-300 rounded-lg flex items-center justify-between text-xs text-red-900 shadow-xs">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold uppercase tracking-wider text-red-700 bg-red-100 px-2 py-0.5 rounded">Backend Connection Error</span>
+                <span>{dataLoadError}. Displaying preserved offline records. Actions requiring backend sync may be disabled.</span>
+              </div>
+              <button onClick={() => loadData()} className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium cursor-pointer">
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* Active Business Segment Scope Indicator */}
           {effectiveSegment !== 'ALL' && (
             <div className="mx-6 mt-3 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs text-blue-900 shadow-xs">
@@ -1093,245 +1235,247 @@ export function App() {
               </div>
             ) : (
               <>
-            {activePage === 'dashboard' && (
-              <DashboardContainer
-                currentUser={effectiveUserSession}
-                selectedSegment={selectedSegment}
-                onSelectSegment={setSelectedSegment}
-                customers={scopedCustomers}
-                facilities={scopedFacilities}
-                collaterals={scopedCollaterals}
-                policies={scopedPolicies}
-                exceptions={scopedExceptions}
-                workflowTasks={scopedWorkflowTasks}
-                documents={scopedDocuments}
-                links={scopedLinks}
-                segments={segments}
-                branches={branches}
-                systemParameters={systemParameters}
-                onNavigate={handleNavigate}
-                onApproveTask={handleApproveTask}
-                onRejectTask={handleRejectTask}
-              />
-            )}
+                {activePage === 'dashboard' && (
+                  <DashboardContainer
+                    currentUser={effectiveUserSession}
+                    selectedSegment={selectedSegment}
+                    onSelectSegment={setSelectedSegment}
+                    customers={scopedCustomers}
+                    facilities={scopedFacilities}
+                    collaterals={scopedCollaterals}
+                    policies={scopedPolicies}
+                    exceptions={scopedExceptions}
+                    workflowTasks={scopedWorkflowTasks}
+                    documents={scopedDocuments}
+                    links={scopedLinks}
+                    segments={segments}
+                    branches={branches}
+                    systemParameters={systemParameters}
+                    onNavigate={handleNavigate}
+                    onApproveTask={handleApproveTask}
+                    onRejectTask={handleRejectTask}
+                  />
+                )}
 
-            {activePage === 'customers' && (
-              <CustomerManager
-                customers={scopedCustomers}
-                facilities={scopedFacilities}
-                collaterals={scopedCollaterals}
-                policies={scopedPolicies}
-                documents={scopedDocuments}
-                segments={segments}
-                branches={branches}
-                currentUser={effectiveUserSession}
-                initialCustomerId={targetCustomerId}
-                onNavigate={handleNavigate}
-                onRegisterManualCustomer={handleRegisterManualCustomer}
-                onMaintainCustomer={handleMaintainCustomer}
-              />
-            )}
+                {activePage === 'customers' && (
+                  <CustomerManager
+                    customers={scopedCustomers}
+                    facilities={scopedFacilities}
+                    collaterals={scopedCollaterals}
+                    policies={scopedPolicies}
+                    documents={scopedDocuments}
+                    segments={segments}
+                    branches={branches}
+                    currentUser={effectiveUserSession}
+                    initialCustomerId={targetCustomerId}
+                    onNavigate={handleNavigate}
+                    onRegisterManualCustomer={handleRegisterManualCustomer}
+                    onMaintainCustomer={handleMaintainCustomer}
+                  />
+                )}
 
-            {activePage === 'facilities' && (
-              <FacilityManager
-                facilities={scopedFacilities}
-                customers={scopedCustomers}
-                collaterals={scopedCollaterals}
-                links={scopedLinks}
-                policies={scopedPolicies}
-                initialFacilityId={targetFacilityId}
-                currentUser={effectiveUserSession}
-                onNavigate={handleNavigate}
-              />
-            )}
+                {activePage === 'facilities' && (
+                  <FacilityManager
+                    facilities={scopedFacilities}
+                    customers={scopedCustomers}
+                    collaterals={scopedCollaterals}
+                    links={scopedLinks}
+                    policies={scopedPolicies}
+                    initialFacilityId={targetFacilityId}
+                    currentUser={effectiveUserSession}
+                    onNavigate={handleNavigate}
+                    onRefreshData={loadData}
+                  />
+                )}
 
-            {activePage === 'collateral' && (
-              <CollateralManager
-                collaterals={scopedCollaterals}
-                facilities={scopedFacilities}
-                links={scopedLinks}
-                policies={scopedPolicies}
-                documents={scopedDocuments}
-                exceptions={scopedExceptions}
-                taxonomies={taxonomies}
-                mandatoryDocRules={mandatoryDocRules}
-                segments={segments}
-                branches={branches}
-                customers={scopedCustomers}
-                systemParameters={systemParameters}
-                currentUser={effectiveUserSession}
-                initialCollateralId={targetCollateralId}
-                onNavigate={handleNavigate}
-                onRegisterCollateral={handleRegisterCollateral}
-                onAddLink={handleAddLink}
-                onRemoveLink={handleRemoveLink}
-                onValidateRelease={handleValidateRelease}
-                onInitiateTransfer={handleInitiateTransfer}
-                onMaintainCollateral={handleMaintainCollateral}
-              />
-            )}
+                {activePage === 'collateral' && (
+                  <CollateralManager
+                    collaterals={scopedCollaterals}
+                    facilities={scopedFacilities}
+                    links={scopedLinks}
+                    policies={scopedPolicies}
+                    documents={scopedDocuments}
+                    exceptions={scopedExceptions}
+                    taxonomies={taxonomies}
+                    mandatoryDocRules={mandatoryDocRules}
+                    segments={segments}
+                    branches={branches}
+                    customers={scopedCustomers}
+                    systemParameters={systemParameters}
+                    currentUser={effectiveUserSession}
+                    initialCollateralId={targetCollateralId}
+                    onNavigate={handleNavigate}
+                    onRegisterCollateral={handleRegisterCollateral}
+                    onAddLink={handleAddLink}
+                    onRemoveLink={handleRemoveLink}
+                    onValidateRelease={handleValidateRelease}
+                    onInitiateTransfer={handleInitiateTransfer}
+                    onMaintainCollateral={handleMaintainCollateral}
+                    onRefreshData={loadData}
+                  />
+                )}
 
-            {activePage === 'insurance' && (
-              <PolicyManager
-                policies={scopedPolicies}
-                endorsements={endorsements}
-                collaterals={scopedCollaterals}
-                customers={scopedCustomers}
-                insurers={insurers}
-                documents={scopedDocuments}
-                systemParameters={systemParameters}
-                taxonomies={taxonomies}
-                currentUser={effectiveUserSession}
-                initialPolicyId={targetPolicyId}
-                onNavigate={handleNavigate}
-                onCreatePolicyDraft={handleCreatePolicyDraft}
-                onSubmitPolicy={handleSubmitPolicy}
-                onAmendPolicy={handleAmendPolicy}
-                onRenewPolicy={handleRenewPolicy}
-                onEndorsePolicy={handleEndorsePolicy}
-                onReplacePolicy={handleReplacePolicy}
-                onCancelPolicy={handleCancelPolicy}
-                onClosePolicy={handleClosePolicy}
-                onReopenPolicy={handleReopenPolicy}
-                onReload={loadData}
-              />
-            )}
+                {activePage === 'insurance' && (
+                  <PolicyManager
+                    policies={scopedPolicies}
+                    endorsements={endorsements}
+                    collaterals={scopedCollaterals}
+                    customers={scopedCustomers}
+                    insurers={insurers}
+                    documents={scopedDocuments}
+                    systemParameters={systemParameters}
+                    taxonomies={taxonomies}
+                    currentUser={effectiveUserSession}
+                    initialPolicyId={targetPolicyId}
+                    onNavigate={handleNavigate}
+                    onCreatePolicyDraft={handleCreatePolicyDraft}
+                    onSubmitPolicy={handleSubmitPolicy}
+                    onAmendPolicy={handleAmendPolicy}
+                    onRenewPolicy={handleRenewPolicy}
+                    onEndorsePolicy={handleEndorsePolicy}
+                    onReplacePolicy={handleReplacePolicy}
+                    onCancelPolicy={handleCancelPolicy}
+                    onClosePolicy={handleClosePolicy}
+                    onReopenPolicy={handleReopenPolicy}
+                    onReload={loadData}
+                  />
+                )}
 
-            {activePage === 'approvals' && (
-              <MakerCheckerInbox
-                tasks={scopedWorkflowTasks}
-                delegations={delegations}
-                allUsers={allUsersList}
-                currentUser={effectiveUserSession}
-                customers={scopedCustomers}
-                facilities={scopedFacilities}
-                collaterals={scopedCollaterals}
-                policies={scopedPolicies}
-                documents={scopedDocuments}
-                links={scopedLinks}
-                exceptions={scopedExceptions}
-                branches={branches}
-                insurers={insurers}
-                onApproveTask={handleApproveTask}
-                onRejectTask={handleRejectTask}
-                onReturnTask={handleReturnTask}
-                onResubmitTask={handleResubmitTask}
-                onBulkApprove={handleBulkApprove}
-                onCreateDelegation={handleCreateDelegation}
-                onRevokeDelegation={handleRevokeDelegation}
-                onReload={loadData}
-              />
-            )}
+                {activePage === 'approvals' && (
+                  <MakerCheckerInbox
+                    tasks={scopedWorkflowTasks}
+                    delegations={delegations}
+                    allUsers={allUsersList}
+                    currentUser={effectiveUserSession}
+                    customers={scopedCustomers}
+                    facilities={scopedFacilities}
+                    collaterals={scopedCollaterals}
+                    policies={scopedPolicies}
+                    documents={scopedDocuments}
+                    links={scopedLinks}
+                    exceptions={scopedExceptions}
+                    branches={branches}
+                    insurers={insurers}
+                    onApproveTask={handleApproveTask}
+                    onRejectTask={handleRejectTask}
+                    onReturnTask={handleReturnTask}
+                    onResubmitTask={handleResubmitTask}
+                    onBulkApprove={handleBulkApprove}
+                    onCreateDelegation={handleCreateDelegation}
+                    onRevokeDelegation={handleRevokeDelegation}
+                    onReload={loadData}
+                  />
+                )}
 
-            {activePage === 'exceptions' && (
-              <ExceptionManager
-                exceptions={scopedExceptions}
-                currentUser={effectiveUserSession}
-                collaterals={scopedCollaterals}
-                facilities={scopedFacilities}
-                policies={scopedPolicies}
-                customers={scopedCustomers}
-                documents={scopedDocuments}
-                mandatoryDocRules={mandatoryDocRules}
-                insurers={insurers}
-                users={allUsersList}
-                initialExceptionId={targetExceptionId}
-                onResolveException={handleResolveException}
-                onEscalateException={handleEscalateException}
-                onScanNow={handleScanExceptions}
-                onNavigate={handleNavigate}
-                onRefreshData={loadData}
-              />
-            )}
+                {activePage === 'exceptions' && (
+                  <ExceptionManager
+                    exceptions={scopedExceptions}
+                    currentUser={effectiveUserSession}
+                    collaterals={scopedCollaterals}
+                    facilities={scopedFacilities}
+                    policies={scopedPolicies}
+                    customers={scopedCustomers}
+                    documents={scopedDocuments}
+                    mandatoryDocRules={mandatoryDocRules}
+                    insurers={insurers}
+                    users={allUsersList}
+                    initialExceptionId={targetExceptionId}
+                    onResolveException={handleResolveException}
+                    onEscalateException={handleEscalateException}
+                    onScanNow={handleScanExceptions}
+                    onNavigate={handleNavigate}
+                    onRefreshData={loadData}
+                  />
+                )}
 
-            {activePage === 'documents' && (
-              <DocumentRepository
-                documents={scopedDocuments}
-                collaterals={scopedCollaterals}
-                mandatoryDocRules={mandatoryDocRules}
-                currentUser={effectiveUserSession}
-                initialDocumentId={targetDocumentId}
-                onUploadDocument={handleUploadDocument}
-                onRefreshData={loadData}
-              />
-            )}
+                {activePage === 'documents' && (
+                  <DocumentRepository
+                    documents={scopedDocuments}
+                    collaterals={scopedCollaterals}
+                    mandatoryDocRules={mandatoryDocRules}
+                    currentUser={effectiveUserSession}
+                    initialDocumentId={targetDocumentId}
+                    onUploadDocument={handleUploadDocument}
+                    onRefreshData={loadData}
+                  />
+                )}
 
-            {activePage === 'reports' && (
-              <ReportCatalog
-                customers={scopedCustomers}
-                facilities={scopedFacilities}
-                collaterals={scopedCollaterals}
-                policies={scopedPolicies}
-                exceptions={scopedExceptions}
-                auditLogs={auditLogs}
-                scheduledReports={scheduledReports}
-                currentUser={effectiveUserSession}
-                onSaveScheduledReport={handleSaveScheduledReport}
-                documents={documents}
-                mandatoryDocRules={mandatoryDocRules}
-                insurers={insurers}
-                branches={branches}
-                segments={segments}
-              />
-            )}
+                {activePage === 'reports' && (
+                  <ReportCatalog
+                    customers={scopedCustomers}
+                    facilities={scopedFacilities}
+                    collaterals={scopedCollaterals}
+                    policies={scopedPolicies}
+                    exceptions={scopedExceptions}
+                    auditLogs={auditLogs}
+                    scheduledReports={scheduledReports}
+                    currentUser={effectiveUserSession}
+                    onSaveScheduledReport={handleSaveScheduledReport}
+                    documents={documents}
+                    mandatoryDocRules={mandatoryDocRules}
+                    insurers={insurers}
+                    branches={branches}
+                    segments={segments}
+                  />
+                )}
 
-            {activePage === 'admin' && (
-              <AdminPortal
-                segments={segments}
-                branches={branches}
-                permissions={permissions}
-                approvalConfigs={approvalConfigs}
-                reminderSchedules={reminderSchedules}
-                scheduledReports={scheduledReports}
-                insurers={insurers}
-                taxonomies={taxonomies}
-                mandatoryDocRules={mandatoryDocRules}
-                holidayCalendars={holidayCalendars}
-                systemParameters={systemParameters}
-                allUsers={allUsersList}
-                currentUser={effectiveUserSession}
-                onSaveSegment={handleSaveSegment}
-                onToggleSegmentStatus={handleToggleSegmentStatus}
-                onSavePermissionsBatch={handleSavePermissionsBatch}
-                onSaveUser={handleSaveUser}
-                onToggleUserStatus={handleToggleUserStatus}
-                onSaveBranch={handleSaveBranch}
-                onSaveApprovalConfig={handleSaveApprovalConfig}
-                onSaveReminderSchedule={handleSaveReminderSchedule}
-                onSaveParameter={handleSaveParameter}
-                onSaveInsurer={handleSaveInsurer}
-                onSaveTaxonomy={handleSaveTaxonomy}
-                onSaveMandatoryDocRule={handleSaveMandatoryDocRule}
-                onSaveHoliday={handleSaveHoliday}
-                onDeleteHoliday={handleDeleteHoliday}
-              />
-            )}
+                {activePage === 'admin' && (
+                  <AdminPortal
+                    segments={segments}
+                    branches={branches}
+                    permissions={permissions}
+                    approvalConfigs={approvalConfigs}
+                    reminderSchedules={reminderSchedules}
+                    scheduledReports={scheduledReports}
+                    insurers={insurers}
+                    taxonomies={taxonomies}
+                    mandatoryDocRules={mandatoryDocRules}
+                    holidayCalendars={holidayCalendars}
+                    systemParameters={systemParameters}
+                    allUsers={allUsersList}
+                    currentUser={effectiveUserSession}
+                    onSaveSegment={handleSaveSegment}
+                    onToggleSegmentStatus={handleToggleSegmentStatus}
+                    onSavePermissionsBatch={handleSavePermissionsBatch}
+                    onSaveUser={handleSaveUser}
+                    onToggleUserStatus={handleToggleUserStatus}
+                    onSaveBranch={handleSaveBranch}
+                    onSaveApprovalConfig={handleSaveApprovalConfig}
+                    onSaveReminderSchedule={handleSaveReminderSchedule}
+                    onSaveParameter={handleSaveParameter}
+                    onSaveInsurer={handleSaveInsurer}
+                    onSaveTaxonomy={handleSaveTaxonomy}
+                    onSaveMandatoryDocRule={handleSaveMandatoryDocRule}
+                    onSaveHoliday={handleSaveHoliday}
+                    onDeleteHoliday={handleDeleteHoliday}
+                  />
+                )}
 
-            {activePage === 'audit' && (
-              <AuditTrailViewer auditLogs={auditLogs} currentUser={effectiveUserSession} />
-            )}
+                {activePage === 'audit' && (
+                  <AuditTrailViewer auditLogs={auditLogs} currentUser={effectiveUserSession} />
+                )}
 
-            {activePage === 'notifications' && (
-              <NotificationManager
-                notifications={notifications}
-                currentUser={effectiveUserSession}
-                onTriggerScan={handleScanExceptions}
-              />
-            )}
+                {activePage === 'notifications' && (
+                  <NotificationManager
+                    notifications={notifications}
+                    currentUser={effectiveUserSession}
+                    onTriggerScan={handleScanExceptions}
+                  />
+                )}
 
-            {activePage === 'cbs-sim' && (
-              <CbsSimulator
-                customers={cbsCustomers}
-                facilities={cbsFacilities}
-                collaterals={cbsCollaterals}
-                syncLogs={cbsSyncLogs}
-                onSyncEntity={handleSyncEntity}
-                onSyncAll={handleSyncAll}
-                onSaveCustomer={handleSaveCbsCustomer}
-                onSaveFacility={handleSaveCbsFacility}
-                onSaveCollateral={handleSaveCbsCollateral}
-              />
-            )}
+                {activePage === 'cbs-sim' && (
+                  <CbsSimulator
+                    customers={cbsCustomers}
+                    facilities={cbsFacilities}
+                    collaterals={cbsCollaterals}
+                    syncLogs={cbsSyncLogs}
+                    onSyncEntity={handleSyncEntity}
+                    onSyncAll={handleSyncAll}
+                    onSaveCustomer={handleSaveCbsCustomer}
+                    onSaveFacility={handleSaveCbsFacility}
+                    onSaveCollateral={handleSaveCbsCollateral}
+                  />
+                )}
               </>
             )}
           </div>

@@ -43,17 +43,33 @@ public class WorkflowController {
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String makerId) {
-        // Return only tasks relevant to the current workflow inbox. A checker gets
-        // pending tasks assigned to their role or hierarchical jurisdiction; a maker also gets their own submissions.
+        // Return only tasks relevant to the current workflow inbox.
+        // A checker gets pending tasks assigned to their role or hierarchical jurisdiction (excluding their own maker submissions per Four-Eyes Principle and Level 1 tasks they already approved).
+        // A maker also gets their own submissions matching the effective status.
         LinkedHashMap<String, WorkflowTask> result = new LinkedHashMap<>();
+        String effectiveStatus = (status == null || status.isBlank()) ? "Pending" : status;
+
         if (role != null && !role.isBlank()) {
-            String effectiveStatus = (status == null || status.isBlank()) ? "Pending" : status;
             List<WorkflowTask> allTasks = workflowTaskRepository.findAll();
             for (WorkflowTask t : allTasks) {
                 if ("ALL".equalsIgnoreCase(effectiveStatus) || effectiveStatus.equalsIgnoreCase(t.getStatus())) {
-                    if (role.equalsIgnoreCase(t.getCandidateRole())
+                    boolean roleMatch = role.equalsIgnoreCase(t.getCandidateRole())
                             || roleHierarchyService.isAuthorizedToActOn(role, t.getCandidateRole())
-                            || "ADMIN".equalsIgnoreCase(role) || "SYSADMIN".equalsIgnoreCase(role)) {
+                            || "ADMIN".equalsIgnoreCase(role) || "SYSADMIN".equalsIgnoreCase(role);
+                    if (roleMatch) {
+                        // Four-Eyes check for checker inbox: if querying pending approvals, exclude maker's own submissions
+                        if ("Pending".equalsIgnoreCase(effectiveStatus) && makerId != null && !makerId.isBlank() && isSamePerson(t.getMakerId(), makerId)) {
+                            continue;
+                        }
+                        // Multi-level hierarchy check: if task is in Level 2 Review, exclude users who already approved Level 1
+                        if ("Level 2 Review".equalsIgnoreCase(t.getCurrentStep()) && makerId != null && !makerId.isBlank()) {
+                            List<ApprovalHistory> histories = approvalHistoryRepository.findByWorkflowTaskIdOrderByDecidedAtDesc(t.getId());
+                            boolean alreadyApprovedLevel1 = histories.stream().anyMatch(h ->
+                                    "Approved".equalsIgnoreCase(h.getDecision()) && isSamePerson(h.getActorId(), makerId));
+                            if (alreadyApprovedLevel1) {
+                                continue;
+                            }
+                        }
                         result.put(t.getId(), t);
                     }
                 }
@@ -61,13 +77,26 @@ public class WorkflowController {
         } else if (status != null && !status.isBlank()) {
             for (WorkflowTask t : workflowTaskRepository.findByStatus(status)) result.put(t.getId(), t);
         }
+
         if (makerId != null && !makerId.isBlank()) {
-            for (WorkflowTask t : workflowTaskRepository.findByMakerIdIgnoreCase(makerId)) result.put(t.getId(), t);
+            for (WorkflowTask t : workflowTaskRepository.findByMakerIdIgnoreCase(makerId)) {
+                if ("ALL".equalsIgnoreCase(effectiveStatus) || effectiveStatus.equalsIgnoreCase(t.getStatus())) {
+                    result.put(t.getId(), t);
+                }
+            }
         }
+
         if (role == null && (status == null || status.isBlank()) && (makerId == null || makerId.isBlank())) {
             return ResponseEntity.ok(workflowTaskRepository.findAll());
         }
         return ResponseEntity.ok(new java.util.ArrayList<>(result.values()));
+    }
+
+    private boolean isSamePerson(String id1, String id2) {
+        if (id1 == null || id2 == null) return false;
+        String a = id1.trim().toLowerCase().replace("_user", "");
+        String b = id2.trim().toLowerCase().replace("_user", "");
+        return a.equals(b);
     }
 
     @PostMapping("/tasks/{taskId}/approve")

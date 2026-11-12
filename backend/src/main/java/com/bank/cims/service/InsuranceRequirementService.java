@@ -29,6 +29,7 @@ public class InsuranceRequirementService {
     @Autowired private OwnershipDocumentRepository ownershipDocumentRepository;
     @Autowired private InsurancePolicyRepository insurancePolicyRepository;
     @Autowired private ConfigurationService configurationService;
+    @Autowired @org.springframework.context.annotation.Lazy private ValidationService validationService;
 
     /**
      * Authoritative calculation of insurance requirement and compliance for a collateral and policy.
@@ -228,19 +229,24 @@ public class InsuranceRequirementService {
     public boolean isInsuranceMandatory(String category, String type) {
         if (category == null || category.isBlank()) return true;
         try {
-            List<CollateralTaxonomy> all = collateralTaxonomyRepository.findAll();
+            // Finding 35: ONLY active taxonomy records can determine insurance requirements
+            List<CollateralTaxonomy> all = collateralTaxonomyRepository.findAll().stream()
+                    .filter(CollateralTaxonomy::isActive)
+                    .toList();
             if (all.isEmpty()) return true;
 
             String normCat = category.trim().toLowerCase(Locale.ROOT);
             String normType = type != null ? type.trim().toLowerCase(Locale.ROOT) : "";
 
             if (!normType.isBlank()) {
+                // Tier 1: Exact category + exact subCategory
                 for (CollateralTaxonomy t : all) {
                     if (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(normCat)
                             && t.getSubCategory() != null && t.getSubCategory().trim().equalsIgnoreCase(normType)) {
                         return t.isInsuranceMandatory();
                     }
                 }
+                // Tier 2: Canonical subCategory alias match
                 for (CollateralTaxonomy t : all) {
                     if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)
                             && t.getSubCategory() != null && isSubCategoryMatch(t.getSubCategory(), normType)) {
@@ -249,7 +255,10 @@ public class InsuranceRequirementService {
                 }
             }
 
-            List<CollateralTaxonomy> catTax = collateralTaxonomyRepository.findByCategoryIgnoreCase(category);
+            // Tier 3: Category level fallback
+            List<CollateralTaxonomy> catTax = all.stream()
+                    .filter(t -> t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat))
+                    .toList();
             if (!catTax.isEmpty()) {
                 return catTax.stream().anyMatch(CollateralTaxonomy::isInsuranceMandatory);
             }
@@ -262,11 +271,24 @@ public class InsuranceRequirementService {
     public String getMandatoryCoverageType(String category, String type) {
         if (category == null || category.isBlank()) return null;
         try {
-            List<CollateralTaxonomy> all = collateralTaxonomyRepository.findAll();
+            // Finding 35: ONLY active taxonomy records can determine mandatory coverage
+            List<CollateralTaxonomy> all = collateralTaxonomyRepository.findAll().stream()
+                    .filter(CollateralTaxonomy::isActive)
+                    .toList();
             String normCat = category.trim().toLowerCase(Locale.ROOT);
             String normType = type != null ? type.trim().toLowerCase(Locale.ROOT) : "";
 
             if (!normType.isBlank()) {
+                // Tier 1: Exact category + exact subCategory
+                for (CollateralTaxonomy t : all) {
+                    if (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(normCat)
+                            && t.getSubCategory() != null && t.getSubCategory().trim().equalsIgnoreCase(normType)) {
+                        if (t.getMandatoryCoverageType() != null && !t.getMandatoryCoverageType().isBlank()) {
+                            return t.getMandatoryCoverageType();
+                        }
+                    }
+                }
+                // Tier 2: Canonical subCategory alias match
                 for (CollateralTaxonomy t : all) {
                     if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)
                             && t.getSubCategory() != null && isSubCategoryMatch(t.getSubCategory(), normType)) {
@@ -276,6 +298,7 @@ public class InsuranceRequirementService {
                     }
                 }
             }
+            // Tier 3: Category level fallback
             for (CollateralTaxonomy t : all) {
                 if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)) {
                     if (t.getMandatoryCoverageType() != null && !t.getMandatoryCoverageType().isBlank()) {
@@ -388,14 +411,8 @@ public class InsuranceRequirementService {
                 continue;
             }
 
-            // Check duplicate active policy for same customer, collateral, and insurer
-            if (same(policy.getCustomerId(), p.getCustomerId()) &&
-                same(policy.getCollateralId(), p.getCollateralId()) &&
-                same(policy.getInsurerName(), p.getInsurerName())) {
-                dto.setDuplicateStatus("DUPLICATE_ACTIVE_POLICY");
-                dto.getValidationErrors().add("An active insurance policy (" + p.getPolicyNumber() + ") already exists for this customer, collateral, and insurer.");
-                return;
-            }
+            // Distinct active policies with the same insurer are permitted on the same collateral
+            // as long as the policy number is unique.
         }
         dto.setDuplicateStatus("UNIQUE");
     }
@@ -457,14 +474,12 @@ public class InsuranceRequirementService {
 
     private boolean docTypeMatches(String ruleType, String docType) {
         if (ruleType == null || docType == null) return false;
+        if (validationService != null) {
+            return validationService.docTypeMatches(ruleType, docType);
+        }
         String a = ruleType.trim().toLowerCase(Locale.ROOT);
         String b = docType.trim().toLowerCase(Locale.ROOT);
-        if (a.equals(b)) return true;
-        if (a.contains("schedule") && b.contains("schedule")) return true;
-        if (a.contains("receipt") && b.contains("receipt")) return true;
-        if (a.contains("certificate") && b.contains("certificate")) return true;
-        if (a.contains("policy") && b.contains("policy")) return true;
-        return a.contains(b) || b.contains(a);
+        return a.equals(b);
     }
 
     private boolean categoryMatches(String ruleCategory, Collateral collateral) {
@@ -509,17 +524,90 @@ public class InsuranceRequirementService {
         return earliest;
     }
 
+    /**
+     * Finding 34: Authoritative structured peril set compatibility.
+     * Evaluates all mandatory peril elements from mandatoryCoverage and ensures
+     * each is covered by policyCoverage wording or approved broad policy extensions.
+     */
     public boolean isCoverageTypeCompatible(String policyCoverage, String mandatoryCoverage) {
-        if (policyCoverage == null || mandatoryCoverage == null) return false;
-        String p = policyCoverage.trim().toLowerCase(Locale.ROOT);
-        String m = mandatoryCoverage.trim().toLowerCase(Locale.ROOT);
-        if (p.equals(m)) return true;
-        if (m.contains("fire") && (p.contains("fire") || p.contains("allied") || p.contains("property") || p.contains("all risk"))) return true;
-        if (m.contains("motor") && (p.contains("motor") || p.contains("vehicle") || p.contains("comprehensive"))) return true;
-        if (m.contains("machin") && (p.contains("machin") || p.contains("all-risk") || p.contains("all risk") || p.contains("comprehensive"))) return true;
-        if (m.contains("merchandise") && (p.contains("fire") || p.contains("burglary") || p.contains("combustion") || p.contains("merchandise") || p.contains("inventory"))) return true;
-        if (m.contains("comprehensive") && (p.contains("comprehensive") || p.contains("all risk") || p.contains("all-risk"))) return true;
-        return p.contains(m) || m.contains(p);
+        if (mandatoryCoverage == null || mandatoryCoverage.isBlank() || "None".equalsIgnoreCase(mandatoryCoverage.trim())) {
+            return true;
+        }
+        if (policyCoverage == null || policyCoverage.isBlank()) {
+            return false;
+        }
+
+        String actual = policyCoverage.trim().toLowerCase(Locale.ROOT);
+        String mandatory = mandatoryCoverage.trim().toLowerCase(Locale.ROOT);
+
+        if (actual.equals(mandatory)) {
+            return true;
+        }
+
+        boolean actualIsComprehensiveAllRisk = (actual.contains("all-risk") || actual.contains("all risk") || actual.contains("property all risk") || actual.contains("commercial all risk"))
+                && !actual.contains("contractor") && !actual.contains("machinery");
+
+        Set<String> requiredPerils = new LinkedHashSet<>();
+        if (mandatory.contains("fire")) requiredPerils.add("FIRE");
+        if (mandatory.contains("lightning")) requiredPerils.add("LIGHTNING");
+        if (mandatory.contains("burglary")) requiredPerils.add("BURGLARY");
+        if (mandatory.contains("theft")) requiredPerils.add("THEFT");
+        if (mandatory.contains("combustion")) requiredPerils.add("COMBUSTION");
+        if (mandatory.contains("machin") || mandatory.contains("breakdown")) requiredPerils.add("MACHINERY_BREAKDOWN");
+        if (mandatory.contains("motor") || mandatory.contains("vehicle")) requiredPerils.add("COMPREHENSIVE_MOTOR");
+        if (mandatory.contains("livestock") || mandatory.contains("mortality")) requiredPerils.add("LIVESTOCK_MORTALITY");
+        if (mandatory.contains("crop")) requiredPerils.add("CROP_PROTECTION");
+        if (mandatory.contains("warehouse")) requiredPerils.add("WAREHOUSE_ALL_RISK");
+        if (mandatory.contains("contractor") || mandatory.contains("car")) requiredPerils.add("CONTRACTOR_ALL_RISK");
+
+        if (requiredPerils.isEmpty()) {
+            return actual.equals(mandatory);
+        }
+
+        for (String peril : requiredPerils) {
+            boolean satisfied = false;
+            switch (peril) {
+                case "FIRE":
+                    satisfied = actual.contains("fire") || actual.contains("allied") || actualIsComprehensiveAllRisk;
+                    break;
+                case "LIGHTNING":
+                    satisfied = actual.contains("lightning") || actual.contains("allied") || actualIsComprehensiveAllRisk;
+                    break;
+                case "BURGLARY":
+                    satisfied = actual.contains("burglary") || actualIsComprehensiveAllRisk;
+                    break;
+                case "THEFT":
+                    satisfied = actual.contains("theft") || actual.contains("burglary") || actualIsComprehensiveAllRisk;
+                    break;
+                case "COMBUSTION":
+                    satisfied = actual.contains("combustion") || actualIsComprehensiveAllRisk;
+                    break;
+                case "MACHINERY_BREAKDOWN":
+                    satisfied = actual.contains("breakdown") || actual.contains("machin") || actual.contains("engineering")
+                            || (actual.contains("contractor") && actual.contains("machin"));
+                    break;
+                case "COMPREHENSIVE_MOTOR":
+                    satisfied = (actual.contains("motor") || actual.contains("vehicle")) && actual.contains("comprehensive");
+                    break;
+                case "LIVESTOCK_MORTALITY":
+                    satisfied = actual.contains("livestock") || actual.contains("mortality");
+                    break;
+                case "CROP_PROTECTION":
+                    satisfied = actual.contains("crop");
+                    break;
+                case "WAREHOUSE_ALL_RISK":
+                    satisfied = actual.contains("warehouse") || actualIsComprehensiveAllRisk;
+                    break;
+                case "CONTRACTOR_ALL_RISK":
+                    satisfied = actual.contains("contractor") || actual.contains("car ") || actual.startsWith("car") || actual.contains("engineering");
+                    break;
+            }
+            if (!satisfied) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private boolean isCategoryMatch(String catA, String catB) {

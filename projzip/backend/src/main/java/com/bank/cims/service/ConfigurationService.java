@@ -27,6 +27,8 @@ public class ConfigurationService {
     @Autowired private ApprovedInsurerRepository approvedInsurerRepository;
     @Autowired private MandatoryDocumentRuleRepository mandatoryDocumentRuleRepository;
     @Autowired private RolePermissionRepository rolePermissionRepository;
+    @Autowired private CollateralTaxonomyRepository collateralTaxonomyRepository;
+    @Autowired private CollateralRepository collateralRepository;
     @Autowired @Lazy private CimsService cimsService;
 
     private final Map<String, String> cache = new ConcurrentHashMap<>();
@@ -60,7 +62,9 @@ public class ConfigurationService {
         Map.entry("escalation_overdue_start_days","10"),
         Map.entry("escalation_overdue_interval_days","15"),
         Map.entry("exception_scan_enabled","true"),
-        Map.entry("exception_scan_interval_minutes","60")
+        Map.entry("exception_scan_interval_minutes","60"),
+        Map.entry("charge_deduction_basis","CBS_BALANCE"),
+        Map.entry("insurance_adequacy_formula_mode","TWO_TIER")
     );
 
     @PostConstruct
@@ -117,12 +121,17 @@ public class ConfigurationService {
     public int getEscalationOverdueIntervalDays(){return Math.max(1,getInt("escalation_overdue_interval_days",15));}
     public boolean isExceptionScanEnabled(){return getBoolean("exception_scan_enabled",true);}
     public int getExceptionScanIntervalMinutes(){return Math.max(1,getInt("exception_scan_interval_minutes",60));}
+    public String getChargeDeductionBasis(){return getString("charge_deduction_basis","CBS_BALANCE");}
+    public String getInsuranceAdequacyFormulaMode(){return getString("insurance_adequacy_formula_mode","TWO_TIER");}
 
     public List<SystemParameter> getAllParameters(){ List<SystemParameter> r=systemParameterRepository.findAll(); r.sort(Comparator.comparing(SystemParameter::getParamKey,String.CASE_INSENSITIVE_ORDER)); return r; }
 
     public synchronized SystemParameter saveParameter(SystemParameter incoming,String userId){
         if(incoming==null||incoming.getParamKey()==null||incoming.getParamKey().isBlank()) throw new IllegalArgumentException("Parameter key is mandatory.");
         if(incoming.getParamValue()==null||incoming.getParamValue().isBlank()) throw new IllegalArgumentException("Parameter value is mandatory.");
+        if (userId != null && !userId.isBlank() && !"SYSADMIN".equalsIgnoreCase(userId)) {
+            cimsService.assertUserPermission(userId, "Administration", "EDIT");
+        }
         String key=normalize(incoming.getParamKey()), value=incoming.getParamValue().trim();
         validate(key,value);
         Optional<SystemParameter> oldOpt=systemParameterRepository.findById(key);
@@ -238,6 +247,62 @@ public class ConfigurationService {
         if(approvedInsurerRepository.count()==0 && isApprovedInsurerRequired()) warnings.add("Approved insurer list is empty while approved_insurer_required=true.");
         if(mandatoryDocumentRuleRepository.count()==0 && areMandatoryDocumentRulesEnabled()) warnings.add("Mandatory document enforcement is enabled but no document rules exist.");
         if(rolePermissionRepository.count()==0) warnings.add("Role permission matrix is empty.");
+
+        // Finding 35: Admin health check validates taxonomy rules vs live collateral
+        if(collateralTaxonomyRepository != null) {
+            List<CollateralTaxonomy> allTax = collateralTaxonomyRepository.findAll();
+            if (allTax.isEmpty()) {
+                warnings.add("Collateral taxonomy is empty; live assets cannot determine insurance mandates.");
+            } else {
+                // Check for duplicate/conflicting active taxonomy definitions
+                Map<String, Long> activeCounts = allTax.stream()
+                        .filter(CollateralTaxonomy::isActive)
+                        .collect(java.util.stream.Collectors.groupingBy(
+                                t -> (t.getCategory() != null ? t.getCategory().trim().toLowerCase() : "") + "||" +
+                                     (t.getSubCategory() != null ? t.getSubCategory().trim().toLowerCase() : ""),
+                                java.util.stream.Collectors.counting()));
+                activeCounts.forEach((key, count) -> {
+                    if (count > 1) {
+                        String[] parts = key.split("\\|\\|");
+                        warnings.add("Conflicting active taxonomy rules detected for Category '" + (parts.length > 0 ? parts[0] : "") +
+                                "' / SubCategory '" + (parts.length > 1 ? parts[1] : "") + "' (" + count + " active rules).");
+                    }
+                });
+
+                // Check live collaterals for references to deactivated or missing taxonomy entries
+                if (collateralRepository != null) {
+                    List<Collateral> liveCols = collateralRepository.findAll().stream()
+                            .filter(c -> "Active".equalsIgnoreCase(c.getStatus()) || "Pending Approval".equalsIgnoreCase(c.getStatus()))
+                            .toList();
+                    int liveInactiveRef = 0;
+                    for (Collateral c : liveCols) {
+                        String cat = c.getCategory() != null ? c.getCategory().trim().toLowerCase() : "";
+                        String typ = c.getType() != null ? c.getType().trim().toLowerCase() : "";
+                        boolean matchesActive = allTax.stream().anyMatch(t -> t.isActive() &&
+                                (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(cat)) &&
+                                (typ.isBlank() || (t.getSubCategory() != null && (t.getSubCategory().trim().equalsIgnoreCase(typ) ||
+                                 t.getSubCategory().toLowerCase().contains(typ) || typ.contains(t.getSubCategory().toLowerCase())))));
+
+                        if (!matchesActive) {
+                            boolean matchesInactive = allTax.stream().anyMatch(t -> !t.isActive() &&
+                                    (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(cat)));
+                            if (matchesInactive) {
+                                liveInactiveRef++;
+                                warnings.add("Collateral " + c.getCode() + " references a DEACTIVATED taxonomy category/type ('" +
+                                        c.getCategory() + "' / '" + c.getType() + "'). Live collateral requires an active taxonomy rule.");
+                            } else {
+                                warnings.add("Collateral " + c.getCode() + " references an UNCONFIGURED/MISSING taxonomy rule ('" +
+                                        c.getCategory() + "' / '" + c.getType() + "').");
+                            }
+                        }
+                    }
+                    if (liveInactiveRef == 0 && activeCounts.values().stream().noneMatch(c -> c > 1)) {
+                        healthy.add("All live collaterals map to active taxonomy rules without conflicts.");
+                    }
+                }
+            }
+        }
+
         Map<String,Object> h=new LinkedHashMap<>(); h.put("status",warnings.isEmpty()?"HEALTHY":"WARNING"); h.put("healthyCount",healthy.size()); h.put("warningCount",warnings.size()); h.put("healthyChecks",healthy); h.put("warnings",warnings); h.put("effectiveConfiguration",getEffectiveConfiguration()); h.put("usageMap",getConfigurationUsageMap()); return h;
     }
 }

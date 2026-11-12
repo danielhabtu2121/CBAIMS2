@@ -25,6 +25,9 @@ public class MandatoryDocumentRule {
 
     private boolean mandatory = true;
 
+    @Column(name = "exception_allowed")
+    private boolean exceptionAllowed = true;
+
     private boolean active = true;
 
     public MandatoryDocumentRule() {}
@@ -51,6 +54,8 @@ public class MandatoryDocumentRule {
     public void setApplicabilityCondition(String applicabilityCondition) { this.applicabilityCondition = applicabilityCondition; }
     public boolean isMandatory() { return mandatory; }
     public void setMandatory(boolean mandatory) { this.mandatory = mandatory; }
+    public boolean isExceptionAllowed() { return exceptionAllowed; }
+    public void setExceptionAllowed(boolean exceptionAllowed) { this.exceptionAllowed = exceptionAllowed; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 }

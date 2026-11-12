@@ -35,10 +35,29 @@ public class DocumentVersionControlIntegrationTest {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @Autowired
+    private com.bank.cims.repository.UserRepository userRepository;
+
     private String testCollateralId;
 
     @BeforeEach
     public void setUp() {
+        String[] users = {"COLLDOCOFF_TEST", "OFFICER_A", "OFFICER_B", "VALUER_1", "VALUER_2", "VALUER_3"};
+        for (String uId : users) {
+            if (userRepository.findById(uId).isEmpty()) {
+                com.bank.cims.model.User u = new com.bank.cims.model.User();
+                u.setId(uId);
+                u.setUsername(uId);
+                u.setFullName(uId);
+                u.setPassword("password");
+                u.setRole("COLLDOCOFF");
+                u.setBranch("Main Branch");
+                u.setSegment("Corporate Banking");
+                u.setActive(true);
+                userRepository.save(u);
+            }
+        }
+
         String uid = UUID.randomUUID().toString().substring(0, 8);
         Collateral col = new Collateral();
         col.setId("col-ver-" + uid);

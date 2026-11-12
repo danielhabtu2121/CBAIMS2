@@ -1,9 +1,13 @@
 package com.bank.cims.model;
 
+import com.bank.cims.config.StringOrArrayDeserializer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "cims_branches")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Branch {
     @Id
     private String id;
@@ -24,6 +28,7 @@ public class Branch {
     private String areaOffice;
 
     @Column(name = "segment_ids", columnDefinition = "TEXT")
+    @JsonDeserialize(using = StringOrArrayDeserializer.class)
     private String segmentIds;
     
     @Column(name = "is_active")

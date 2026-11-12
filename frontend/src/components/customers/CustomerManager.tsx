@@ -360,9 +360,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActive360Tab(tab.id as any)}
-                  className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors shrink-0 ${
-                    active360Tab === tab.id ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`pb-2.5 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors shrink-0 ${active360Tab === tab.id ? 'border-[#D48806] text-[#00205B] font-bold' : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -487,10 +486,10 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                         ) : (
                           currentCollaterals.map((c) => {
                             const net = c.valuationAmount * (1.0 - ((c.haircut || 0) / 100.0));
-                            const colPolicy = currentPolicies.find((p) => 
+                            const colPolicy = currentPolicies.find((p) =>
                               (p.collateralId && c.id && p.collateralId.trim().toLowerCase() === c.id.trim().toLowerCase()) ||
                               (p.collateralId && c.code && p.collateralId.trim().toLowerCase() === c.code.trim().toLowerCase())
-                            ) || policies.find((p) => 
+                            ) || policies.find((p) =>
                               (p.collateralId && c.id && p.collateralId.trim().toLowerCase() === c.id.trim().toLowerCase()) ||
                               (p.collateralId && c.code && p.collateralId.trim().toLowerCase() === c.code.trim().toLowerCase())
                             );
@@ -564,69 +563,69 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                       <h4 className="font-bold text-[#101828] text-xs">Facility-Collateral Allocations</h4>
                       <div className="overflow-x-auto w-full max-w-full">
                         <table className="w-full text-left text-xs min-w-[700px]">
-                        <thead className="text-[#5B6472] font-semibold border-b border-[#E2E8F0] pb-1">
-                          <tr>
-                            <th className="p-1.5">Facility Ref / Line</th>
-                            <th className="p-1.5">Collateral</th>
-                            <th className="p-1.5">Linkage Type</th>
-                            <th className="p-1.5 text-right">Allocated Security Amount</th>
-                            <th className="p-1.5">Status</th>
-                            <th className="p-1.5 text-right">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#E2E8F0]">
-                          {currentLinks.map(lnk => (
-                            <tr key={lnk.id} className="hover:bg-white/80 group">
-                              <td className="p-1.5 font-semibold">
-                                <button
-                                  onClick={() => {
-                                    if (onNavigate) {
-                                      setShow360Modal(false);
-                                      onNavigate('facilities', { facilityId: lnk.facilityId || lnk.loanAccountId, id: lnk.facilityId || lnk.loanAccountId });
-                                    }
-                                  }}
-                                  className="font-bold text-blue-700 hover:text-blue-900 underline inline-flex items-center gap-1 cursor-pointer"
-                                  title="Click to view facility"
-                                >
-                                  <span>{lnk.facilityId || lnk.loanAccountId}</span>
-                                  <ArrowUpRight className="w-3 h-3 opacity-60" />
-                                </button>
-                              </td>
-                              <td className="p-1.5">
-                                <button
-                                  onClick={() => {
-                                    if (onNavigate) {
-                                      setShow360Modal(false);
-                                      onNavigate('collateral', { collateralId: lnk.collateralId, id: lnk.collateralId });
-                                    }
-                                  }}
-                                  className="font-bold text-blue-700 hover:text-blue-900 underline inline-flex items-center gap-1 cursor-pointer font-mono"
-                                  title="Click to view collateral"
-                                >
-                                  <span>{lnk.collateralId}</span>
-                                  <ArrowUpRight className="w-3 h-3 opacity-60" />
-                                </button>
-                              </td>
-                              <td className="p-1.5">{lnk.linkageType || 'Primary'}</td>
-                              <td className="p-1.5 text-right tabular-nums font-semibold">ETB {(lnk.linkedAmount || lnk.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="p-1.5"><StatusChip label={lnk.status || 'Active'} /></td>
-                              <td className="p-1.5 text-right">
-                                <button
-                                  onClick={() => {
-                                    if (onNavigate) {
-                                      setShow360Modal(false);
-                                      onNavigate('collateral', { collateralId: lnk.collateralId, id: lnk.collateralId });
-                                    }
-                                  }}
-                                  className="btn-ghost py-0.5 px-1.5 text-[10px] text-blue-700 hover:text-blue-900 border border-blue-200 rounded inline-flex items-center gap-0.5"
-                                >
-                                  Asset <ArrowUpRight className="w-2.5 h-2.5" />
-                                </button>
-                              </td>
+                          <thead className="text-[#5B6472] font-semibold border-b border-[#E2E8F0] pb-1">
+                            <tr>
+                              <th className="p-1.5">Facility Ref / Line</th>
+                              <th className="p-1.5">Collateral</th>
+                              <th className="p-1.5">Linkage Type</th>
+                              <th className="p-1.5 text-right">Allocated Security Amount</th>
+                              <th className="p-1.5">Status</th>
+                              <th className="p-1.5 text-right">Action</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-[#E2E8F0]">
+                            {currentLinks.map(lnk => (
+                              <tr key={lnk.id} className="hover:bg-white/80 group">
+                                <td className="p-1.5 font-semibold">
+                                  <button
+                                    onClick={() => {
+                                      if (onNavigate) {
+                                        setShow360Modal(false);
+                                        onNavigate('facilities', { facilityId: lnk.facilityId || lnk.loanAccountId, id: lnk.facilityId || lnk.loanAccountId });
+                                      }
+                                    }}
+                                    className="font-bold text-blue-700 hover:text-blue-900 underline inline-flex items-center gap-1 cursor-pointer"
+                                    title="Click to view facility"
+                                  >
+                                    <span>{lnk.facilityId || lnk.loanAccountId}</span>
+                                    <ArrowUpRight className="w-3 h-3 opacity-60" />
+                                  </button>
+                                </td>
+                                <td className="p-1.5">
+                                  <button
+                                    onClick={() => {
+                                      if (onNavigate) {
+                                        setShow360Modal(false);
+                                        onNavigate('collateral', { collateralId: lnk.collateralId, id: lnk.collateralId });
+                                      }
+                                    }}
+                                    className="font-bold text-blue-700 hover:text-blue-900 underline inline-flex items-center gap-1 cursor-pointer font-mono"
+                                    title="Click to view collateral"
+                                  >
+                                    <span>{lnk.collateralId}</span>
+                                    <ArrowUpRight className="w-3 h-3 opacity-60" />
+                                  </button>
+                                </td>
+                                <td className="p-1.5">{lnk.linkageType || 'Primary'}</td>
+                                <td className="p-1.5 text-right tabular-nums font-semibold">ETB {(lnk.linkedAmount || lnk.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="p-1.5"><StatusChip label={lnk.status || 'Active'} /></td>
+                                <td className="p-1.5 text-right">
+                                  <button
+                                    onClick={() => {
+                                      if (onNavigate) {
+                                        setShow360Modal(false);
+                                        onNavigate('collateral', { collateralId: lnk.collateralId, id: lnk.collateralId });
+                                      }
+                                    }}
+                                    className="btn-ghost py-0.5 px-1.5 text-[10px] text-blue-700 hover:text-blue-900 border border-blue-200 rounded inline-flex items-center gap-0.5"
+                                  >
+                                    Asset <ArrowUpRight className="w-2.5 h-2.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   )}
@@ -655,15 +654,15 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                         <tr><td colSpan={10} className="p-6 text-center text-[#5B6472]">No insurance policies found for this customer or pledged assets.</td></tr>
                       ) : (
                         currentPolicies.map((p) => {
-                          const matchedCol = currentCollaterals.find(c => 
+                          const matchedCol = currentCollaterals.find(c =>
                             (c.id && p.collateralId && c.id.trim().toLowerCase() === p.collateralId.trim().toLowerCase()) ||
                             (c.code && p.collateralId && c.code.trim().toLowerCase() === p.collateralId.trim().toLowerCase())
-                          ) || collaterals.find(c => 
+                          ) || collaterals.find(c =>
                             (c.id && p.collateralId && c.id.trim().toLowerCase() === p.collateralId.trim().toLowerCase()) ||
                             (c.code && p.collateralId && c.code.trim().toLowerCase() === p.collateralId.trim().toLowerCase())
                           );
-                          const isAdequate = matchedCol && matchedCol.valuationAmount > 0 
-                            ? (p.insuredAmount || 0) >= matchedCol.valuationAmount 
+                          const isAdequate = matchedCol && matchedCol.valuationAmount > 0
+                            ? (p.insuredAmount || 0) >= matchedCol.valuationAmount
                             : null;
 
                           return (
@@ -927,16 +926,16 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
 
               {/* Linked Collateral Info */}
               {(() => {
-                const matchedCol = currentCollaterals.find(c => 
+                const matchedCol = currentCollaterals.find(c =>
                   (c.id && selected360Policy.collateralId && c.id.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase()) ||
                   (c.code && selected360Policy.collateralId && c.code.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase())
-                ) || collaterals.find(c => 
+                ) || collaterals.find(c =>
                   (c.id && selected360Policy.collateralId && c.id.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase()) ||
                   (c.code && selected360Policy.collateralId && c.code.trim().toLowerCase() === selected360Policy.collateralId.trim().toLowerCase())
                 );
                 if (!matchedCol) return null;
-                const covPct = matchedCol.valuationAmount > 0 
-                  ? ((selected360Policy.insuredAmount || 0) / matchedCol.valuationAmount) * 100 
+                const covPct = matchedCol.valuationAmount > 0
+                  ? ((selected360Policy.insuredAmount || 0) / matchedCol.valuationAmount) * 100
                   : 0;
                 return (
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">

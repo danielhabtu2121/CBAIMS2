@@ -41,12 +41,15 @@ import {
   EntryTimeExceptionRequest,
   CollateralFacilityLinkDto,
   CollateralCandidateDto,
+  FacilityCandidateDto,
   CollateralSecuredFacilitiesSummaryDto,
   FacilityCollateralSummaryDto,
   RelationshipRequestDto,
   RelationshipValidationResultDto,
   LoanCollateralLinkHistoryDto,
   CbsRelationshipReconciliationDto,
+  SecondDegreeValidationResult,
+  DegreeDetailsDto,
 } from '../types';
 
 const API_BASE = (import.meta as any).env?.VITE_CIMS_API_BASE || '/api';
@@ -55,16 +58,41 @@ function getStoredSession(): any {
   try { return JSON.parse(localStorage.getItem('cims.currentUser') || 'null'); } catch { return null; }
 }
 
-function authHeaders(): Record<string,string> {
-  const session=getStoredSession();
-  return { 'X-User-Id': session?.userId || session?.username || '', 'X-User-Role': session?.role || '' };
+function authHeaders(): Record<string, string> {
+  const session = getStoredSession();
+  const token = session?.token || localStorage.getItem('cims.token');
+  const headers: Record<string, string> = {};
+  if (session?.userId || session?.username) {
+    headers['X-User-Id'] = session.userId || session.username;
+  }
+  if (session?.role) {
+    headers['X-User-Role'] = session.role;
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
-function rememberSession(user: any) {
-  try { localStorage.setItem('cims.currentUser', JSON.stringify(user)); } catch {}
+function rememberSession(user: any, token?: string) {
+  try {
+    const sessionToSave = { ...user };
+    if (token) {
+      sessionToSave.token = token;
+      localStorage.setItem('cims.token', token);
+    } else if (user?.token) {
+      localStorage.setItem('cims.token', user.token);
+    }
+    localStorage.setItem('cims.currentUser', JSON.stringify(sessionToSave));
+  } catch { }
 }
 
-function clearSession() { try { localStorage.removeItem('cims.currentUser'); } catch {} }
+function clearSession() {
+  try {
+    localStorage.removeItem('cims.currentUser');
+    localStorage.removeItem('cims.token');
+  } catch { }
+}
 
 let stateInFlight: Promise<FullCimsState> | null = null;
 let stateCache: FullCimsState | null = null;
@@ -126,19 +154,74 @@ export interface FullCimsState {
 }
 
 export const cimsApi = {
-  async login(username: string, password = 'password123'): Promise<{ success: boolean; user?: any; token?: string; message?: string }> {
+  async login(identifier: string, password = 'password123'): Promise<{ success: boolean; user?: any; token?: string; message?: string; sessionTimeoutMinutes?: number }> {
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ identifier, password }),
       });
       const data = await res.json();
-      if (data?.success && data?.user) rememberSession(data.user);
+      if (data?.success && data?.user) {
+        const token = data.token;
+        rememberSession({ ...data.user, token }, token);
+      }
       return data;
     } catch (e: any) {
       return { success: false, message: e.message || 'Login request failed' };
     }
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+    } catch { }
+    clearSession();
+  },
+
+  async forgotPassword(identifier: string): Promise<{ success: boolean; message: string; simulationResetToken?: string }> {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier }),
+    });
+    return await res.json();
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword }),
+    });
+    return await res.json();
+  },
+
+  async getPasswordPolicy(): Promise<{
+    minLength: number;
+    requireSpecial: boolean;
+    requireUppercase: boolean;
+    requireDigit: boolean;
+    maxFailedAttempts: number;
+    lockoutDurationMinutes: number;
+    sessionTimeoutMinutes: number;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE}/auth/policy`);
+      if (res.ok) return await res.json();
+    } catch { }
+    return {
+      minLength: 8,
+      requireSpecial: true,
+      requireUppercase: true,
+      requireDigit: true,
+      maxFailedAttempts: 5,
+      lockoutDurationMinutes: 15,
+      sessionTimeoutMinutes: 15,
+    };
   },
 
   setCurrentUser(user: any | null) { if (user) rememberSession(user); else clearSession(); },
@@ -166,84 +249,48 @@ export const cimsApi = {
 
   // Convenience entity getters (queries state or individual endpoints)
   async getCustomers(): Promise<Customer[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.customers || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.customers || [];
   },
 
   async getFacilities(): Promise<LoanAccount[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.facilities || state.loans || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.facilities || state.loans || [];
   },
 
   async getCollaterals(): Promise<Collateral[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.collaterals || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.collaterals || [];
   },
 
   async getLinks(): Promise<LoanCollateralLink[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.links || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.links || [];
   },
 
   async getPolicies(): Promise<InsurancePolicy[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.policies || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.policies || [];
   },
 
   async getEndorsements(): Promise<PolicyEndorsement[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.endorsements || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.endorsements || [];
   },
 
   async getDocuments(): Promise<OwnershipDocument[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.documents || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.documents || [];
   },
 
   async getExceptions(): Promise<CimsException[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.exceptions || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.exceptions || [];
   },
 
   async getNotifications(): Promise<NotificationItem[]> {
-    try {
-      const state = await this.fetchFullState();
-      return state.notifications || [];
-    } catch {
-      return [];
-    }
+    const state = await this.fetchFullState();
+    return state.notifications || [];
   },
 
   async getAuditLogs(): Promise<AuditLog[]> {
@@ -1112,38 +1159,48 @@ export const cimsApi = {
   },
 
   // Admin Configuration
-  async saveSegment(seg: Partial<BusinessSegment>, userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/segments/save?adminUserId=${encodeURIComponent(userId)}`, {method:'POST',body:JSON.stringify(seg)}); },
-  async saveUser(user: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/users/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(user)}); },
-  async saveBranch(branch: Partial<Branch>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/branches/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(branch)}); },
-  async saveApprovalConfig(config: Partial<ApprovalHierarchyConfig>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/approval-configs/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(config)}); },
-  async saveReminderSchedule(schedule: Partial<ReminderSchedule>, adminUserId = 'SYSADMIN'): Promise<ReminderSchedule> { return requestJson<ReminderSchedule>(`${API_BASE}/admin/reminder-schedules/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(schedule)}); },
-  async saveScheduledReport(report: Partial<ScheduledReport>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/scheduled-reports/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(report)}); },
-  async saveSystemParameter(param: Partial<SystemParameter>, adminUserId = 'SYSADMIN'): Promise<SystemParameter> { return requestJson<SystemParameter>(`${API_BASE}/admin/parameters/save?userId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(param)}); },
-  async saveApprovedInsurer(insurer: Partial<ApprovedInsurer>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/insurers/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(insurer)}); },
-  async saveRolePermission(permission: Partial<RolePermission>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/permissions/save?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(permission)}); },
-  async saveRolePermissionsBatch(permissions: RolePermission[], adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/permissions/save-batch?adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(permissions)}); },
-  async saveCollateralTaxonomy(taxonomy: Partial<CollateralTaxonomy>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/taxonomy/save?userId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(taxonomy)}); },
-  async saveMandatoryDocRule(rule: Partial<MandatoryDocumentRule>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/document-rules/save?userId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(rule)}); },
-  async saveHolidayCalendar(holiday: Partial<HolidayCalendar>, adminUserId = 'SYSADMIN'): Promise<HolidayCalendar> { return requestJson<HolidayCalendar>(`${API_BASE}/admin/holidays/save?userId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(holiday)}); },
-  async deleteHolidayCalendar(holidayId: string, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/holidays/${encodeURIComponent(holidayId)}/delete?userId=${encodeURIComponent(adminUserId)}`, {method:'POST'}); },
+  async saveSegment(seg: Partial<BusinessSegment>, userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/segments/save?adminUserId=${encodeURIComponent(userId)}`, { method: 'POST', body: JSON.stringify(seg) }); },
+  async saveUser(user: any, adminUserId = 'SYSADMIN'): Promise<any> {
+    const payload = {
+      ...user,
+      fullName: user.fullName || user.name || user.username,
+      segmentIds: Array.isArray(user.segmentIds) ? user.segmentIds.join(',') : user.segmentIds,
+    };
+    return requestJson<any>(`${API_BASE}/admin/users/save?adminUserId=${encodeURIComponent(adminUserId)}`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+  async saveBranch(branch: Partial<Branch>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/branches/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(branch) }); },
+  async saveApprovalConfig(config: Partial<ApprovalHierarchyConfig>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/approval-configs/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(config) }); },
+  async saveReminderSchedule(schedule: Partial<ReminderSchedule>, adminUserId = 'SYSADMIN'): Promise<ReminderSchedule> { return requestJson<ReminderSchedule>(`${API_BASE}/admin/reminder-schedules/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(schedule) }); },
+  async saveScheduledReport(report: Partial<ScheduledReport>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/scheduled-reports/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(report) }); },
+  async saveSystemParameter(param: Partial<SystemParameter>, adminUserId = 'SYSADMIN'): Promise<SystemParameter> { return requestJson<SystemParameter>(`${API_BASE}/admin/parameters/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(param) }); },
+  async saveApprovedInsurer(insurer: Partial<ApprovedInsurer>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/insurers/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(insurer) }); },
+  async saveRolePermission(permission: Partial<RolePermission>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/permissions/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(permission) }); },
+  async saveRolePermissionsBatch(permissions: RolePermission[], adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/permissions/save-batch?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(permissions) }); },
+  async saveCollateralTaxonomy(taxonomy: Partial<CollateralTaxonomy>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/taxonomy/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(taxonomy) }); },
+  async saveMandatoryDocRule(rule: Partial<MandatoryDocumentRule>, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/document-rules/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(rule) }); },
+  async saveHolidayCalendar(holiday: Partial<HolidayCalendar>, adminUserId = 'SYSADMIN'): Promise<HolidayCalendar> { return requestJson<HolidayCalendar>(`${API_BASE}/admin/holidays/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(holiday) }); },
+  async deleteHolidayCalendar(holidayId: string, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/holidays/${encodeURIComponent(holidayId)}/delete?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST' }); },
   async getDistricts(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/districts`); },
-  async saveDistrict(district: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/districts/save?userId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify(district)}); },
-  async toggleSegmentStatus(segmentId: string, active: boolean, userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/segments/${encodeURIComponent(segmentId)}/toggle-status?active=${active}&adminUserId=${encodeURIComponent(userId)}`, {method:'POST'}); },
-  async toggleUserStatus(userId: string, active: boolean, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/users/${encodeURIComponent(userId)}/toggle-status?active=${active}&adminUserId=${encodeURIComponent(adminUserId)}`, {method:'POST'}); },
+  async saveDistrict(district: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/districts/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(district) }); },
+  async toggleSegmentStatus(segmentId: string, active: boolean, userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/segments/${encodeURIComponent(segmentId)}/toggle-status?active=${active}&adminUserId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
+  async toggleUserStatus(userId: string, active: boolean, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/users/${encodeURIComponent(userId)}/toggle-status?active=${active}&adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST' }); },
 
   async getAdminRuntimeConfiguration(): Promise<any> { return requestJson<any>(`${API_BASE}/admin/runtime`); },
   async getAdminHealth(): Promise<any> { return requestJson<any>(`${API_BASE}/admin/health`); },
-  async getConfigurationUsage(): Promise<Record<string,string>> { return requestJson<Record<string,string>>(`${API_BASE}/admin/configuration-usage`); },
+  async getConfigurationUsage(): Promise<Record<string, string>> { return requestJson<Record<string, string>>(`${API_BASE}/admin/configuration-usage`); },
   async getDependencyHealth(): Promise<any> { return requestJson<any>(`${API_BASE}/admin/health/dependencies`); },
   async checkBusinessDate(date: string): Promise<any> { return requestJson<any>(`${API_BASE}/admin/calendar/check?date=${encodeURIComponent(date)}`); },
   async addWorkingDays(date: string, days: number): Promise<any> { return requestJson<any>(`${API_BASE}/admin/calendar/add-working-days?date=${encodeURIComponent(date)}&days=${days}`); },
-  async previewNotificationTemplate(template: string, context: Record<string, unknown> = {}): Promise<{preview:string}> { return requestJson<{preview:string}>(`${API_BASE}/admin/templates/preview`, {method:'POST',body:JSON.stringify({template,context})}); },
-  async validateNotificationTemplate(subject: string, body: string): Promise<any> { return requestJson<any>(`${API_BASE}/admin/templates/validate`, {method:'POST',body:JSON.stringify({subject,body})}); },
-  async saveNotificationTemplate(template: NotificationTemplate, adminUserId = 'SYSADMIN'): Promise<NotificationTemplate> { return requestJson<NotificationTemplate>(`${API_BASE}/admin/templates/save?userId=${encodeURIComponent(adminUserId)}`, {method:'POST',body:JSON.stringify({id:template.id,name:template.name,type:template.type||template.channel||'Email',triggerDaysBefore:template.triggerDaysBefore||0,subject:template.subject||'',body:template.body,active:template.active!==false})}); },
+  async previewNotificationTemplate(template: string, context: Record<string, unknown> = {}): Promise<{ preview: string }> { return requestJson<{ preview: string }>(`${API_BASE}/admin/templates/preview`, { method: 'POST', body: JSON.stringify({ template, context }) }); },
+  async validateNotificationTemplate(subject: string, body: string): Promise<any> { return requestJson<any>(`${API_BASE}/admin/templates/validate`, { method: 'POST', body: JSON.stringify({ subject, body }) }); },
+  async saveNotificationTemplate(template: NotificationTemplate, adminUserId = 'SYSADMIN'): Promise<NotificationTemplate> { return requestJson<NotificationTemplate>(`${API_BASE}/admin/templates/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify({ id: template.id, name: template.name, type: template.type || template.channel || 'Email', triggerDaysBefore: template.triggerDaysBefore || 0, subject: template.subject || '', body: template.body, active: template.active !== false }) }); },
   async getNotificationTemplates(): Promise<NotificationTemplate[]> { return requestJson<NotificationTemplate[]>(`${API_BASE}/admin/templates`); },
-  async runPolicyReminders(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/reminders/run?userId=${encodeURIComponent(userId)}`, {method:'POST'}); },
-  async runRenewalEscalations(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/escalations/run?userId=${encodeURIComponent(userId)}`, {method:'POST'}); },
-  async scanExceptionsNow(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/exceptions/scan?userId=${encodeURIComponent(userId)}`, {method:'POST'}); },
+  async runPolicyReminders(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/reminders/run?userId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
+  async runRenewalEscalations(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/escalations/run?userId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
+  async scanExceptionsNow(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/exceptions/scan?userId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
 
   // --- Customer 360 Hub API ---
   async fetchCustomer360(customerId: string): Promise<any> {
@@ -1617,6 +1674,14 @@ export const cimsApi = {
     return requestJson<LoanAccount[]>(`${API_BASE}/collaterals/${encodeURIComponent(collateralId)}/eligible-facilities${qs}`);
   },
 
+  async getCandidateFacilitiesForCollateral(collateralId: string, targetCustomerId?: string, userId?: string): Promise<FacilityCandidateDto[]> {
+    const q = new URLSearchParams();
+    if (targetCustomerId) q.append('targetCustomerId', targetCustomerId);
+    if (userId) q.append('userId', userId);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return requestJson<FacilityCandidateDto[]>(`${API_BASE}/collaterals/${encodeURIComponent(collateralId)}/candidate-facilities${qs}`);
+  },
+
   async searchExistingCollateral(params: { code?: string; titleDeedNumber?: string; registrationNumber?: string; excludeId?: string }): Promise<any> {
     const q = new URLSearchParams();
     if (params.code) q.append('code', params.code);
@@ -1686,5 +1751,140 @@ export const cimsApi = {
   async reconcileCbsRelationships(): Promise<CbsRelationshipReconciliationDto> {
     return requestJson<CbsRelationshipReconciliationDto>(`${API_BASE}/collateral-facility-links/reconcile-cbs`);
   },
+
+  // 1st / 2nd Degree Collateral Prioritization & Mortgage Registration
+  async validateSecondDegreeCollateral(collateral: Partial<Collateral>): Promise<SecondDegreeValidationResult> {
+    return requestJson<SecondDegreeValidationResult>(`${API_BASE}/collaterals/second-degree/validate`, {
+      method: 'POST',
+      body: JSON.stringify(collateral),
+    });
+  },
+
+  async promoteCollateralToFirstDegree(collateralId: string, reviewNotes: string, reviewedBy?: string): Promise<{ success: boolean; message: string; collateral: Collateral }> {
+    const q = new URLSearchParams();
+    if (reviewNotes) q.append('reviewNotes', reviewNotes);
+    if (reviewedBy) q.append('reviewedBy', reviewedBy);
+    return requestJson<any>(`${API_BASE}/collaterals/${encodeURIComponent(collateralId)}/promote?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async refreshFirstDegreeBalance(collateralId: string, balance?: number, asOfDate?: string, updatedBy?: string): Promise<{ success: boolean; message: string; collateral: Collateral }> {
+    const q = new URLSearchParams();
+    if (balance !== undefined && balance !== null) q.append('balance', balance.toString());
+    if (asOfDate) q.append('asOfDate', asOfDate);
+    if (updatedBy) q.append('updatedBy', updatedBy);
+    return requestJson<any>(`${API_BASE}/collaterals/${encodeURIComponent(collateralId)}/refresh-first-degree-balance?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async getCollateralDegreeDetails(collateralId: string): Promise<DegreeDetailsDto> {
+    return requestJson<DegreeDetailsDto>(`${API_BASE}/collaterals/${encodeURIComponent(collateralId)}/degree-details`);
+  },
+
+  async getPromotionEligibleCollaterals(): Promise<Collateral[]> {
+    return requestJson<Collateral[]>(`${API_BASE}/collaterals/promotion-eligible`);
+  },
+
+  // --- Insurance Adequacy & Coverage Rules (BR-18, BR-03, BR-11) ---
+  async getInsuranceAdequacy(collateralId: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/${encodeURIComponent(collateralId)}`);
+  },
+
+  async getInsuranceCoverageRules(): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/insurance-adequacy/rules`);
+  },
+
+  async saveInsuranceCoverageRule(rule: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/rules`, {
+      method: 'POST',
+      body: JSON.stringify(rule),
+    });
+  },
+
+  async toggleInsuranceCoverageRule(ruleId: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/rules/${encodeURIComponent(ruleId)}/toggle`, {
+      method: 'POST',
+    });
+  },
+
+  async submitInsuranceException(exception: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/exceptions`, {
+      method: 'POST',
+      body: JSON.stringify(exception),
+    });
+  },
+
+  async approveInsuranceException(exceptionId: string, comments?: string): Promise<any> {
+    const q = new URLSearchParams();
+    if (comments) q.append('comments', comments);
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/exceptions/${encodeURIComponent(exceptionId)}/approve?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async rejectInsuranceException(exceptionId: string, comments: string): Promise<any> {
+    const q = new URLSearchParams();
+    q.append('comments', comments);
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/exceptions/${encodeURIComponent(exceptionId)}/reject?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async resolveInsuranceException(exceptionId: string, notes?: string): Promise<any> {
+    const q = new URLSearchParams();
+    if (notes) q.append('notes', notes);
+    return requestJson<any>(`${API_BASE}/insurance-adequacy/exceptions/${encodeURIComponent(exceptionId)}/resolve?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  // --- Early Collateral Release & Pre-Release Impact Assessment ---
+  async getPreReleaseImpactCheck(collateralId: string, facilityIds?: string[]): Promise<any> {
+    const q = new URLSearchParams();
+    q.append('collateralId', collateralId);
+    if (facilityIds && facilityIds.length > 0) q.append('facilityIds', facilityIds.join(','));
+    return requestJson<any>(`${API_BASE}/collateral-release/pre-release-check?${q.toString()}`);
+  },
+
+  async submitEarlyReleaseRequest(payload: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral-release/requests`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getAllReleaseRequests(): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/collateral-release/requests`);
+  },
+
+  async getReleaseRequestById(id: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral-release/requests/${encodeURIComponent(id)}`);
+  },
+
+  async approveReleaseRequest(id: string, comments?: string): Promise<any> {
+    const q = new URLSearchParams();
+    if (comments) q.append('comments', comments);
+    return requestJson<any>(`${API_BASE}/collateral-release/requests/${encodeURIComponent(id)}/approve?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async rejectReleaseRequest(id: string, comments?: string): Promise<any> {
+    const q = new URLSearchParams();
+    if (comments) q.append('comments', comments);
+    return requestJson<any>(`${API_BASE}/collateral-release/requests/${encodeURIComponent(id)}/reject?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async recordManualCbsUpdate(id: string, payload: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral-release/requests/${encodeURIComponent(id)}/manual-cbs-update`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
 };
+
 

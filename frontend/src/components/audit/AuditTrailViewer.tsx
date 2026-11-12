@@ -172,14 +172,14 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
         if (log.oldValue.startsWith('{') || log.oldValue.startsWith('[')) {
           beforeObj = JSON.parse(log.oldValue);
         }
-      } catch {}
+      } catch { }
     }
     if (!afterObj && log.newValue) {
       try {
         if (log.newValue.startsWith('{') || log.newValue.startsWith('[')) {
           afterObj = JSON.parse(log.newValue);
         }
-      } catch {}
+      } catch { }
     }
 
     const isStructuredJson = (beforeObj && typeof beforeObj === 'object') || (afterObj && typeof afterObj === 'object');
@@ -400,9 +400,8 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
       cell: (r) => {
         const isSuccess = !r.result || r.result.toLowerCase() === 'success' || r.result.toLowerCase() === 'synced';
         return (
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 w-fit ${
-            isSuccess ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-rose-50 text-rose-800 border-rose-300'
-          }`}>
+          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 w-fit ${isSuccess ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-rose-50 text-rose-800 border-rose-300'
+            }`}>
             <span className={`w-1.5 h-1.5 rounded-full ${isSuccess ? 'bg-emerald-500' : 'bg-rose-500'}`} />
             {r.result || 'Success'}
           </span>
@@ -499,11 +498,10 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
               <button
                 key={cat}
                 onClick={() => setEntityFilter(cat)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  entityFilter === cat
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${entityFilter === cat
                     ? 'bg-[#00205B] text-white shadow-2xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -528,11 +526,10 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
               <button
                 key={cat.id}
                 onClick={() => setActionCategoryFilter(cat.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  actionCategoryFilter === cat.id
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${actionCategoryFilter === cat.id
                     ? 'bg-[#00205B] text-white shadow-2xs'
                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -651,25 +648,22 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setDrawerTab('diff')}
-                  className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    drawerTab === 'diff' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${drawerTab === 'diff' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
+                    }`}
                 >
                   <ArrowRight className="w-3.5 h-3.5 text-[#EAA023]" /> State Mutation & Diff
                 </button>
                 <button
                   onClick={() => setDrawerTab('overview')}
-                  className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    drawerTab === 'overview' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${drawerTab === 'overview' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
+                    }`}
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-[#EAA023]" /> Operational Context
                 </button>
                 <button
                   onClick={() => setDrawerTab('raw')}
-                  className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    drawerTab === 'raw' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className={`px-3.5 py-1.5 font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${drawerTab === 'raw' ? 'bg-[#00205B] text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
+                    }`}
                 >
                   <Code className="w-3.5 h-3.5 text-[#EAA023]" /> Raw JSON Payload
                 </button>
@@ -768,9 +762,8 @@ export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ auditLogs, c
                             {parsedDiff?.diffRows.map((row) => (
                               <tr
                                 key={row.key}
-                                className={`transition-colors ${
-                                  row.isChanged ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50'
-                                }`}
+                                className={`transition-colors ${row.isChanged ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50'
+                                  }`}
                               >
                                 <td className="p-3 font-mono font-bold text-slate-900 text-[11px]">
                                   {row.key}

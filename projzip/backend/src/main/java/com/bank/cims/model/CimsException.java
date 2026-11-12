@@ -56,6 +56,12 @@ public class CimsException {
     @Column(name = "evidence_document")
     private String evidenceDocument;
 
+    @Column(name = "failed_requirement")
+    private String failedRequirement;
+
+    @Column(name = "rule_id")
+    private String ruleId;
+
     // Contextual business linkages (BRD & US-12)
     @Column(name = "customer_id")
     private String customerId;
@@ -221,6 +227,10 @@ public class CimsException {
     public void setCorrectiveAction(String correctiveAction) { this.correctiveAction = correctiveAction; }
     public String getEvidenceDocument() { return evidenceDocument; }
     public void setEvidenceDocument(String evidenceDocument) { this.evidenceDocument = evidenceDocument; }
+    public String getFailedRequirement() { return failedRequirement; }
+    public void setFailedRequirement(String failedRequirement) { this.failedRequirement = failedRequirement; }
+    public String getRuleId() { return ruleId; }
+    public void setRuleId(String ruleId) { this.ruleId = ruleId; }
 
     public String getCustomerId() { return customerId; }
     public void setCustomerId(String customerId) { this.customerId = customerId; }

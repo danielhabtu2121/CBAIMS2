@@ -11,6 +11,9 @@ public class Customer {
 
     private String cif;
 
+    @Column(name = "identification_type")
+    private String identificationType = "CBS_CIF";
+
     @Column(name = "customer_type")
     private String customerType = "Individual";
 
@@ -40,7 +43,7 @@ public class Customer {
     private String segment;
 
     private String branch;
-    private String status = "Active";
+    private String status = "Pending Approval";
 
     @Column(name = "risk_rating")
     private String riskRating = "Medium";
@@ -91,6 +94,8 @@ public class Customer {
     public void setId(String id) { this.id = id; }
     public String getCif() { return cif; }
     public void setCif(String cif) { this.cif = cif; }
+    public String getIdentificationType() { return identificationType; }
+    public void setIdentificationType(String identificationType) { this.identificationType = identificationType; }
     public String getCustomerType() { return customerType; }
     public void setCustomerType(String customerType) { this.customerType = customerType; }
     public String getName() { return name; }

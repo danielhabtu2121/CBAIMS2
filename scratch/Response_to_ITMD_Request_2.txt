@@ -1,0 +1,68 @@
+﻿1. Collateral registration and data source
+CBAIMS will be the system where collateral is registered and managed. Collateral records will be created in CBAIMS through a maker-checker workflow. This covers ownership details, valuation details, classification, ownership documents and the link to the loan(s) the collateral secures (BR-02, BR-03, BR-04).
+The responsibilities are divided as follows:
+CBS (FLEXCUBE 12.5) remains the master for: customer (CIF), loan and facility details, sanction amounts, outstanding balances, loan closure and facility changes. CBAIMS retrieves these through integration.
+CBAIMS is the master for: the collateral record, ownership and third-party pledge information, valuation details, collateral-to-loan allocation, insurance policies, documents (stored in Alfresco DMS), workflows, alerts and exceptions.
+Existing collateral: collateral already registered in FLEXCUBE or other systems will be loaded into CBAIMS once, then reconciled and validated. Each record will carry a unique Collateral ID, and CBAIMS will prevent duplicate registration (BR-03).
+CBAIMS prevails for collateral data and CBS prevails for loan and customer data.
+Customer data: pulled from CBS by CIF. Manual capture is a fallback only for parties without a CIF, such as third-party owners.
+2. Determination of adequate insurance coverage
+The thresholds must come from the Bank’s Credit Policy, so CBAIMS should hold them as configurable coverage rules (BR-18) by collateral type and segment, not hard-code them. The recommended logic is:
+Primary test: insured amount against the Bank-assessed value of the insurable portion of the collateral. For a building, this is the structure without the land. Required coverage = Bank-assessed insurable value × required % (default 100%). [confirm %]
+Secondary test (BR-03/BR-11): insured amount against the aggregate outstanding exposure of all facilities secured by the collateral. This means cross-collateralized facilities are monitored on total exposure.
+Estimated value is for reference only and is not used in the adequacy test.
+Statuses: Adequate, Underinsured (below the required %), Uninsured and Over insured (above a configurable tolerance, e.g. [X]%). Over insurance is an informational flag and does not block anything.
+Exceptions: yes. If the Bank accepts underinsured or over insured collateral, the user must record a reason and approved exception amount, a validity period and review date, and obtain supervisor approval through the BR-07/BR-12 workflow. The exception is reported until it expires or is resolved.
+3.Required Collateral Information 
+Field 
+Required?
+Source 
+Intended Use
+Collateral Location 
+Mandatory for immovable property and for machinery and stock where site based. Building coordinates (X<Y) per BRD -04.
+Captured in CBAIMS
+Match against the policy’s insured risk address, support claims and report concentration by location.
+Land/ Property certificate or registration number  
+Mandatory for immovable property, Vehicles use plate/chassis/engine number and other types use their own registration IDs. 
+CBS if held, otherwise to be captured in CBAIMS
+Unique identifier for duplicate prevention, search and verification with land administration authorities (BR-16)
+%Work completed/remaining (buildings under construction)
+Mandatory only when the collateral is flagged “Under Construction”
+Captured in CBAIMS from the engineer or Engineering evaluation report , with inspection date and expected completion date
+scales required coverage to the value of work done and triggers a review on completion.
+Estimated Value
+Optional, reference only
+Retrieved from CBS or the valuation record. CBAIMS will not calculate or estimate value. If not found from the CBS feed the CBAIMS manually from the valuation report.
+Can be used for Insurance value determination.
+Bank-assessed value
+Mandatory 
+CBS, Read only 
+If not captured feed the CBAIMS manually. 
+Basis for the adequacy test, plus valuation expiry monitoring.
+Insurance Value (Insured Amount)
+Mandatory
+Captured in CBAIMS from the policy, the total of all active policies on the collateral
+Coverage ratio/ Underinsured / Over insured.
+3.Early release of collateral. Because CBAIMS manages the collateral, it will also record and route the release request. Release is approved through the CBAIMS maker-checker workflow. Once approved, the linkage to the loan shall be removed from the CBS as well (to be done manually). The proposed conditions are below.
+Release is approved by the authorized credit authority.
+The remaining collateral still meets the required coverage and margin for all linked facilities.
+For cross-collateral, all linked facilities have been validated (BR-03). Release is blocked if any fails.
+There is no unresolved insurance exception or pending insurance claim.
+Release documents are filed in DMS.
+CBAIMS will show a pre-release impact check (coverage after release) and warn if the check fails. After release, it closes monitoring.
+4. First-degree and second-degree collateral
+CBAIMS will maintain the first-degree/second-degree relationship, because the insurance and exposure checks depend on it. For a second-degree record, CBAIMS will hold:
+Rank (1st, 2nd) and a flag for whether the first-degree charge is internal (held by the Bank) or external (held by another institution)
+First-degree holder’s name
+First-degree facility reference and outstanding balance, with an “as of” date
+Registered mortgage amount, registration number and date
+First-degree insurance status: policy number, insurer, expiry, and whether the Bank is noted as second mortgagee
+Data source:
+Internal first-degree: the first-degree collateral is already a CBAIMS record, so the second-degree record links to it directly. Only the first-degree loan balance is retrieved from CBS.
+External first-degree: captured manually in CBAIMS as a separate registration step, supported by the other institution’s confirmation letter and a registration extract in DMS. Balances must be refreshed periodically.
+Validation rules:
+A second-degree record cannot be created without a first-degree record and supporting evidence.
+Rank must be unique per collateral.
+Combined exposure (first plus second) must not exceed the collateral’s Bank-assessed value or a warning is raised.
+Insured amount is tested against the combined exposure.
+If an internal first-degree charge is released or closed, CBAIMS flags the second-degree charge for promotion and review.

@@ -15,9 +15,14 @@ import java.util.Optional;
 public interface CustomerRepository extends JpaRepository<Customer, String> {
     Optional<Customer> findFirstByCifIgnoreCase(String cif);
     Optional<Customer> findByCifIgnoreCase(String cif);
+    Optional<Customer> findFirstByNameIgnoreCase(String name);
     default Optional<Customer> findByCif(String cif) {
         return findFirstByCifIgnoreCase(cif);
     }
+
+    Optional<Customer> findFirstByNationalIdIgnoreCase(String nationalId);
+    Optional<Customer> findFirstByTaxIdNoIgnoreCase(String taxIdNo);
+    Optional<Customer> findFirstByBusinessRegNoIgnoreCase(String businessRegNo);
 
     List<Customer> findByBranch(String branch);
     List<Customer> findByBranchIn(Collection<String> branches);

@@ -45,8 +45,21 @@ public class CollateralFacilityRelationshipController {
     public ResponseEntity<List<LoanAccount>> getEligibleFacilitiesForCollateral(
             @PathVariable String id,
             @RequestParam(required = false) String targetCustomerId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             @RequestParam(required = false) String userId) {
-        return ResponseEntity.ok(relationshipService.getEligibleFacilitiesForCollateral(id, targetCustomerId, userId));
+        String effectiveUser = resolveEffectiveUserId(headerUserId, userId);
+        return ResponseEntity.ok(relationshipService.getEligibleFacilitiesForCollateral(id, targetCustomerId, effectiveUser));
+    }
+
+    // --- Candidate Facilities for Collateral (Direction 1 Linking Entry Point - Section 35) ---
+    @GetMapping({"/collaterals/{id}/candidate-facilities", "/collateral/{id}/candidate-facilities", "/cims/collaterals/{id}/candidate-facilities"})
+    public ResponseEntity<List<FacilityCandidateDto>> getCandidateFacilitiesForCollateral(
+            @PathVariable String id,
+            @RequestParam(required = false) String targetCustomerId,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String userId) {
+        String effectiveUser = resolveEffectiveUserId(headerUserId, userId);
+        return ResponseEntity.ok(relationshipService.getCandidateFacilitiesForCollateral(id, targetCustomerId, effectiveUser));
     }
 
     // --- Duplicate Collateral Search Before Registration (Section 23 & 24) ---
@@ -69,17 +82,27 @@ public class CollateralFacilityRelationshipController {
     @GetMapping({"/facilities/{id}/eligible-collaterals", "/facility/{id}/eligible-collaterals", "/cims/facilities/{id}/eligible-collaterals"})
     public ResponseEntity<List<CollateralCandidateDto>> getEligibleCollateralsForFacility(
             @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             @RequestParam(required = false) String userId) {
-        return ResponseEntity.ok(relationshipService.getEligibleCollateralsForFacility(id, userId));
+        String effectiveUser = resolveEffectiveUserId(headerUserId, userId);
+        return ResponseEntity.ok(relationshipService.getEligibleCollateralsForFacility(id, effectiveUser));
+    }
+
+    private String resolveEffectiveUserId(String headerUserId, String paramUserId) {
+        if (headerUserId != null && !headerUserId.isBlank()) return headerUserId.trim();
+        if (paramUserId != null && !paramUserId.isBlank()) return paramUserId.trim();
+        return "CRO_USER";
     }
 
     // --- Create Relationship (Section 20 & 32) ---
     @PostMapping("/collateral-facility-links")
     public ResponseEntity<?> createRelationship(
             @RequestBody RelationshipRequestDto request,
-            @RequestParam(defaultValue = "CRO_USER") String userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String userId) {
         try {
-            CollateralFacilityLinkDto created = relationshipService.createRelationship(request, userId);
+            String effectiveUser = resolveEffectiveUserId(headerUserId, userId);
+            CollateralFacilityLinkDto created = relationshipService.createRelationship(request, effectiveUser);
             return ResponseEntity.ok(created);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -91,9 +114,11 @@ public class CollateralFacilityRelationshipController {
     public ResponseEntity<?> updateRelationship(
             @PathVariable String id,
             @RequestBody RelationshipRequestDto request,
-            @RequestParam(defaultValue = "CRO_USER") String userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String userId) {
         try {
-            CollateralFacilityLinkDto updated = relationshipService.updateRelationship(id, request, userId);
+            String effectiveUser = resolveEffectiveUserId(headerUserId, userId);
+            CollateralFacilityLinkDto updated = relationshipService.updateRelationship(id, request, effectiveUser);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -105,9 +130,11 @@ public class CollateralFacilityRelationshipController {
     public ResponseEntity<?> endRelationship(
             @PathVariable String id,
             @RequestParam(defaultValue = "Obligation settled or facility closed") String reason,
-            @RequestParam(defaultValue = "CRO_USER") String userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String userId) {
         try {
-            CollateralFacilityLinkDto ended = relationshipService.endRelationship(id, reason, userId);
+            String effectiveUser = resolveEffectiveUserId(headerUserId, userId);
+            CollateralFacilityLinkDto ended = relationshipService.endRelationship(id, reason, effectiveUser);
             return ResponseEntity.ok(ended);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));

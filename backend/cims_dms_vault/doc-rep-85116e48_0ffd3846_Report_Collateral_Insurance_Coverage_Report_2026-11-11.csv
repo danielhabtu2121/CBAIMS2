@@ -1,0 +1,283 @@
+# CBAIMS ENTERPRISE REPORT ARTIFACT
+# Title: Collateral Insurance Coverage Report
+# Generated At: 2026-11-11T08:26:26.265231400
+# Classification: STRICTLY CONFIDENTIAL
+# Total Records: 276
+
+CollateralCode,Type,Branch,ValuationAmount,InsuredAmount,CoveragePct,CoverageGap,Status
+C-UNDER-1792474804585,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+COL-MSME-003,Industrial Warehouses,Merkato Branch,1.6E7,0.0,0.0,1.28E7,Uninsured
+COL-PERFECT-485143,Commercial Building,Bole Special Branch,1.2E7,0.0,0.0,9600000.0,Draft
+COL-2ND-EXT-002,Buildings - Commercial,BRN-001,6.0E7,6.0E7,100.0,0.0,Active
+COL-TEST-988621,Commercial Building,Bole Special Branch,1.2E7,0.0,0.0,9600000.0,Draft
+COL-IR001-381458,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-LC002-573320,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CS001-520487,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-TEST-NORM-18524,Buildings - Commercial,Bole Special Branch,7000000.0,0.0,0.0,5600000.0,Active
+COL-TEST-EXC-26683,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-LC002-114582,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-237243,Industrial,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Uninsured
+COL-CS001-681225,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+C-ENTRY-1792474796765,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+COL-409132,Cash,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-TEST-BLOCK-21240,Buildings - Commercial,Addis Ababa Main Branch,6000000.0,0.0,0.0,4800000.0,Draft
+COL-TEST-EXC-92704,Buildings - Commercial,Addis Ababa Main Branch,6000000.0,0.0,0.0,4800000.0,Draft
+COL-TEST-NORM-93655,Buildings - Commercial,Addis Ababa Main Branch,6000000.0,0.0,0.0,4800000.0,Draft
+COL-CORR-854072,Buildings - Commercial,BRN-001,3.0E7,0.0,0.0,2.4E7,Active
+COL-TEST-131354,Commercial Building,Bole Special Branch,1.2E7,0.0,0.0,9600000.0,Active
+COL-CS002-869152,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS002-444214,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS001-197437,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-IR002CASH-851349,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-CS002-229579,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS001-726393,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+C-UNDER-1791186834334,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-ENTRY-1792828865934,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+C-UNDER-1792828888507,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+COL-MSME-002,Manufacturing Equipment,Hawassa Main Branch,8000000.0,0.0,0.0,6400000.0,Active
+COL-949668,Industrial,Bole Special Branch,1.0E7,2.1E7,210.0,0.0,Insured
+COL-IFB-003,Manufacturing Equipment,Merkato Branch,9000000.0,9000000.0,100.0,0.0,Insured
+COL-861995,Marketable Shares,Bole Special Branch,1000000.0,0.0,0.0,800000.0,Active
+COL-CORR-660142,Buildings - Commercial,BRN-001,3.0E7,0.0,0.0,2.4E7,Active
+COL-IR008-422445,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR002CASH-630511,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-TEST-EXC-90376,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-TEST-NORM-46095,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-TEST-EXC-53470,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-TEST-NORM-36831,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-CORR-578737,Buildings - Commercial,BRN-001,3.0E7,0.0,0.0,2.4E7,Active
+COL-CORR-359714,Buildings - Commercial,BRN-001,3.0E7,0.0,0.0,2.4E7,Active
+COL-IR002CASH-507385,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-CR001-154044,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS001-218453,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-CS002-565976,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR008-281852,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-TEST-NORM-17298,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-DC-49567,Buildings - Commercial,Bole Special Branch,7500000.0,0.0,0.0,6000000.0,Active
+COL-CR001-589583,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR001-444666,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR001-598648,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR001-641910,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR001-369692,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+C-ENTRY-1792475359780,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+C-UNDER-1792475364776,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+COL-CS001-167057,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-CR003-959700,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-CS001-405705,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-IR009-843107,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CS002-478422,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR008-968420,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-CS002-977183,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS001-923846,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-TEST-REL-11,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-TEST-BORR-01,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-TEST-JOINT-04,Buildings - Mixed-use,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+C-ENTRY-1791784549903,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+C-ENTRY-1791190543085,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+C-ENTRY-1791190684298,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+COL-PERM-TEST-5836,Vehicles,Bole Special Branch,400000.0,0.0,0.0,320000.0,Pending Approval
+COL-IR002CASH-923644,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-85671,Vehicles,Admin Test District Branch 264,600000.0,0.0,0.0,480000.0,Active
+COL-CR001-252546,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR004-454206,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC001-922154,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-LC002-682028,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC003-221009,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-LC001-778564,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-LC002-711730,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-2ND-786757,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC003-976762,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-CR003-754257,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-LC001-490574,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS001-251047,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-2ND-478043,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC003-766079,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-LC001-799727,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-2ND-150126,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC002-919354,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC003-626296,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-2ND-170620,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC001-666955,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-LC003-960668,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-CR001-767195,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR003-551379,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-CR004-772389,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+C-UNDER-1791186751153,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791788419748,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791189302629,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791189864197,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791881858889,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791189121958,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791189369423,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791264162403,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791784553675,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791190546447,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+C-UNDER-1791190688872,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+COL-MSME-001,Heavy Construction Machinery,Hawassa Main Branch,1.4E7,0.0,0.0,1.12E7,Uninsured
+COL-CORP-007,Commercial Trucks,Lake Tana Branch,1.5E7,1.2E7,80.0,0.0,Under-Insured
+COL-RET-001,Fleet Vehicles,Kazanchis Branch,4000000.0,4000000.0,100.0,0.0,Insured
+C-UNDER-1791195395391,Commercial Vehicle,Addis Ababa Main Branch,1000000.0,400000.0,40.0,400000.0,Under-Insured
+COL-IR008-341063,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-M3-FLEET-03,Vehicles,BRN-001,1.6E7,0.0,0.0,1.28E7,Active
+COL-IR014-873271,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-2026-000101,Building,Bole Special Branch,2.5E7,0.0,0.0,2.0E7,Uninsured
+C-ENTRY-1791264135957,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+COL-IFB-001,Commercial Buildings,Kazanchis Branch,2.2E7,2.2E7,100.0,0.0,Insured
+COL-2026-000102,Building,Bole Special Branch,4.5E7,0.0,0.0,3.6E7,Uninsured
+C-ENTRY-1791881853906,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+C-ENTRY-1791189118661,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+C-ENTRY-1791189365987,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+COL-M3-MACH-02,Construction Machineries,BRN-001,2.5E7,2.5E7,100.0,0.0,Active
+COL-CS001-687246,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-599968,Buildings,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-2026-000103,Building,Merkato Branch,1.2E7,0.0,0.0,9600000.0,Active
+COL-403292,Buildings,Head Office,1.0E7,0.0,0.0,8000000.0,Active
+COL-TEST-TP-02,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+C-ENTRY-1791189861640,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Uninsured
+COL-541385,Immovable Properties,Bole Special Branch,1.0E7,8.0E7,800.0,0.0,Insured
+COL-937066,Buildings,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-771511,Buildings,Bole Special Branch,5000000.0,0.0,0.0,4000000.0,Uninsured
+COL-RET-002,Residential Properties,Merkato Branch,1.5E7,0.0,0.0,1.2E7,Active
+COL-738129,Immovable Properties,Bole Special Branch,1.0E7,1.0E7,100.0,0.0,Under-Insured
+COL-730755,Buildings,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR010-401340,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-811404,Immovable Properties,Head Office,1.0E7,0.0,0.0,8000000.0,Uninsured
+COL-IFB-002,Industrial Warehouses,Kazanchis Branch,1.0E7,0.0,0.0,8000000.0,Active
+C-ENTRY-1791788415422,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+COL-M3-HQ-01,Buildings - Commercial,BRN-001,4.5E7,0.0,0.0,3.6E7,Active
+COL-CS002-268650,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+C-ENTRY-1791195386296,Commercial/Residential/Mixed-use Buildings,Addis Ababa Main Branch,2000000.0,0.0,0.0,1600000.0,Active
+COL-CORP-006,Industrial Warehouses,Lake Tana Branch,3.2E7,0.0,0.0,2.56E7,Active
+COL-M3-TP-01,Buildings - Commercial,BRN-002,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR009-423402,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-578531,Buildings,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-EXC-777,Buildings,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-M3-CROSS-01,Buildings - Commercial,BRN-001,1.0E8,9.0E7,90.0,0.0,Active
+COL-IR014-871786,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CORR-792846,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-CR001-772320,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-196369,Buildings,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-TEST-EXC-35874,Buildings - Commercial,Bole Special Branch,6000000.0,0.0,0.0,4800000.0,Active
+COL-CS002-531814,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR008-602518,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-CS001-987075,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-CS001-844153,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-CS002-151165,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS007-598479,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS007-463831,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS002-507644,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CR004-346369,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-2ND-949351,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CR003-321972,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-LC003-344929,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-CR001-905602,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS002-172860,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR009-591349,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CS001-798518,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-IR010-863645,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-LC002-416503,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC001-995402,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS007-891100,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-424575,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR010-816093,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR014-297362,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR002CASH-538836,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR009-613487,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR002CASH-652461,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR002CASH-222687,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-800657,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-512569,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR002CASH-101107,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-458618,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-512272,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR002CASH-109831,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-415395,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR009-969971,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR002CASH-503560,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-754629,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-264127,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR021-594089,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-898706,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR008-554290,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR009-528772,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR008-269214,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR009-724326,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR010-250934,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR014-266336,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-309296,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR014-955738,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR010-667237,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR021-852964,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-574518,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-765885,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-214383,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR002CASH-154134,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-685092,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR022-206308,Buildings - Commercial,Bole Special Branch,6.0E7,5.0E7,83.3,0.0,Active
+COL-IR002CASH-446580,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-239365,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-219483,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR009-112141,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR014-609591,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR010-514507,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR001-522263,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR002CASH-270150,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR009-806000,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR009-279083,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR002CASH-880402,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-110607,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR021-593244,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR009-473351,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR001-436912,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR010-259634,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR022-930286,Buildings - Commercial,Bole Special Branch,8.0E7,6.5E7,81.3,0.0,Active
+COL-CR003-416190,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-IR001-974319,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR010-411591,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR014-150350,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR022-553281,Buildings - Commercial,Bole Special Branch,8.0E7,6.5E7,81.3,0.0,Active
+COL-IR002CASH-745461,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR008-610375,Vehicles,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-504640,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR010-128636,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR009-190034,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-2ND-291118,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC002-214518,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC003-845194,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-CR004-382193,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CR001-173756,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-2ND-INT-001,Buildings - Commercial,BRN-001,4.5E7,0.0,0.0,3.6E7,Active
+COL-LC001-198358,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS001-862038,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-CS002-604690,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS007-667759,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR004-140420,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC001-106690,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-LC002-559305,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CR003-541524,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-49196,Vehicles,Admin Test District Branch 913,600000.0,0.0,0.0,480000.0,Active
+COL-CR001-916654,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS001-906977,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-LC003-996304,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-2ND-183782,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-CS007-311692,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS002-918274,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR002CASH-690425,Cash Collateral,Bole Special Branch,1.0E7,0.0,0.0,8000000.0,Active
+COL-IR001-762953,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR009-903627,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-IR010-786344,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-IR014-949674,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR021-814026,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR022-599032,Buildings - Commercial,Bole Special Branch,8.0E7,6.5E7,81.3,0.0,Active
+COL-CR001-851095,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CR004-225346,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC003-787425,Buildings - Commercial,Bole Special Branch,3.0E7,0.0,0.0,2.4E7,Active
+COL-LC002-134880,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-2ND-199027,Buildings - Commercial,Bole Special Branch,4.0E7,0.0,0.0,3.2E7,Active
+COL-LC001-314090,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-CS001-687851,Buildings - Commercial,Bole Special Branch,6.0E7,0.0,0.0,4.8E7,Active
+COL-CR003-963669,Buildings - Commercial,Bole Special Branch,2.0E7,0.0,0.0,1.6E7,Active
+COL-CS002-967643,Buildings - Commercial,Bole Special Branch,7.0E7,0.0,0.0,5.6E7,Active
+COL-CS007-940351,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-IR001-683427,Buildings - Commercial,Bole Special Branch,5.0E7,0.0,0.0,4.0E7,Active
+COL-TEST-TP-03,Buildings - Commercial,Bole Special Branch,6.0E7,6.0E7,100.0,0.0,Active

@@ -67,6 +67,7 @@ public class OwnershipDocument {
     @Column(name = "file_url")
     private String fileUrl;
 
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     @Column(name = "file_content", columnDefinition = "TEXT")
     private String fileContent;
 
@@ -76,7 +77,20 @@ public class OwnershipDocument {
     @Column(name = "retention_policy")
     private String retentionPolicy = "10 Years Post-Settlement";
 
+    @Column(name = "verified_by")
+    private String verifiedBy;
+
+    @Column(name = "verified_at")
+    private String verifiedAt;
+
     public OwnershipDocument() {}
+
+    @PrePersist
+    public void ensureId() {
+        if (this.id == null || this.id.isBlank()) {
+            this.id = "doc-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
+        }
+    }
 
     public OwnershipDocument(String id, String name, String type, String verificationStatus, String collateralId, String uploadDate, int version, String fileUrl) {
         this.id = id;
@@ -148,4 +162,10 @@ public class OwnershipDocument {
     public void setDocumentType(String documentType) { this.type = documentType; }
     public String getDocumentNumber() { return dmsRef != null ? dmsRef : id; }
     public void setDocumentNumber(String documentNumber) { this.dmsRef = documentNumber; }
+    public String getVerifiedBy() { return verifiedBy; }
+    public void setVerifiedBy(String verifiedBy) { this.verifiedBy = verifiedBy; }
+    public String getVerifiedAt() { return verifiedAt; }
+    public void setVerifiedAt(String verifiedAt) { this.verifiedAt = verifiedAt; }
+    public String getStoragePath() { return fileUrl != null ? fileUrl : (dmsRef != null ? dmsRef : fileName); }
+    public void setStoragePath(String storagePath) { this.fileUrl = storagePath; }
 }

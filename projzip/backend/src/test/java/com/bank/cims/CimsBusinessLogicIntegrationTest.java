@@ -52,6 +52,9 @@ public class CimsBusinessLogicIntegrationTest {
     @Autowired
     private WorkflowTaskRepository workflowTaskRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private Customer testCustomer;
     private LoanAccount facility1;
     private LoanAccount facility2;
@@ -84,6 +87,32 @@ public class CimsBusinessLogicIntegrationTest {
 
     @BeforeEach
     public void setupTestData() {
+        if (userRepository.findByUsername("maker_john").isEmpty()) {
+            User makerJohn = new User();
+            makerJohn.setId("usr-maker-john");
+            makerJohn.setUsername("maker_john");
+            makerJohn.setPassword("password123");
+            makerJohn.setFullName("John Maker");
+            makerJohn.setRole("CRO");
+            makerJohn.setBranch("Bole Special Branch");
+            makerJohn.setSegment("Corporate Banking");
+            makerJohn.setActive(true);
+            userRepository.save(makerJohn);
+        }
+
+        if (userRepository.findByUsername("mgr_doc_user").isEmpty()) {
+            User mgrDoc = new User();
+            mgrDoc.setId("usr-mgr-doc-user");
+            mgrDoc.setUsername("mgr_doc_user");
+            mgrDoc.setPassword("password123");
+            mgrDoc.setFullName("Manager Collateral Documents");
+            mgrDoc.setRole("MGRCOLLDOC");
+            mgrDoc.setBranch("Head Office");
+            mgrDoc.setSegment("Corporate Banking");
+            mgrDoc.setActive(true);
+            userRepository.save(mgrDoc);
+        }
+
         testCustomer = new Customer();
         testCustomer.setId("cust-test-" + System.currentTimeMillis());
         testCustomer.setCif("CIF-TEST-001");
@@ -144,6 +173,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0); // 20% haircut => 16M Net Security Value
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-BOLE-BLD-01");
         attachMandatoryDoc(col.getId());
 
         List<Map<String, Object>> allocations = new ArrayList<>();
@@ -179,6 +211,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0); // 8M Net Security Value
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-OVERFLOW-01");
         attachMandatoryDoc(col.getId());
 
         // Attempting to allocate 12M (> 8M Net Value)
@@ -223,6 +258,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(10.0);
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-ISO-01");
         attachMandatoryDoc(col.getId());
 
         // Attempting to link other customer's facility
@@ -249,6 +287,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0);
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-DC-01");
         attachMandatoryDoc(col.getId());
 
         Map<String, Object> result = cimsService.registerCollateralWithAllocations(col, Collections.emptyList(), "maker_john");
@@ -275,6 +316,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0); // 20M net
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-ATOMIC-01");
         attachMandatoryDoc(col.getId());
 
         List<Map<String, Object>> allocations = new ArrayList<>();
@@ -314,6 +358,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0);
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-RET-01");
         attachMandatoryDoc(col.getId());
 
         Map<String, Object> result = cimsService.registerCollateralWithAllocations(col, Collections.emptyList(), "cro_user");
@@ -344,6 +391,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0);
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-INS-01");
         attachMandatoryDoc(col.getId());
 
         List<Map<String, Object>> allocations = new ArrayList<>();
@@ -444,6 +494,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0);
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-DOC-01");
 
         List<Map<String, Object>> allocations = List.of(
             Map.of("facilityId", facility1.getId(), "allocatedAmount", 10000000.0, "linkageType", "Primary")
@@ -580,6 +633,9 @@ public class CimsBusinessLogicIntegrationTest {
         col.setHaircut(20.0);
         col.setBranch("Bole Special Branch");
         col.setOwningSegment("Corporate Banking");
+        col.setLocationAddress("Bole Road, Addis Ababa");
+        col.setLocationCity("Addis Ababa");
+        col.setPropertyCertNumber("CERT-RNW-01");
         attachMandatoryDoc(col.getId());
 
         List<Map<String, Object>> allocations = List.of(

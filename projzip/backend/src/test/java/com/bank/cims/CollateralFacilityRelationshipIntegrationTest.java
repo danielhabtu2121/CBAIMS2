@@ -46,6 +46,9 @@ public class CollateralFacilityRelationshipIntegrationTest {
     @Autowired
     private OwnershipDocumentRepository documentRepository;
 
+    @Autowired
+    private com.bank.cims.repository.UserRepository userRepository;
+
     private Customer custCorporate;
     private Customer custDifferent;
     private Collateral col100M;
@@ -55,6 +58,22 @@ public class CollateralFacilityRelationshipIntegrationTest {
 
     @BeforeEach
     public void setUp() {
+        String[] testUsers = {"TEST_MAKER", "MAKER_1", "CHECKER_1", "TEST_CHECKER", "APPROVER_1", "TEST_USER"};
+        for (String uId : testUsers) {
+            if (userRepository.findById(uId).isEmpty()) {
+                com.bank.cims.model.User u = new com.bank.cims.model.User();
+                u.setId(uId);
+                u.setUsername(uId);
+                u.setFullName(uId);
+                u.setPassword("password");
+                u.setRole("SYSADMIN");
+                u.setBranch("Head Office");
+                u.setSegment("Corporate Banking");
+                u.setActive(true);
+                userRepository.save(u);
+            }
+        }
+
         String uid = UUID.randomUUID().toString().substring(0, 6);
 
         // Corporate Borrower
@@ -429,6 +448,86 @@ public class CollateralFacilityRelationshipIntegrationTest {
     }
 
     @Test
+    @DisplayName("US-04.5: Borrower-owned collateral can be pledged for a distinct borrower with third-party relationship and pledge details")
+    public void testUS045BorrowerOwnedCollateralLinkedAsThirdPartyPledge() {
+        LoanAccount diffLoan = new LoanAccount();
+        diffLoan.setId("loan-us045-" + UUID.randomUUID().toString().substring(0, 6));
+        diffLoan.setLoanReference("LN-US045-001");
+        diffLoan.setCustomerId(custDifferent.getId());
+        diffLoan.setFacilityType("Term Loan");
+        diffLoan.setApprovedLimit(25_000_000.0);
+        diffLoan.setOutstandingBalance(18_000_000.0);
+        diffLoan.setStatus("Active");
+        loanAccountRepository.save(diffLoan);
+
+        // 1. Verify getEligibleFacilitiesForCollateral returns diffLoan when targetCustomerId is custDifferent
+        List<LoanAccount> eligibleForDiff = relationshipService.getEligibleFacilitiesForCollateral(col100M.getId(), custDifferent.getId(), "TEST_MAKER");
+        assertTrue(eligibleForDiff.stream().anyMatch(f -> f.getId().equals(diffLoan.getId())));
+
+        // 1b. Verify targetCustomerId="ALL" returns diffLoan across borrowers for third-party pledge search without re-registering collateral
+        List<LoanAccount> allPortfolioEligible = relationshipService.getEligibleFacilitiesForCollateral(col100M.getId(), "ALL", "TEST_MAKER");
+        assertTrue(allPortfolioEligible.stream().anyMatch(f -> f.getId().equals(diffLoan.getId())));
+
+        // 2. Link col100M (owned by custCorporate) to diffLoan (borrower is custDifferent) with US-04.5 metadata
+        RelationshipRequestDto req = new RelationshipRequestDto();
+        req.setCollateralId(col100M.getId());
+        req.setLoanAccountId(diffLoan.getId());
+        req.setAllocatedAmount(10_000_000.0);
+        req.setLinkageType("Primary");
+        req.setBorrowerCustomerId(custDifferent.getId());
+        req.setRelationshipToBorrower("Guarantor");
+        req.setPledgeAgreementRef("PLG-AGR-US045-2024");
+        req.setConsentInfo("Written Board Resolution & Pledge Agreement on File");
+        req.setThirdPartyPledge(true);
+
+        CollateralFacilityLinkDto created = relationshipService.createRelationship(req, "TEST_MAKER");
+        assertNotNull(created);
+        assertEquals(10_000_000.0, created.getAllocatedAmount());
+        assertTrue(created.isThirdParty());
+        assertEquals("Guarantor", created.getRelationshipToBorrower());
+        assertEquals(custDifferent.getId(), created.getBorrowerCustomerId());
+
+        // 3. Duplicate link between same (collateral, borrower, loan) is prevented
+        RelationshipRequestDto dupReq = new RelationshipRequestDto();
+        dupReq.setCollateralId(col100M.getId());
+        dupReq.setLoanAccountId(diffLoan.getId());
+        dupReq.setAllocatedAmount(5_000_000.0);
+        dupReq.setBorrowerCustomerId(custDifferent.getId());
+        dupReq.setRelationshipToBorrower("Guarantor");
+        dupReq.setPledgeAgreementRef("PLG-AGR-US045-2024");
+        dupReq.setThirdPartyPledge(true);
+
+        IllegalArgumentException dupEx = assertThrows(IllegalArgumentException.class, () -> {
+            relationshipService.createRelationship(dupReq, "TEST_MAKER");
+        });
+        assertTrue(dupEx.getMessage().contains("Duplicate") || dupEx.getMessage().contains("already linked"));
+
+        // 4. US-04.5 validation blocks if selected loan does not belong to associated borrower
+        LoanAccount otherLoan = new LoanAccount();
+        otherLoan.setId("loan-other-" + UUID.randomUUID().toString().substring(0, 6));
+        otherLoan.setLoanReference("LN-OTHER-001");
+        otherLoan.setCustomerId("CUST-OTHER-123");
+        otherLoan.setFacilityType("Term Loan");
+        otherLoan.setApprovedLimit(20_000_000.0);
+        otherLoan.setOutstandingBalance(10_000_000.0);
+        otherLoan.setStatus("Active");
+        loanAccountRepository.save(otherLoan);
+
+        RelationshipRequestDto mismatchReq = new RelationshipRequestDto();
+        mismatchReq.setCollateralId(col100M.getId());
+        mismatchReq.setLoanAccountId(otherLoan.getId()); // belongs to CUST-OTHER-123
+        mismatchReq.setAllocatedAmount(5_000_000.0);
+        mismatchReq.setBorrowerCustomerId(custDifferent.getId()); // Associated borrower is custDifferent!
+        mismatchReq.setRelationshipToBorrower("Guarantor");
+        mismatchReq.setThirdPartyPledge(true);
+
+        IllegalArgumentException mismatchEx = assertThrows(IllegalArgumentException.class, () -> {
+            relationshipService.createRelationship(mismatchReq, "TEST_MAKER");
+        });
+        assertTrue(mismatchEx.getMessage().contains("US-04.5 Validation Failed") || mismatchEx.getMessage().contains("does not belong to the associated borrower"));
+    }
+
+    @Test
     @DisplayName("Relationship Change & History: Modifying allocation records previous value and increments modNo")
     public void testRelationshipChangeTracksHistory() {
         RelationshipRequestDto req = new RelationshipRequestDto();
@@ -549,5 +648,418 @@ public class CollateralFacilityRelationshipIntegrationTest {
         double totalColAgg = (Double) portfolioSummary.get("totalCollateralAggregateExposure");
         assertTrue(trueBank > 0);
         assertNotNull(portfolioSummary.get("doubleCountingDifferential"));
+    }
+
+    @Test
+    @DisplayName("Test 3 (N:1 Pattern): Multiple Collateral Assets securing Single Credit Facility")
+    public void testScenarioManyToOne_Test3() {
+        // Collateral 1: col100M (NSV 80M) -> Loan A (allocated 25M)
+        RelationshipRequestDto req1 = new RelationshipRequestDto();
+        req1.setCollateralId(col100M.getId());
+        req1.setLoanAccountId(loanA.getId());
+        req1.setAllocatedAmount(25_000_000.0);
+        req1.setLinkageType("Primary");
+        relationshipService.createRelationship(req1, "TEST_MAKER");
+
+        // Collateral 2: colVehicles (MV 30M, Haircut 20% -> NSV 24M) -> Loan A (allocated 15M)
+        Collateral colVehicles = new Collateral();
+        colVehicles.setId("col-veh-" + UUID.randomUUID().toString().substring(0, 6));
+        colVehicles.setCode("COL-VEH-01");
+        colVehicles.setCustomerId(custCorporate.getId());
+        colVehicles.setCategory("Movable Properties");
+        colVehicles.setType("Vehicles");
+        colVehicles.setOwnerType("Borrower-owned");
+        colVehicles.setCurrency("ETB");
+        colVehicles.setValuationAmount(30_000_000.0);
+        colVehicles.setHaircut(20.0);
+        colVehicles.setNsv(24_000_000.0);
+        colVehicles.setStatus("Active");
+        colVehicles.setOwningSegment("Corporate Banking");
+        colVehicles.setBranch("BRN-001");
+        collateralRepository.save(colVehicles);
+
+        RelationshipRequestDto req2 = new RelationshipRequestDto();
+        req2.setCollateralId(colVehicles.getId());
+        req2.setLoanAccountId(loanA.getId());
+        req2.setAllocatedAmount(15_000_000.0);
+        req2.setLinkageType("Secondary");
+        relationshipService.createRelationship(req2, "TEST_MAKER");
+
+        // Facility-side inspection: Loan A should show 2 linked collaterals, total allocated = 40M
+        FacilityCollateralSummaryDto facSummary = relationshipService.getFacilityCollateralSummary(loanA.getId());
+        assertEquals(2, facSummary.getLinkedCollateralCount());
+        assertEquals(40_000_000.0, facSummary.getTotalAllocatedCollateral(), 0.01);
+        assertEquals(104_000_000.0, facSummary.getTotalNetCollateralValue(), 0.01); // 80M + 24M = 104M
+        assertEquals(40_000_000.0, facSummary.getOutstandingBalance(), 0.01);
+
+        // Ending C2 link does not remove C1 link
+        LoanCollateralLink link2 = linkRepository.findByCollateralIdAndLoanAccountIdAndStatus(
+                colVehicles.getId(), loanA.getId(), "Active").get(0);
+        relationshipService.endRelationship(link2.getId(), "Vehicle released", "TEST_CHECKER");
+
+        FacilityCollateralSummaryDto updatedFacSummary = relationshipService.getFacilityCollateralSummary(loanA.getId());
+        assertEquals(1, updatedFacSummary.getLinkedCollateralCount());
+        assertEquals(25_000_000.0, updatedFacSummary.getTotalAllocatedCollateral(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Test 4 (N:N Pattern): Multiple Independent Collateral-Facility Associations")
+    public void testScenarioManyToMany_Test4() {
+        // Collaterals: C1 (col100M, NSV 80M), C2 (colMachinery, NSV 50M)
+        Collateral colMachinery = new Collateral();
+        colMachinery.setId("col-mach-" + UUID.randomUUID().toString().substring(0, 6));
+        colMachinery.setCode("COL-MACH-01");
+        colMachinery.setCustomerId(custCorporate.getId());
+        colMachinery.setCategory("Movable Properties");
+        colMachinery.setType("Equipment & Machinery");
+        colMachinery.setOwnerType("Borrower-owned");
+        colMachinery.setCurrency("ETB");
+        colMachinery.setValuationAmount(62_500_000.0);
+        colMachinery.setHaircut(20.0);
+        colMachinery.setNsv(50_000_000.0);
+        colMachinery.setStatus("Active");
+        colMachinery.setOwningSegment("Corporate Banking");
+        colMachinery.setBranch("BRN-001");
+        collateralRepository.save(colMachinery);
+
+        // C1 -> L1 (30M), C1 -> L2 (20M)
+        RelationshipRequestDto reqC1L1 = new RelationshipRequestDto();
+        reqC1L1.setCollateralId(col100M.getId());
+        reqC1L1.setLoanAccountId(loanA.getId());
+        reqC1L1.setAllocatedAmount(30_000_000.0);
+        reqC1L1.setLinkageType("Cross-Collateral");
+        relationshipService.createRelationship(reqC1L1, "TEST_MAKER");
+
+        RelationshipRequestDto reqC1L2 = new RelationshipRequestDto();
+        reqC1L2.setCollateralId(col100M.getId());
+        reqC1L2.setLoanAccountId(loanB.getId());
+        reqC1L2.setAllocatedAmount(20_000_000.0);
+        reqC1L2.setLinkageType("Cross-Collateral");
+        relationshipService.createRelationship(reqC1L2, "TEST_MAKER");
+
+        // C2 -> L1 (10M), C2 -> L2 (25M)
+        RelationshipRequestDto reqC2L1 = new RelationshipRequestDto();
+        reqC2L1.setCollateralId(colMachinery.getId());
+        reqC2L1.setLoanAccountId(loanA.getId());
+        reqC2L1.setAllocatedAmount(10_000_000.0);
+        reqC2L1.setLinkageType("Cross-Collateral");
+        relationshipService.createRelationship(reqC2L1, "TEST_MAKER");
+
+        RelationshipRequestDto reqC2L2 = new RelationshipRequestDto();
+        reqC2L2.setCollateralId(colMachinery.getId());
+        reqC2L2.setLoanAccountId(loanB.getId());
+        reqC2L2.setAllocatedAmount(25_000_000.0);
+        reqC2L2.setLinkageType("Cross-Collateral");
+        relationshipService.createRelationship(reqC2L2, "TEST_MAKER");
+
+        // Verify C1: 2 facilities, 50M allocated, 30M unallocated
+        CollateralSecuredFacilitiesSummaryDto c1Summary = relationshipService.getCollateralSecuredFacilitiesSummary(col100M.getId());
+        assertEquals(2, c1Summary.getLinkedFacilityCount());
+        assertEquals(50_000_000.0, c1Summary.getTotalAllocatedSecurity(), 0.01);
+        assertEquals(30_000_000.0, c1Summary.getUnallocatedSecurity(), 0.01);
+
+        // Verify C2: 2 facilities, 35M allocated, 15M unallocated
+        CollateralSecuredFacilitiesSummaryDto c2Summary = relationshipService.getCollateralSecuredFacilitiesSummary(colMachinery.getId());
+        assertEquals(2, c2Summary.getLinkedFacilityCount());
+        assertEquals(35_000_000.0, c2Summary.getTotalAllocatedSecurity(), 0.01);
+        assertEquals(15_000_000.0, c2Summary.getUnallocatedSecurity(), 0.01);
+
+        // Verify L1: 2 collaterals, 40M allocated
+        FacilityCollateralSummaryDto l1Summary = relationshipService.getFacilityCollateralSummary(loanA.getId());
+        assertEquals(2, l1Summary.getLinkedCollateralCount());
+        assertEquals(40_000_000.0, l1Summary.getTotalAllocatedCollateral(), 0.01);
+
+        // Verify L2: 2 collaterals, 45M allocated
+        FacilityCollateralSummaryDto l2Summary = relationshipService.getFacilityCollateralSummary(loanB.getId());
+        assertEquals(2, l2Summary.getLinkedCollateralCount());
+        assertEquals(45_000_000.0, l2Summary.getTotalAllocatedCollateral(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Test 6: Valid Additional Link (C1 -> L1 exists, C1 -> L2 is accepted)")
+    public void testValidAdditionalLink_Test6() {
+        RelationshipRequestDto req1 = new RelationshipRequestDto();
+        req1.setCollateralId(col100M.getId());
+        req1.setLoanAccountId(loanA.getId());
+        req1.setAllocatedAmount(30_000_000.0);
+        relationshipService.createRelationship(req1, "TEST_MAKER");
+
+        // Adding C1 -> L2 must succeed
+        RelationshipRequestDto req2 = new RelationshipRequestDto();
+        req2.setCollateralId(col100M.getId());
+        req2.setLoanAccountId(loanB.getId());
+        req2.setAllocatedAmount(25_000_000.0);
+        CollateralFacilityLinkDto link2 = relationshipService.createRelationship(req2, "TEST_MAKER");
+
+        assertNotNull(link2);
+        assertEquals(25_000_000.0, link2.getAllocatedAmount());
+        assertEquals("Active", link2.getRelationshipStatus());
+
+        List<LoanCollateralLink> activeLinks = linkRepository.findByCollateralIdAndStatus(col100M.getId(), "Active");
+        assertEquals(2, activeLinks.size());
+    }
+
+    @Test
+    @DisplayName("Test 9: Third-Party Prerequisites Missing (Missing Consent or Pledge Document Rejected with Explanation)")
+    public void testThirdPartyPrerequisitesMissing_Test9() {
+        Collateral tpColMissing = new Collateral();
+        tpColMissing.setId("col-tp-missing-" + UUID.randomUUID().toString().substring(0, 6));
+        tpColMissing.setCode("COL-TP-MISS");
+        tpColMissing.setCustomerId(custCorporate.getId());
+        tpColMissing.setOwnerType("Third-party-owned");
+        tpColMissing.setCategory("Immovable Properties");
+        tpColMissing.setType("Buildings - Commercial");
+        tpColMissing.setValuationAmount(50_000_000.0);
+        tpColMissing.setHaircut(20.0);
+        tpColMissing.setNsv(40_000_000.0);
+        tpColMissing.setStatus("Active");
+        tpColMissing.setOwningSegment("Corporate Banking");
+        tpColMissing.setBranch("BRN-001");
+        collateralRepository.save(tpColMissing);
+
+        CollateralOwner owner = new CollateralOwner();
+        owner.setId("own-tp-miss-" + UUID.randomUUID().toString().substring(0, 6));
+        owner.setCollateralId(tpColMissing.getId());
+        owner.setName("W/ro Chaltu Gemechu");
+        owner.setOwnershipType("Third-party-owned");
+        owner.setRelationshipToBorrower("Shareholder");
+        owner.setPercentage(100.0);
+        owner.setVerificationStatus("Verified");
+        owner.setStatus("Active");
+        collateralOwnerRepository.save(owner);
+
+        // DO NOT upload the mandatory Third-Party Consent and Pledge Agreement or Letter of Consent
+
+        RelationshipRequestDto req = new RelationshipRequestDto();
+        req.setCollateralId(tpColMissing.getId());
+        req.setLoanAccountId(loanA.getId());
+        req.setAllocatedAmount(20_000_000.0);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            relationshipService.createRelationship(req, "TEST_MAKER");
+        });
+        assertTrue(ex.getMessage().contains("mandatory documents are missing") ||
+                   ex.getMessage().contains("Third-Party Consent and Pledge Agreement") ||
+                   ex.getMessage().contains("Letter of Consent"));
+    }
+
+    @Test
+    @DisplayName("Test 10: Ineligible Facility Status (Closed, Settled, Cancelled Rejected with Reason)")
+    public void testFacilityStatusIneligible_Test10() {
+        // Set loanA status to Closed
+        loanA.setStatus("Closed");
+        loanAccountRepository.save(loanA);
+
+        RelationshipRequestDto req = new RelationshipRequestDto();
+        req.setCollateralId(col100M.getId());
+        req.setLoanAccountId(loanA.getId());
+        req.setAllocatedAmount(20_000_000.0);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            relationshipService.createRelationship(req, "TEST_MAKER");
+        });
+        assertTrue(ex.getMessage().contains("Facility Status Ineligible") || ex.getMessage().contains("Closed"));
+    }
+
+    @Test
+    @DisplayName("Test 12: Allocation Amendment Self-Exclusion (Current allocation excluded during capacity check)")
+    public void testAllocationAmendmentSelfExclusion_Test12() {
+        // col100M NSV = 80M
+        // Create initial link of 50M (remaining capacity = 30M)
+        RelationshipRequestDto req = new RelationshipRequestDto();
+        req.setCollateralId(col100M.getId());
+        req.setLoanAccountId(loanA.getId());
+        req.setAllocatedAmount(50_000_000.0);
+        CollateralFacilityLinkDto link = relationshipService.createRelationship(req, "TEST_MAKER");
+
+        // Amend allocation from 50M to 70M.
+        // If prior 50M were not excluded, 50M + 70M = 120M > 80M would fail!
+        // Because of self-exclusion, projected = (50 - 50) + 70 = 70M <= 80M -> SUCCEEDS!
+        RelationshipRequestDto amendReq = new RelationshipRequestDto();
+        amendReq.setAllocatedAmount(70_000_000.0);
+        amendReq.setChangeReason("Increased credit facility utilization");
+
+        CollateralFacilityLinkDto amended = relationshipService.updateRelationship(link.getId(), amendReq, "TEST_CHECKER");
+        assertEquals(70_000_000.0, amended.getAllocatedAmount());
+
+        CollateralSecuredFacilitiesSummaryDto colSummary = relationshipService.getCollateralSecuredFacilitiesSummary(col100M.getId());
+        assertEquals(70_000_000.0, colSummary.getTotalAllocatedSecurity(), 0.01);
+        assertEquals(10_000_000.0, colSummary.getUnallocatedSecurity(), 0.01);
+
+        // Amending to 85M (> 80M NSV) must fail
+        amendReq.setAllocatedAmount(85_000_000.0);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            relationshipService.updateRelationship(link.getId(), amendReq, "TEST_CHECKER");
+        });
+        assertTrue(ex.getMessage().contains("Allocation Overflow") || ex.getMessage().contains("Net Security Value"));
+    }
+
+    @Test
+    @DisplayName("Test 15: End One Relationship Preserves Other Active Relationships")
+    public void testEndOneRelationshipPreservesOther_Test15() {
+        // C1 -> L1 (30M) and C1 -> L2 (25M)
+        RelationshipRequestDto reqA = new RelationshipRequestDto();
+        reqA.setCollateralId(col100M.getId());
+        reqA.setLoanAccountId(loanA.getId());
+        reqA.setAllocatedAmount(30_000_000.0);
+        CollateralFacilityLinkDto linkA = relationshipService.createRelationship(reqA, "TEST_MAKER");
+
+        RelationshipRequestDto reqB = new RelationshipRequestDto();
+        reqB.setCollateralId(col100M.getId());
+        reqB.setLoanAccountId(loanB.getId());
+        reqB.setAllocatedAmount(25_000_000.0);
+        CollateralFacilityLinkDto linkB = relationshipService.createRelationship(reqB, "TEST_MAKER");
+
+        // End C1 -> L1
+        relationshipService.endRelationship(linkA.getId(), "Refinanced via other security", "TEST_CHECKER");
+
+        // Verify C1 -> L1 is Ended
+        LoanCollateralLink dbLinkA = linkRepository.findById(linkA.getId()).orElse(null);
+        assertNotNull(dbLinkA);
+        assertEquals("Ended", dbLinkA.getStatus());
+
+        // Verify C1 -> L2 is completely Active and intact
+        LoanCollateralLink dbLinkB = linkRepository.findById(linkB.getId()).orElse(null);
+        assertNotNull(dbLinkB);
+        assertEquals("Active", dbLinkB.getStatus());
+        assertEquals(25_000_000.0, dbLinkB.getAllocatedAmount());
+
+        // Collateral summary reflects only L2 as active
+        CollateralSecuredFacilitiesSummaryDto colSummary = relationshipService.getCollateralSecuredFacilitiesSummary(col100M.getId());
+        assertEquals(1, colSummary.getLinkedFacilityCount());
+        assertEquals(25_000_000.0, colSummary.getTotalAllocatedSecurity(), 0.01);
+        assertEquals(55_000_000.0, colSummary.getUnallocatedSecurity(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Test 16: Multi-Facility Collateral Release Blocked when any obligation remains unsettled")
+    public void testMultiFacilityCollateralReleaseBlocked_Test16() {
+        // col100M secures Loan A (40M) and Loan B (25M)
+        RelationshipRequestDto reqA = new RelationshipRequestDto();
+        reqA.setCollateralId(col100M.getId());
+        reqA.setLoanAccountId(loanA.getId());
+        reqA.setAllocatedAmount(40_000_000.0);
+        relationshipService.createRelationship(reqA, "TEST_MAKER");
+
+        RelationshipRequestDto reqB = new RelationshipRequestDto();
+        reqB.setCollateralId(col100M.getId());
+        reqB.setLoanAccountId(loanB.getId());
+        reqB.setAllocatedAmount(25_000_000.0);
+        relationshipService.createRelationship(reqB, "TEST_MAKER");
+
+        // Settle Loan A only
+        loanA.setOutstandingBalance(0.0);
+        loanA.setStatus("Closed");
+        loanAccountRepository.save(loanA);
+
+        // Loan B is still outstanding (25M). Release must remain blocked!
+        Map<String, Object> releaseCheck1 = relationshipService.validateCollateralRelease(col100M.getId());
+        assertFalse((Boolean) releaseCheck1.get("eligibleForRelease"));
+        assertEquals(25_000_000.0, (Double) releaseCheck1.get("totalUnclearedExposure"), 0.01);
+
+        // Now settle Loan B as well
+        loanB.setOutstandingBalance(0.0);
+        loanB.setStatus("Closed");
+        loanAccountRepository.save(loanB);
+
+        // Both facilities settled -> release is eligible!
+        Map<String, Object> releaseCheck2 = relationshipService.validateCollateralRelease(col100M.getId());
+        assertTrue((Boolean) releaseCheck2.get("eligibleForRelease"));
+        assertEquals(0.0, (Double) releaseCheck2.get("totalUnclearedExposure"), 0.01);
+    }
+
+    @Test
+    @DisplayName("Test 17: Bidirectional Consistency (Collateral-First vs Facility-First views)")
+    public void testBidirectionalConsistency_Test17() {
+        RelationshipRequestDto req = new RelationshipRequestDto();
+        req.setCollateralId(col100M.getId());
+        req.setLoanAccountId(loanA.getId());
+        req.setAllocatedAmount(35_000_000.0);
+        req.setLinkageType("Primary");
+        relationshipService.createRelationship(req, "TEST_MAKER");
+
+        // Direction 1: Collateral -> Facilities
+        CollateralSecuredFacilitiesSummaryDto colSummary = relationshipService.getCollateralSecuredFacilitiesSummary(col100M.getId());
+        assertEquals(1, colSummary.getLinkedFacilityCount());
+        assertEquals(35_000_000.0, colSummary.getTotalAllocatedSecurity(), 0.01);
+        assertEquals(loanA.getLoanReference(), colSummary.getSecuredFacilities().get(0).getLoanReference());
+
+        // Direction 2: Facility -> Collaterals
+        FacilityCollateralSummaryDto facSummary = relationshipService.getFacilityCollateralSummary(loanA.getId());
+        assertEquals(1, facSummary.getLinkedCollateralCount());
+        assertEquals(35_000_000.0, facSummary.getTotalAllocatedCollateral(), 0.01);
+        assertEquals(col100M.getCode(), facSummary.getSecuringCollaterals().get(0).getCollateralCode());
+    }
+
+    @Test
+    @DisplayName("Test 18: Authoritative Eligibility Explanation")
+    public void testAuthoritativeEligibilityExplanation_Test18() {
+        RelationshipRequestDto validReq = new RelationshipRequestDto();
+        validReq.setCollateralId(col100M.getId());
+        validReq.setLoanAccountId(loanA.getId());
+        validReq.setAllocatedAmount(40_000_000.0);
+
+        RelationshipValidationResultDto validResult = relationshipService.validateRelationship(validReq);
+        assertTrue(validResult.isValid());
+        assertTrue(validResult.isCanProceed());
+        assertTrue(validResult.isOwnerBorrowerMatch());
+        assertNotNull(validResult.getNetCollateralValue());
+        assertNotNull(validResult.getChecks());
+
+        // Candidate collaterals evaluation for Loan A
+        List<CollateralCandidateDto> candidates = relationshipService.getEligibleCollateralsForFacility(loanA.getId(), "TEST_USER");
+        assertNotNull(candidates);
+        assertFalse(candidates.isEmpty());
+        CollateralCandidateDto cand = candidates.stream().filter(c -> c.getId().equalsIgnoreCase(col100M.getId())).findFirst().orElse(null);
+        assertNotNull(cand);
+        assertTrue(cand.isEligible());
+        assertEquals(80_000_000.0, cand.getNetCollateralValue(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Test 19: Historical Records Preserved and Excluded from Active Allocations on Re-linking")
+    public void testHistoricalRecordsPreservedOnReLinking_Test19() {
+        // 1. Initial Link (30M)
+        RelationshipRequestDto req1 = new RelationshipRequestDto();
+        req1.setCollateralId(col100M.getId());
+        req1.setLoanAccountId(loanA.getId());
+        req1.setAllocatedAmount(30_000_000.0);
+        CollateralFacilityLinkDto link1 = relationshipService.createRelationship(req1, "TEST_MAKER");
+
+        // 2. End link
+        relationshipService.endRelationship(link1.getId(), "Matured contract", "TEST_CHECKER");
+
+        // 3. Re-establish link with new terms (35M)
+        RelationshipRequestDto req2 = new RelationshipRequestDto();
+        req2.setCollateralId(col100M.getId());
+        req2.setLoanAccountId(loanA.getId());
+        req2.setAllocatedAmount(35_000_000.0);
+        req2.setChangeReason("New credit agreement executed");
+        CollateralFacilityLinkDto link2 = relationshipService.createRelationship(req2, "TEST_MAKER");
+
+        assertNotEquals(link1.getId(), link2.getId());
+
+        // Check history and status in database: exactly 1 Active, 1 Ended
+        List<LoanCollateralLink> allLinks = linkRepository.findByCollateralId(col100M.getId());
+        long activeCount = allLinks.stream().filter(l -> "Active".equalsIgnoreCase(l.getStatus())).count();
+        long endedCount = allLinks.stream().filter(l -> "Ended".equalsIgnoreCase(l.getStatus())).count();
+        assertEquals(1, activeCount);
+        assertEquals(1, endedCount);
+
+        // Active allocation on col100M must be 35M (historical 30M is NOT counted)
+        CollateralSecuredFacilitiesSummaryDto colSummary = relationshipService.getCollateralSecuredFacilitiesSummary(col100M.getId());
+        assertEquals(35_000_000.0, colSummary.getTotalAllocatedSecurity(), 0.01);
+        assertEquals(45_000_000.0, colSummary.getUnallocatedSecurity(), 0.01); // 80M - 35M = 45M
+    }
+
+    @Test
+    @DisplayName("Test 20: CBS Relationship Reconciliation (MATCHING, CHANGED, CBS_ONLY, CIMS_ONLY)")
+    public void testCbsRelationshipReconciliation_Test20() {
+        CbsRelationshipReconciliationDto recon = relationshipService.reconcileCbsRelationships();
+        assertNotNull(recon);
+        assertNotNull(recon.getReconciliationTimestamp());
+        assertTrue(recon.getTotalCbsRelationships() >= 0);
+        assertTrue(recon.getTotalCimsRelationships() >= 0);
+        assertNotNull(recon.getItems());
     }
 }

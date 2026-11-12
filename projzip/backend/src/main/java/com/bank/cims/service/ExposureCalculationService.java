@@ -110,11 +110,67 @@ public class ExposureCalculationService {
         summary.setTotalOutstandingExposure(totalOutstanding);
         summary.setFacilityBreakdowns(breakdowns);
 
-        // Required Insurance Rule: Sum Insured >= Max(Outstanding Balance, Collateral Value)
-        boolean isMandatory = effectiveInsuranceService.isInsuranceMandatory(collateral.getCategory(), collateral.getType());
+        // 1st / 2nd Degree Mortgage Priority & Combined Exposure Evaluation
+        String rank = collateral.getCollateralRank() != null ? collateral.getCollateralRank() : "1st";
+        boolean isSecondDegree = "2nd".equalsIgnoreCase(rank);
+        double firstDegreeBal = isSecondDegree ? collateral.getFirstDegreeOutstandingBalance() : 0.0;
 
+        // If internal first-degree balance is 0 or needs CBS refresh, auto-resolve from linked 1st-degree collateral if present
+        if (isSecondDegree && collateral.isFirstDegreeInternal() && firstDegreeBal <= 0 && collateral.getFirstDegreeCollateralId() != null) {
+            final String firstColId = collateral.getFirstDegreeCollateralId();
+            Collateral firstCol = collateralRepository.findById(firstColId)
+                    .or(() -> collateralRepository.findByCode(firstColId)).orElse(null);
+            if (firstCol != null) {
+                List<LoanCollateralLink> firstLinks = loanCollateralLinkRepository.findByCollateralId(firstCol.getId());
+                double resolvedFirstBal = 0;
+                for (LoanCollateralLink fl : firstLinks) {
+                    if ("Active".equalsIgnoreCase(fl.getStatus()) || "Active".equalsIgnoreCase(fl.getRelationshipStatus())) {
+                        String facId = fl.getLoanAccountId() != null ? fl.getLoanAccountId() : fl.getFacilityId();
+                        LoanAccount fac = facId != null ? loanAccountRepository.findById(facId).or(() -> loanAccountRepository.findByLoanReference(facId)).orElse(null) : null;
+                        if (fac != null && fac.getOutstandingBalance() > 0) {
+                            resolvedFirstBal += fac.getOutstandingBalance();
+                        }
+                    }
+                }
+                if (resolvedFirstBal > 0) {
+                    firstDegreeBal = resolvedFirstBal;
+                }
+            }
+        }
+
+        double combinedExposure = isSecondDegree ? (firstDegreeBal + totalOutstanding) : totalOutstanding;
+        double bankAssessedValue = collateral.getValuationAmount();
+
+        summary.setCollateralRank(rank);
+        summary.setFirstDegreeInternal(collateral.isFirstDegreeInternal());
+        summary.setFirstDegreeCollateralId(collateral.getFirstDegreeCollateralId());
+        summary.setFirstDegreeHolderName(collateral.getFirstDegreeHolderName());
+        summary.setFirstDegreeFacilityRef(collateral.getFirstDegreeFacilityRef());
+        summary.setFirstDegreeOutstandingBalance(firstDegreeBal);
+        summary.setFirstDegreeBalanceAsOfDate(collateral.getFirstDegreeBalanceAsOfDate());
+        summary.setSecondDegreeExposure(totalOutstanding);
+        summary.setCombinedExposure(combinedExposure);
+        summary.setBankNotedAsSecondMortgagee(collateral.isBankNotedAsSecondMortgagee());
+        summary.setPromotionEligible(collateral.isPromotionEligible());
+        summary.setPromotionStatus(collateral.getPromotionStatus());
+
+        // Rule: Combined exposure must not exceed collateral's Bank-assessed value or a warning is raised
+        if (isSecondDegree && combinedExposure > bankAssessedValue) {
+            double excess = combinedExposure - bankAssessedValue;
+            summary.setExposureWarning(true);
+            summary.setExposureWarningMessage(String.format(Locale.ROOT,
+                    "EXPOSURE WARNING: Combined exposure of ETB %,.2f (1st-Degree: ETB %,.2f + 2nd-Degree: ETB %,.2f) exceeds Bank-assessed valuation of ETB %,.2f by ETB %,.2f. Credit committee review or additional security required.",
+                    combinedExposure, firstDegreeBal, totalOutstanding, bankAssessedValue, excess));
+        }
+
+        // Required Insurance Rule: Tested against combined exposure for second-degree collateral
+        boolean isMandatory = effectiveInsuranceService.isInsuranceMandatory(collateral.getCategory(), collateral.getType());
         double thresholdPct = configurationService.getMinimumCoverageAdequacyPct();
-        double baseRequired = Math.max(totalOutstanding, collateral.getValuationAmount());
+        double effectiveExposureForInsurance = isSecondDegree ? combinedExposure : totalOutstanding;
+        double baseAssetVal = (collateral.getInsurableValue() != null && collateral.getInsurableValue() > 0)
+                ? collateral.getInsurableValue()
+                : collateral.getValuationAmount();
+        double baseRequired = Math.max(effectiveExposureForInsurance, baseAssetVal);
         double reqAmount = isMandatory ? (baseRequired * (thresholdPct / 100.0)) : 0.0;
         summary.setRequiredInsurancePercentage(isMandatory ? thresholdPct : 0.0);
         summary.setRequiredInsuranceAmount(reqAmount);
@@ -143,12 +199,15 @@ public class ExposureCalculationService {
         double gap = Math.max(0, reqAmount - currentInsured);
         summary.setInsuranceGap(gap);
 
-        // Adequacy Status
+        // Adequacy Status with combined exposure protection test
         String status;
         if (!isMandatory) {
             status = "NOT REQUIRED";
         } else if (hasExpiredPolicy && currentInsured < reqAmount) {
             status = "EXPIRED";
+        } else if (isSecondDegree && currentInsured < combinedExposure) {
+            // Insured amount is tested directly against combined exposure
+            status = "UNDERINSURED";
         } else if (currentInsured >= reqAmount && reqAmount > 0) {
             if (currentInsured > reqAmount * 1.10) {
                 status = "EXCESS";
@@ -177,15 +236,34 @@ public class ExposureCalculationService {
             collateralRepository.save(collateral);
         }
 
-        // Formulate clear explanation
+        // Formulate clear authoritative explanation
         StringBuilder explanation = new StringBuilder();
         explanation.append(String.format(Locale.ROOT, "Collateral Value: ETB %,.2f with Haircut of %.1f%% yields Net Security Value of ETB %,.2f. ", 
                 collateral.getValuationAmount(), collateral.getHaircut(), netValue));
-        explanation.append(String.format(Locale.ROOT, "Allocated to %d facilities: ETB %,.2f (Remaining unallocated: ETB %,.2f). ", 
-                breakdowns.size(), totalAllocated, summary.getUnallocatedSecurity()));
+        
+        if (isSecondDegree) {
+            explanation.append(String.format(Locale.ROOT, "[2nd-Degree Charge | Priority: Subordinated to %s (1st-Degree Ref: %s, Outstanding: ETB %,.2f as of %s)]. ",
+                    collateral.getFirstDegreeHolderName() != null ? collateral.getFirstDegreeHolderName() : "1st Mortgagee",
+                    collateral.getFirstDegreeFacilityRef() != null ? collateral.getFirstDegreeFacilityRef() : "N/A",
+                    firstDegreeBal,
+                    collateral.getFirstDegreeBalanceAsOfDate() != null ? collateral.getFirstDegreeBalanceAsOfDate() : "N/A"));
+            explanation.append(String.format(Locale.ROOT, "Combined Exposure: ETB %,.2f (1st: ETB %,.2f + 2nd: ETB %,.2f) vs Valuation: ETB %,.2f. ",
+                    combinedExposure, firstDegreeBal, totalOutstanding, bankAssessedValue));
+            if (summary.isExposureWarning()) {
+                explanation.append(String.format(Locale.ROOT, "⚠️ %s ", summary.getExposureWarningMessage()));
+            }
+            if (!collateral.isBankNotedAsSecondMortgagee()) {
+                explanation.append("⚠️ Notice: Bank is not yet endorsed as second mortgagee on first-degree insurance policy. ");
+            }
+        } else {
+            explanation.append(String.format(Locale.ROOT, "Allocated to %d facilities: ETB %,.2f (Remaining unallocated: ETB %,.2f). ", 
+                    breakdowns.size(), totalAllocated, summary.getUnallocatedSecurity()));
+        }
+
         if (isMandatory) {
-            explanation.append(String.format(Locale.ROOT, "Mandatory Insurance Requirement: Max(Outstanding Exposure ETB %,.2f, Collateral Value ETB %,.2f) = ETB %,.2f. Current Active Insured Coverage: ETB %,.2f. Gap: ETB %,.2f -> Status: %s.",
-                    totalOutstanding, collateral.getValuationAmount(), reqAmount, currentInsured, gap, status));
+            explanation.append(String.format(Locale.ROOT, "Mandatory Insurance Requirement: Max(%s ETB %,.2f, Collateral Value ETB %,.2f) = ETB %,.2f. Current Active Insured Coverage: ETB %,.2f. Gap: ETB %,.2f -> Status: %s.",
+                    isSecondDegree ? "Combined Exposure" : "Outstanding Exposure",
+                    effectiveExposureForInsurance, collateral.getValuationAmount(), reqAmount, currentInsured, gap, status));
         } else {
             explanation.append("Insurance is Not Mandatory for this collateral category.");
         }

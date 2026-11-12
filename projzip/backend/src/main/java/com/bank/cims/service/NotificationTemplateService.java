@@ -20,9 +20,11 @@ public class NotificationTemplateService {
     private static final Pattern PLACEHOLDER=Pattern.compile("\\{([^}]+)}");
     private static final Set<String> SUPPORTED=Set.of(
         "customer name","customername","policy number","policynumber","collateral id","collateralid","collateral code","collateralcode",
-        "expiry date","expirydate","days remaining","daysremaining","insurer name","insurername","amount","insured amount","insuredamount",
+        "expiry date","expirydate","days remaining","daysremaining","days overdue","daysoverdue","insurer name","insurername","amount","insured amount","insuredamount",
         "maker id","makerid","checker id","checkerid","action type","actiontype","remarks","comments","branch","rm name","rmname","rm phone","rmphone",
-        "loan account number","loanaccountnumber","entity id","entityid"
+        "loan account number","loanaccountnumber","entity id","entityid","rejection reason","rejectionreason",
+        "district name","districtname","area office","areaoffice","overdue count","overduecount","total exposure","totalexposure","report date","reportdate",
+        "escalation stage","escalationstage"
     );
 
     public void validateTemplatePlaceholders(String text){
@@ -57,8 +59,11 @@ public class NotificationTemplateService {
             if(channel!=null&&t.getType()!=null&&!t.getType().equalsIgnoreCase(channel))continue;
             if(code!=null && (code.equalsIgnoreCase(t.getId())||code.equalsIgnoreCase(t.getName()))) {match=t;break;}
             if(code!=null && code.matches("(?i)PRE_EXPIRY_\\d+") && t.getTriggerDaysBefore()==Integer.parseInt(code.substring(code.lastIndexOf('_')+1))){match=t;break;}
+            if(code!=null && code.equalsIgnoreCase("POST_EXPIRY_ESCALATION_10") && t.getName()!=null&&(t.getName().toLowerCase().contains("post")||t.getName().toLowerCase().contains("10"))){match=t;break;}
+            if(code!=null && (code.equalsIgnoreCase("POST_EXPIRY_ESCALATION_15_CONSOLIDATED") || code.equalsIgnoreCase("DISTRICT_CONSOLIDATED_OVERDUE_REPORT")) && t.getName()!=null&&t.getName().toLowerCase().contains("consolidated")){match=t;break;}
             if(code!=null && code.matches("(?i)RENEWAL_ESCALATION_.*") && t.getName()!=null&&t.getName().toLowerCase().contains("escalation")){match=t;break;}
             if(code!=null && code.equalsIgnoreCase("CUSTOMER_POLICY_EXPIRY_REMINDER") && t.getName()!=null&&t.getName().toLowerCase().contains("customer")){match=t;break;}
+            if(code!=null && code.equalsIgnoreCase("POLICY_EXPIRY_REMINDER") && t.getName()!=null&&t.getName().toLowerCase().contains("reminder")){match=t;break;}
         }
         if(match!=null){
             validateTemplatePlaceholders(match.getSubject()); validateTemplatePlaceholders(match.getBody());
@@ -73,6 +78,9 @@ public class NotificationTemplateService {
     public NotificationTemplate saveTemplate(NotificationTemplate t,String userId){
         if(t==null||t.getName()==null||t.getName().isBlank())throw new IllegalArgumentException("Template name is mandatory.");
         if(t.getBody()==null||t.getBody().isBlank())throw new IllegalArgumentException("Template body is mandatory.");
+        if (userId != null && !userId.isBlank() && !"SYSADMIN".equalsIgnoreCase(userId)) {
+            cimsService.assertUserPermission(userId, "Administration", "EDIT");
+        }
         if(t.getType()==null||t.getType().isBlank())t.setType("Email");
         if(!t.getType().equalsIgnoreCase("Email")&&!t.getType().equalsIgnoreCase("SMS"))throw new IllegalArgumentException("Template channel must be Email or SMS.");
         if(t.getTriggerDaysBefore()<0||t.getTriggerDaysBefore()>3650)throw new IllegalArgumentException("Template trigger days must be between 0 and 3650.");

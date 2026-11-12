@@ -73,4 +73,6 @@ public class OwnershipTransfer {
     public void setApprovedAt(String approvedAt) { this.approvedAt = approvedAt; }
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
+    public String getRequestedBy() { return initiatedBy; }
+    public void setRequestedBy(String requestedBy) { this.initiatedBy = requestedBy; }
 }

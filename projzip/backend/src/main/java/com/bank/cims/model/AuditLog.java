@@ -22,7 +22,7 @@ public class AuditLog {
     private String roleCode;
 
     @Column(name = "ip_address", nullable = false)
-    private String ipAddress;
+    private String ipAddress = "127.0.0.1";
 
     @Column(name = "action_type", nullable = false)
     private String actionType;

@@ -94,7 +94,7 @@ public class EffectiveInsuranceService {
             if (p.getRenewedFromPolicyId() != null && !p.getRenewedFromPolicyId().isBlank()) {
                 // If renewal is active/approved and effective, old policy is superseded
                 LocalDate eff = parseDate(p.getEffectiveDate());
-                if (eff == null || !eff.isAfter(effectiveAsOf.plusDays(30))) {
+                if (eff == null || !eff.isAfter(effectiveAsOf)) {
                     supersededPolicyIds.add(p.getRenewedFromPolicyId().trim());
                 }
             }
@@ -128,7 +128,7 @@ public class EffectiveInsuranceService {
 
             // Check if status is Active or Approved
             if ("Active".equalsIgnoreCase(stat) || "Approved".equalsIgnoreCase(stat)) {
-                if (effDate != null && effDate.isAfter(effectiveAsOf.plusDays(30))) {
+                if (effDate != null && effDate.isAfter(effectiveAsOf)) {
                     // Future inception policy, not yet effective
                     continue;
                 }
@@ -221,8 +221,12 @@ public class EffectiveInsuranceService {
                 if (collateralLinks != null) {
                     for (LoanCollateralLink l : collateralLinks) {
                         if (!isLinkActive(l)) continue;
-                        String lFac = l.getFacilityId() != null ? l.getFacilityId() : l.getLoanAccountId();
-                        if (lFac != null && (lFac.equals(facId) || (facRef != null && lFac.equals(facRef)))) {
+                        String lFacId = l.getFacilityId();
+                        String lLoanAccId = l.getLoanAccountId();
+                        String fLineCode = f.getLineCode();
+                        boolean matches = (lFacId != null && (lFacId.equalsIgnoreCase(facId) || (facRef != null && lFacId.equalsIgnoreCase(facRef)) || (fLineCode != null && lFacId.equalsIgnoreCase(fLineCode))))
+                                       || (lLoanAccId != null && (lLoanAccId.equalsIgnoreCase(facId) || (facRef != null && lLoanAccId.equalsIgnoreCase(facRef)) || (fLineCode != null && lLoanAccId.equalsIgnoreCase(fLineCode))));
+                        if (matches) {
                             matchingLink = l;
                             break;
                         }
@@ -262,6 +266,9 @@ public class EffectiveInsuranceService {
                     facLinks = allLinksByFacilityId.get(facId);
                     if (facLinks == null && facRef != null) {
                         facLinks = allLinksByFacilityId.get(facRef);
+                    }
+                    if (facLinks == null && f.getLineCode() != null) {
+                        facLinks = allLinksByFacilityId.get(f.getLineCode());
                     }
                 }
 
@@ -304,9 +311,12 @@ public class EffectiveInsuranceService {
         // Check if insurance is mandatory for this category and type
         res.isMandatory = isInsuranceMandatory(collateral.getCategory(), collateral.getType());
 
-        // Insurance Requirement = MAX(Allocated Secured Exposure, Collateral Value)
+        // Insurance Requirement = MAX(Allocated Secured Exposure, Collateral Value / Insurable Value)
         if (res.isMandatory) {
-            res.insuranceRequired = Math.max(res.totalAllocatedSecuredExposure, collateral.getValuationAmount());
+            double baseAssetVal = (collateral.getInsurableValue() != null && collateral.getInsurableValue() > 0)
+                    ? collateral.getInsurableValue()
+                    : collateral.getValuationAmount();
+            res.insuranceRequired = Math.max(res.totalAllocatedSecuredExposure, baseAssetVal);
         } else {
             res.insuranceRequired = 0.0;
         }
@@ -364,15 +374,18 @@ public class EffectiveInsuranceService {
     public boolean isInsuranceMandatory(String category, String type) {
         if (category == null || category.isBlank()) return true;
         try {
-            List<CollateralTaxonomy> allTax = collateralTaxonomyRepository.findAll();
+            // Finding 35: ONLY active taxonomy records can determine insurance requirements
+            List<CollateralTaxonomy> allTax = collateralTaxonomyRepository.findAll().stream()
+                    .filter(CollateralTaxonomy::isActive)
+                    .toList();
             if (allTax.isEmpty()) return true;
 
             String normCat = category.trim().toLowerCase(Locale.ROOT);
             String normType = type != null ? type.trim().toLowerCase(Locale.ROOT) : "";
 
-            // 1. Try exact or fuzzy match on both category and subCategory (type)
+            // 1. Try exact or canonical alias match on both category and subCategory (type)
             if (!normType.isBlank()) {
-                // Exact category + exact subCategory
+                // Tier 1: Exact category + exact subCategory
                 for (CollateralTaxonomy t : allTax) {
                     if (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(normCat)
                             && t.getSubCategory() != null && t.getSubCategory().trim().equalsIgnoreCase(normType)) {
@@ -380,7 +393,7 @@ public class EffectiveInsuranceService {
                     }
                 }
 
-                // Substring / contains match
+                // Tier 2: Canonical alias match
                 for (CollateralTaxonomy t : allTax) {
                     if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)) {
                         if (t.getSubCategory() != null && isSubCategoryMatch(t.getSubCategory(), normType)) {
@@ -391,14 +404,9 @@ public class EffectiveInsuranceService {
             }
 
             // 2. Fall back to category-level check
-            List<CollateralTaxonomy> catTax = collateralTaxonomyRepository.findByCategoryIgnoreCase(category);
-            if (catTax.isEmpty()) {
-                for (CollateralTaxonomy t : allTax) {
-                    if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)) {
-                        catTax.add(t);
-                    }
-                }
-            }
+            List<CollateralTaxonomy> catTax = allTax.stream()
+                    .filter(t -> t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat))
+                    .toList();
             if (catTax.isEmpty()) return true;
             return catTax.stream().anyMatch(CollateralTaxonomy::isInsuranceMandatory);
         } catch (Exception e) {
@@ -413,11 +421,25 @@ public class EffectiveInsuranceService {
     public String getMandatoryCoverageType(String category, String type) {
         if (category == null || category.isBlank()) return null;
         try {
-            List<CollateralTaxonomy> allTax = collateralTaxonomyRepository.findAll();
+            // Finding 35: ONLY active taxonomy records can determine mandatory coverage
+            List<CollateralTaxonomy> allTax = collateralTaxonomyRepository.findAll().stream()
+                    .filter(CollateralTaxonomy::isActive)
+                    .toList();
             String normCat = category.trim().toLowerCase(Locale.ROOT);
             String normType = type != null ? type.trim().toLowerCase(Locale.ROOT) : "";
 
             if (!normType.isBlank()) {
+                // Tier 1: Exact category + exact subCategory
+                for (CollateralTaxonomy t : allTax) {
+                    if (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(normCat)
+                            && t.getSubCategory() != null && t.getSubCategory().trim().equalsIgnoreCase(normType)) {
+                        if (t.getMandatoryCoverageType() != null && !t.getMandatoryCoverageType().isBlank()) {
+                            return t.getMandatoryCoverageType();
+                        }
+                    }
+                }
+
+                // Tier 2: Canonical alias match
                 for (CollateralTaxonomy t : allTax) {
                     if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)
                             && t.getSubCategory() != null && isSubCategoryMatch(t.getSubCategory(), normType)) {
@@ -427,6 +449,7 @@ public class EffectiveInsuranceService {
                     }
                 }
             }
+            // Tier 3: Category level fallback
             for (CollateralTaxonomy t : allTax) {
                 if (t.getCategory() != null && isCategoryMatch(t.getCategory(), normCat)) {
                     if (t.getMandatoryCoverageType() != null && !t.getMandatoryCoverageType().isBlank()) {

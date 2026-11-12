@@ -43,6 +43,9 @@ public class ValidationCheckItemDto {
         this.message = message;
         this.failedRequirement = failedRequirement;
         this.exceptionType = exceptionType;
+        if (exceptionType != null && (exceptionType.equalsIgnoreCase("HARD_STOP") || exceptionType.equalsIgnoreCase("WARNING") || exceptionType.equalsIgnoreCase("INFO") || exceptionType.equalsIgnoreCase("CRITICAL"))) {
+            this.severity = exceptionType;
+        }
     }
 
     public String getCategory() { return category; }
@@ -61,6 +64,7 @@ public class ValidationCheckItemDto {
     public void setFailedRequirement(String failedRequirement) { this.failedRequirement = failedRequirement; }
     public String getRuleKey() { return ruleKey; }
     public void setRuleKey(String ruleKey) { this.ruleKey = ruleKey; }
+    public String getCode() { return ruleKey; }
     public String getSeverity() { return severity; }
     public void setSeverity(String severity) { this.severity = severity; }
 }

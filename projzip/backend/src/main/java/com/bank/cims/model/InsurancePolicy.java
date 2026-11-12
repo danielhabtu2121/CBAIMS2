@@ -172,4 +172,10 @@ public class InsurancePolicy {
     public void setLoanAccountId(String loanAccountId) { this.loanAccountId = loanAccountId; }
     public String getOnceAuth() { return onceAuth; }
     public void setOnceAuth(String onceAuth) { this.onceAuth = onceAuth; }
+
+    @Transient
+    private java.util.List<OwnershipDocument> documents = new java.util.ArrayList<>();
+
+    public java.util.List<OwnershipDocument> getDocuments() { return documents; }
+    public void setDocuments(java.util.List<OwnershipDocument> documents) { this.documents = documents; }
 }

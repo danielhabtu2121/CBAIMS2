@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Values are persisted in cims_system_parameters and refreshed immediately after save.
  */
 @Service
-@Transactional
 public class ConfigurationService {
     @Autowired private SystemParameterRepository systemParameterRepository;
     @Autowired private ReminderScheduleRepository reminderScheduleRepository;
@@ -27,6 +26,8 @@ public class ConfigurationService {
     @Autowired private ApprovedInsurerRepository approvedInsurerRepository;
     @Autowired private MandatoryDocumentRuleRepository mandatoryDocumentRuleRepository;
     @Autowired private RolePermissionRepository rolePermissionRepository;
+    @Autowired private CollateralTaxonomyRepository collateralTaxonomyRepository;
+    @Autowired private CollateralRepository collateralRepository;
     @Autowired @Lazy private CimsService cimsService;
 
     private final Map<String, String> cache = new ConcurrentHashMap<>();
@@ -60,12 +61,19 @@ public class ConfigurationService {
         Map.entry("escalation_overdue_start_days","10"),
         Map.entry("escalation_overdue_interval_days","15"),
         Map.entry("exception_scan_enabled","true"),
-        Map.entry("exception_scan_interval_minutes","60")
+        Map.entry("exception_scan_interval_minutes","60"),
+        Map.entry("charge_deduction_basis","CBS_BALANCE"),
+        Map.entry("insurance_adequacy_formula_mode","TWO_TIER"),
+        Map.entry("collateral_release_margin_pct","100.0"),
+        Map.entry("password_expiry_days","90"),
+        Map.entry("password_history_count","5"),
+        Map.entry("trusted_proxies","127.0.0.1,::1,localhost")
     );
 
     @PostConstruct
     public void init() { ensureDefaults(); refreshCache(); }
 
+    @Transactional
     public synchronized void ensureDefaults() {
         for (var e : DEFAULTS.entrySet()) {
             if (systemParameterRepository.findById(e.getKey()).isEmpty()) {
@@ -117,12 +125,19 @@ public class ConfigurationService {
     public int getEscalationOverdueIntervalDays(){return Math.max(1,getInt("escalation_overdue_interval_days",15));}
     public boolean isExceptionScanEnabled(){return getBoolean("exception_scan_enabled",true);}
     public int getExceptionScanIntervalMinutes(){return Math.max(1,getInt("exception_scan_interval_minutes",60));}
+    public String getChargeDeductionBasis(){return getString("charge_deduction_basis","CBS_BALANCE");}
+    public String getInsuranceAdequacyFormulaMode(){return getString("insurance_adequacy_formula_mode","TWO_TIER");}
+    public double getCollateralReleaseMarginPct(){return getDouble("collateral_release_margin_pct",100.0);}
 
     public List<SystemParameter> getAllParameters(){ List<SystemParameter> r=systemParameterRepository.findAll(); r.sort(Comparator.comparing(SystemParameter::getParamKey,String.CASE_INSENSITIVE_ORDER)); return r; }
 
+    @Transactional
     public synchronized SystemParameter saveParameter(SystemParameter incoming,String userId){
         if(incoming==null||incoming.getParamKey()==null||incoming.getParamKey().isBlank()) throw new IllegalArgumentException("Parameter key is mandatory.");
         if(incoming.getParamValue()==null||incoming.getParamValue().isBlank()) throw new IllegalArgumentException("Parameter value is mandatory.");
+        if (userId != null && !userId.isBlank() && !"SYSADMIN".equalsIgnoreCase(userId)) {
+            cimsService.assertUserPermission(userId, "Administration", "EDIT");
+        }
         String key=normalize(incoming.getParamKey()), value=incoming.getParamValue().trim();
         validate(key,value);
         Optional<SystemParameter> oldOpt=systemParameterRepository.findById(key);
@@ -138,8 +153,8 @@ public class ConfigurationService {
 
     public void validate(String key,String value){
         switch(key){
-            case "min_coverage_adequacy_pct","max_insurer_concentration_pct" -> { double v=parseDouble(key,value); if(v<=0||v>100)throw new IllegalArgumentException(key+" must be greater than 0 and no more than 100."); }
-            case "policy_expiry_grace_period_days","minimum_policy_validity_days","session_timeout_minutes","password_min_length","max_login_failed_attempts","cbs_sync_interval_minutes","reminder_scheduler_interval_minutes","reminder_continuation_interval_working_days","max_reminder_notifications_per_recipient_per_day","customer_notification_frequency_days","customer_notification_start_days","escalation_first_days_before_expiry","escalation_second_days_before_expiry","escalation_overdue_start_days","escalation_overdue_interval_days","document_expiry_warning_days","policy_expiring_status_days","exception_scan_interval_minutes" -> { if(parseInt(key,value)<=0)throw new IllegalArgumentException(key+" must be greater than zero."); }
+            case "min_coverage_adequacy_pct","max_insurer_concentration_pct","collateral_release_margin_pct" -> { double v=parseDouble(key,value); if(v<=0||v>200)throw new IllegalArgumentException(key+" must be greater than 0 and no more than 200."); }
+            case "policy_expiry_grace_period_days","minimum_policy_validity_days","session_timeout_minutes","password_min_length","max_login_failed_attempts","password_expiry_days","password_history_count","cbs_sync_interval_minutes","reminder_scheduler_interval_minutes","reminder_continuation_interval_working_days","max_reminder_notifications_per_recipient_per_day","customer_notification_frequency_days","customer_notification_start_days","escalation_first_days_before_expiry","escalation_second_days_before_expiry","escalation_overdue_start_days","escalation_overdue_interval_days","document_expiry_warning_days","policy_expiring_status_days","exception_scan_interval_minutes" -> { if(parseInt(key,value)<=0)throw new IllegalArgumentException(key+" must be greater than zero."); }
             case "password_require_special","dual_control_strict_mode","approved_insurer_required","mandatory_document_rules_enabled","reminder_scheduler_enabled","exception_scan_enabled" -> { if(!value.matches("(?i)(true|false|1|0|yes|no|y|n)"))throw new IllegalArgumentException(key+" must be boolean."); }
             case "cbs_sync_mode" -> { if(!value.equalsIgnoreCase("Manual")&&!value.equalsIgnoreCase("Scheduled"))throw new IllegalArgumentException("CBS sync mode must be Manual or Scheduled."); }
             case "default_currency" -> { if(!value.matches("[A-Za-z]{3}"))throw new IllegalArgumentException("Default currency must be a three-letter code."); }
@@ -238,6 +253,62 @@ public class ConfigurationService {
         if(approvedInsurerRepository.count()==0 && isApprovedInsurerRequired()) warnings.add("Approved insurer list is empty while approved_insurer_required=true.");
         if(mandatoryDocumentRuleRepository.count()==0 && areMandatoryDocumentRulesEnabled()) warnings.add("Mandatory document enforcement is enabled but no document rules exist.");
         if(rolePermissionRepository.count()==0) warnings.add("Role permission matrix is empty.");
+
+        // Finding 35: Admin health check validates taxonomy rules vs live collateral
+        if(collateralTaxonomyRepository != null) {
+            List<CollateralTaxonomy> allTax = collateralTaxonomyRepository.findAll();
+            if (allTax.isEmpty()) {
+                warnings.add("Collateral taxonomy is empty; live assets cannot determine insurance mandates.");
+            } else {
+                // Check for duplicate/conflicting active taxonomy definitions
+                Map<String, Long> activeCounts = allTax.stream()
+                        .filter(CollateralTaxonomy::isActive)
+                        .collect(java.util.stream.Collectors.groupingBy(
+                                t -> (t.getCategory() != null ? t.getCategory().trim().toLowerCase() : "") + "||" +
+                                     (t.getSubCategory() != null ? t.getSubCategory().trim().toLowerCase() : ""),
+                                java.util.stream.Collectors.counting()));
+                activeCounts.forEach((key, count) -> {
+                    if (count > 1) {
+                        String[] parts = key.split("\\|\\|");
+                        warnings.add("Conflicting active taxonomy rules detected for Category '" + (parts.length > 0 ? parts[0] : "") +
+                                "' / SubCategory '" + (parts.length > 1 ? parts[1] : "") + "' (" + count + " active rules).");
+                    }
+                });
+
+                // Check live collaterals for references to deactivated or missing taxonomy entries
+                if (collateralRepository != null) {
+                    List<Collateral> liveCols = collateralRepository.findAll().stream()
+                            .filter(c -> "Active".equalsIgnoreCase(c.getStatus()) || "Pending Approval".equalsIgnoreCase(c.getStatus()))
+                            .toList();
+                    int liveInactiveRef = 0;
+                    for (Collateral c : liveCols) {
+                        String cat = c.getCategory() != null ? c.getCategory().trim().toLowerCase() : "";
+                        String typ = c.getType() != null ? c.getType().trim().toLowerCase() : "";
+                        boolean matchesActive = allTax.stream().anyMatch(t -> t.isActive() &&
+                                (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(cat)) &&
+                                (typ.isBlank() || (t.getSubCategory() != null && (t.getSubCategory().trim().equalsIgnoreCase(typ) ||
+                                 t.getSubCategory().toLowerCase().contains(typ) || typ.contains(t.getSubCategory().toLowerCase())))));
+
+                        if (!matchesActive) {
+                            boolean matchesInactive = allTax.stream().anyMatch(t -> !t.isActive() &&
+                                    (t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(cat)));
+                            if (matchesInactive) {
+                                liveInactiveRef++;
+                                warnings.add("Collateral " + c.getCode() + " references a DEACTIVATED taxonomy category/type ('" +
+                                        c.getCategory() + "' / '" + c.getType() + "'). Live collateral requires an active taxonomy rule.");
+                            } else {
+                                warnings.add("Collateral " + c.getCode() + " references an UNCONFIGURED/MISSING taxonomy rule ('" +
+                                        c.getCategory() + "' / '" + c.getType() + "').");
+                            }
+                        }
+                    }
+                    if (liveInactiveRef == 0 && activeCounts.values().stream().noneMatch(c -> c > 1)) {
+                        healthy.add("All live collaterals map to active taxonomy rules without conflicts.");
+                    }
+                }
+            }
+        }
+
         Map<String,Object> h=new LinkedHashMap<>(); h.put("status",warnings.isEmpty()?"HEALTHY":"WARNING"); h.put("healthyCount",healthy.size()); h.put("warningCount",warnings.size()); h.put("healthyChecks",healthy); h.put("warnings",warnings); h.put("effectiveConfiguration",getEffectiveConfiguration()); h.put("usageMap",getConfigurationUsageMap()); return h;
     }
 }

@@ -76,9 +76,8 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
       accessorKey: 'channel',
       cell: (r) => (
         <span
-          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold ${
-            r.channel === 'SMS' ? 'bg-blue-100 text-blue-800' : 'bg-indigo-100 text-indigo-800'
-          }`}
+          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold ${r.channel === 'SMS' ? 'bg-blue-100 text-blue-800' : 'bg-indigo-100 text-indigo-800'
+            }`}
         >
           {r.channel === 'SMS' ? <MessageSquare className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
           {r.channel}
@@ -205,25 +204,22 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
           <div className="flex rounded-md border border-[#E2E8F0] overflow-hidden text-xs">
             <button
               onClick={() => setChannelFilter('ALL')}
-              className={`px-3 py-1.5 font-medium ${
-                channelFilter === 'ALL' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
-              }`}
+              className={`px-3 py-1.5 font-medium ${channelFilter === 'ALL' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
+                }`}
             >
               All Channels
             </button>
             <button
               onClick={() => setChannelFilter('Email')}
-              className={`px-3 py-1.5 font-medium ${
-                channelFilter === 'Email' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
-              }`}
+              className={`px-3 py-1.5 font-medium ${channelFilter === 'Email' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
+                }`}
             >
               Email ({emailCount})
             </button>
             <button
               onClick={() => setChannelFilter('SMS')}
-              className={`px-3 py-1.5 font-medium ${
-                channelFilter === 'SMS' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
-              }`}
+              className={`px-3 py-1.5 font-medium ${channelFilter === 'SMS' ? 'bg-[#00205B] text-white' : 'bg-white text-[#5B6472] hover:bg-gray-50'
+                }`}
             >
               SMS ({smsCount})
             </button>
@@ -277,9 +273,8 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
               <div>
                 <div className="flex items-center gap-2.5">
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${
-                      selectedNotif.channel === 'SMS' ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white'
-                    }`}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${selectedNotif.channel === 'SMS' ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white'
+                      }`}
                   >
                     {selectedNotif.channel === 'SMS' ? <MessageSquare className="w-3 h-3" /> : <Mail className="w-3 h-3" />}
                     {selectedNotif.channel} Outbound

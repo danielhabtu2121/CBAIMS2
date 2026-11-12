@@ -1,0 +1,858 @@
+﻿TEST AREA 4 â€” INSURANCE REGISTRATION
+
+The insurance lifecycle must support registration and subsequent lifecycle operations without breaking the collateral/loan relationships.
+
+---
+
+# 35. TEST IR-001 â€” REGISTER VALID INSURANCE POLICY
+
+Select an eligible collateral.
+
+Register:
+
+- Policy Number
+- Insurer
+- Coverage Type
+- Insured Amount
+- Premium
+- Effective Date
+- Expiry Date
+- Policy Status
+
+These fields are explicitly identified in US-05.1.
+
+### Expected
+
+Policy registration succeeds when all applicable validations pass.
+
+Policy is linked to the correct:
+
+- Customer
+- Collateral
+- Loan relationship where applicable
+
+Policy history is created.
+
+---
+
+# 36. TEST IR-002 â€” INSURANCE MANDATORY VALIDATION
+
+Test a collateral type for which insurance is mandatory.
+
+The business clarification specifies mandatory insurance for almost all tangible collateral categories, including:
+
+- Buildings/Real Estate â€” Fire and Lightning
+- Vehicles â€” Comprehensive Motor Insurance
+- Construction Machinery â€” All-risk comprehensive insurance
+- Merchandise/Inventory â€” Fire, lightning, burglary and spontaneous combustion
+- Movable Properties â€” Comprehensive insurance before EMCR registration
+
+For financial assets/cash, the clarification states insurance is generally not required because the asset itself is the cover.
+
+### Expected
+
+The system determines insurance eligibility based on:
+
+- collateral type;
+- lending product;
+- configured business rules.
+
+Do not hardcode one universal insurance rule if the application already provides configurable rules.
+
+---
+
+# 37. TEST IR-003 â€” APPROVED INSURER
+
+Register policy using an approved insurer.
+
+### Expected
+
+Registration can proceed if all other validations pass.
+
+---
+
+# 38. TEST IR-004 â€” UNAPPROVED INSURER
+
+Select an insurer that is not on the approved insurer list.
+
+Attempt registration.
+
+### Expected
+
+Registration is blocked.
+
+The system must clearly identify:
+
+> Insurer is not approved.
+
+Do not allow the frontend to bypass the backend validation.
+
+---
+
+# 39. TEST IR-005 â€” EXPIRED POLICY
+
+Enter an expiry date in the past.
+
+### Expected
+
+Policy registration is rejected.
+
+---
+
+# 40. TEST IR-006 â€” INVALID POLICY DATES
+
+Test:
+
+### Case A
+
+Expiry date before effective date.
+
+### Case B
+
+Invalid/null effective date where mandatory.
+
+### Case C
+
+Invalid/null expiry date where mandatory.
+
+### Expected
+
+Registration is rejected.
+
+No invalid policy becomes active.
+
+---
+
+# 41. TEST IR-007 â€” POLICY VALIDITY PERIOD
+
+Verify the clarified policy validity rules.
+
+General rule:
+
+> Policy coverage shall not be less than one year.
+
+For short-term loans/merchandise/shipments, the policy validity must meet the applicable loan-tenor requirement stated in the clarification.
+
+Do not invent another validity formula.
+
+---
+
+# 42. TEST IR-008 â€” COVERAGE ADEQUACY
+
+The clarified insurance rule states:
+
+> Sum Insured >= Max(Outstanding Balance, Collateral Value)
+
+Use controlled test data.
+
+Example:
+
+Collateral Value = 10,000,000
+
+Outstanding Balance = 8,000,000
+
+Required insurance = 10,000,000
+
+### Test A
+
+Sum Insured = 10,000,000
+
+Expected:
+
+Adequately insured.
+
+### Test B
+
+Sum Insured = 9,000,000
+
+Expected:
+
+Underinsured.
+
+Under-insurance must not be silently treated as adequate.
+
+### Test C
+
+Sum Insured = 12,000,000
+
+Expected:
+
+Adequately insured / over-insurance status according to the application's configured over-insurance rule.
+
+Do not invent an undocumented blocking rule for over-insurance.
+
+---
+
+# 43. TEST IR-009 â€” CROSS-COLLATERAL INSURANCE
+
+Use:
+
+C001 â†’ Loan A1
+C001 â†’ Loan A2
+C001 â†’ Loan B1
+
+Calculate the actual aggregate secured exposure.
+
+Verify insurance monitoring reflects the total secured exposure as required by the business rules.
+
+The application must not calculate insurance independently for each loan and then incorrectly report the collateral as adequately insured.
+
+---
+
+# 44. TEST IR-010 â€” BUILDING INSURABLE VALUE
+
+For a building, verify that insurance adequacy uses the applicable bank-assessed insurable portion.
+
+The clarification/documentation states that for a building the insurable portion is the structure excluding land.
+
+Do not replace this with estimated value.
+
+Estimated value is reference information and must not silently replace the bank-assessed value used for adequacy.
+
+---
+
+# 45. TEST IR-011 â€” DUPLICATE POLICY
+
+Register:
+
+Policy P001
+
+for:
+
+Customer A
+Collateral C001
+Insurer X
+
+Then attempt to register the same policy again.
+
+The duplicate validation must consider the documented duplicate criteria:
+
+- Policy Number
+- Customer ID
+- Loan Account
+- Collateral ID
+- Insurance Company
+
+### Expected
+
+Duplicate policy is detected/rejected.
+
+---
+
+# 46. TEST IR-012 â€” MISSING INSURANCE DOCUMENTS
+
+Attempt policy registration without applicable required insurance documents.
+
+### Expected
+
+Registration must not silently succeed.
+
+The system must apply the configured mandatory-document/insurance-document rules.
+
+---
+
+# 47. TEST IR-013 â€” INSURANCE WORKFLOW
+
+Register a valid policy as Maker.
+
+### Expected
+
+Policy follows the configured maker-checker workflow.
+
+Verify:
+
+- Maker cannot approve own transaction where maker-checker separation applies.
+- Checker can review.
+- Checker can approve.
+- Checker can reject.
+- Checker can return where supported.
+- History is maintained.
+- Final status changes correctly.
+
+---
+
+# 48. TEST IR-014 â€” REJECTED POLICY
+
+Submit a valid policy and reject it during checker review.
+
+### Expected
+
+- Policy becomes rejected.
+- Rejection reason is mandatory where configured.
+- History is retained.
+- The rejected policy is not treated as an active valid insurance policy.
+- The collateral's insurance status reflects the actual active policy state.
+
+---
+
+# 49. TEST IR-015 â€” POLICY AMENDMENT
+
+Amend an existing policy.
+
+### Expected
+
+- Previous values remain available in history.
+- New values are recorded.
+- Version/history is preserved.
+- Approval workflow is followed where required.
+
+---
+
+# 50. TEST IR-016 â€” POLICY ENDORSEMENT
+
+Create an endorsement.
+
+### Expected
+
+- Multiple endorsements are supported where applicable.
+- Endorsement remains linked to the original policy.
+- History is retained.
+
+---
+
+# 51. TEST IR-017 â€” POLICY RENEWAL
+
+Renew an existing policy.
+
+### Expected
+
+- Renewal is linked to previous policy.
+- Renewal history exists.
+- Policy status updates correctly.
+- Previous policy is not deleted.
+- Coverage monitoring uses the active policy correctly.
+
+---
+
+# 52. TEST IR-018 â€” POLICY REPLACEMENT
+
+Replace an existing policy.
+
+### Expected
+
+- Previous policy remains in history.
+- Replacement is linked.
+- Active policy status is correct.
+- No duplicate active coverage is created.
+
+---
+
+# 53. TEST IR-019 â€” POLICY CANCELLATION
+
+Cancel an insurance policy.
+
+### Expected
+
+- Cancellation reason is mandatory.
+- Required approval occurs.
+- Policy history remains.
+- Active coverage status changes correctly.
+
+---
+
+# 54. TEST IR-020 â€” CLOSE / REOPEN POLICY
+
+Close a policy.
+
+Then attempt to reopen it.
+
+### Expected
+
+- Closed policy remains in history.
+- Reopening requires approval.
+- Complete lifecycle history remains.
+
+---
+
+# 55. TEST IR-021 â€” INSURANCE AFTER CROSS-SEGMENT LINKAGE
+
+Create:
+
+C001 â†’ Loan A1
+C001 â†’ Loan B1
+
+Then register insurance for C001.
+
+### Expected
+
+Insurance remains attached to the correct collateral.
+
+Both facility relationships remain intact.
+
+Cross-segment status remains intact.
+
+Insurance calculations consider the correct linked facilities.
+
+The insurance registration must not alter collateral ownership.
+
+---
+
+# 56. TEST IR-022 â€” COLLATERAL REGISTRATION â†’ LINKAGE â†’ INSURANCE COMPLETE FLOW
+
+Perform the complete lifecycle:
+
+1. Register C001.
+2. Approve C001.
+3. Link C001 â†’ A1.
+4. Link C001 â†’ A2.
+5. Link C001 â†’ B1 if third-party rules/evidence allow.
+6. Verify 1:N and cross-segment relationships.
+7. Register insurance.
+8. Verify insurance adequacy.
+9. Refresh application.
+10. Navigate away.
+11. Return to collateral.
+12. Return to Loan A1.
+13. Return to Loan A2.
+14. Return to Loan B1.
+15. Open insurance record.
+
+### Expected
+
+All relationships and insurance information remain consistent.
+
+No data disappears.
+
+No ownership is changed.
+
+No duplicate collateral exists.
+
+No duplicate relationship exists.
+
+No duplicate insurance exists.
+
+---
+
+# 57. BUSINESS RULE REGRESSION TEST
+
+After every code fix, rerun at least:
+
+1. Borrower-owned registration.
+2. Third-party registration.
+3. Mandatory-document validation.
+4. 1:1 relationship.
+5. 1:N relationship.
+6. N:1 relationship.
+7. N:N relationship.
+8. Duplicate relationship prevention.
+9. Collateral-side linkage.
+10. Loan-side linkage.
+11. Third-party relationship to another borrower.
+12. Cross-segment relationship.
+13. Allocation validation.
+14. First-/second-degree validation.
+15. Insurance mandatory validation.
+16. Approved insurer validation.
+17. Coverage validation.
+18. Duplicate policy validation.
+19. Policy workflow.
+20. Insurance history.
+
+A fix that causes an existing business rule to fail is NOT acceptable.
+
+---
+
+# 58. FRONTEND/BACKEND CONSISTENCY TEST
+
+For every important rule test the same condition through:
+
+### Frontend
+
+User attempts the action.
+
+### Backend API directly
+
+Send the equivalent request directly to the API.
+
+### Expected
+
+Both must enforce the same business rule.
+
+Never rely only on frontend validation.
+
+The backend must remain authoritative.
+
+---
+
+# 59. DATABASE CONSISTENCY TEST
+
+After each successful transaction inspect the database.
+
+Verify:
+
+- master collateral record;
+- collateral owner;
+- loan/facility;
+- relationship;
+- allocation;
+- insurance;
+- documents;
+- workflow status;
+- history;
+- audit information.
+
+After a failed transaction verify:
+
+> no partial invalid transaction remains.
+
+---
+
+# 60. IMPORTANT RELATIONSHIP MODEL TEST
+
+This is a mandatory architectural test.
+
+The implementation must distinguish:
+
+### COLLATERAL MASTER
+
+Who legally owns the collateral.
+
+from:
+
+### COLLATERALâ€“LOAN RELATIONSHIP
+
+Which borrower/facility is secured by that collateral.
+
+Example:
+
+C001
+Owner = Customer A
+
+Relationship 1:
+
+C001 â†’ Loan A1
+Borrower = Customer A
+Relationship = Borrower-owned
+
+Relationship 2:
+
+C001 â†’ Loan B1
+Borrower = Customer B
+Relationship = Third-party
+
+The system must NOT change:
+
+C001 Owner = Customer A
+
+into:
+
+C001 Owner = Customer B.
+
+This distinction must work from both:
+
+- Collateral â†’ Link to Loan
+- Loan â†’ Link to Collateral
+
+---
+
+# 61. NO ARTIFICIAL FILTERING
+
+Inspect the eligibility query used by the linkage screens.
+
+The query must NOT simply exclude every facility belonging to another customer.
+
+Instead, it must determine whether a candidate is:
+
+1. already linked to this exact collateral/facility relationship;
+2. eligible for normal borrower-owned linkage;
+3. eligible as a third-party relationship;
+4. blocked because of a specific business rule.
+
+The user interface should expose the appropriate workflow rather than hiding every potentially usable facility.
+
+---
+
+# 62. NO BUSINESS-RULE DUPLICATION
+
+Inspect the backend.
+
+If the existing:
+
+`CollateralFacilityRelationshipService`
+
+already contains authoritative relationship validation, do not create another independent implementation of the same business rules.
+
+Reuse/extend the existing service.
+
+Likewise preserve existing first-/second-degree validation.
+
+Do not duplicate allocation formulas in multiple controllers/components.
+
+There must be one authoritative backend calculation.
+
+---
+
+# 63. ERROR HANDLING TEST
+
+Every failed test must produce a useful business-level error.
+
+Bad:
+
+> 500 Internal Server Error
+
+Better:
+
+> Cannot link collateral because the requested allocation exceeds the available security capacity.
+
+or:
+
+> This policy cannot be registered because the insurer is not approved.
+
+or:
+
+> This collateral already has an active relationship with this facility.
+
+or:
+
+> Third-party pledge evidence is required before this collateral can secure another customer's facility.
+
+Do not expose stack traces to the user.
+
+---
+
+# 64. AUTOMATIC FIX RULE
+
+When a test fails:
+
+### Step 1
+
+Determine whether the failure is:
+
+- frontend defect;
+- backend defect;
+- database defect;
+- validation defect;
+- workflow defect;
+- data-model defect;
+- calculation defect;
+- synchronization defect;
+- test-data problem;
+- requirement not defined.
+
+### Step 2
+
+If it is a genuine implementation defect:
+
+FIX IT.
+
+### Step 3
+
+After fixing:
+
+- compile backend;
+- compile frontend;
+- run relevant unit tests;
+- run integration tests;
+- run database migration validation if applicable;
+- execute the failed test again;
+- execute regression tests.
+
+### Step 4
+
+If a database schema change is genuinely required:
+
+Do NOT modify an already-applied migration.
+
+Create a new Flyway migration.
+
+Do NOT reset the database.
+
+---
+
+# 65. DO NOT FIX BY DISABLING RULES
+
+Never make a test pass by:
+
+- removing validation;
+- removing mandatory documents;
+- removing duplicate checks;
+- removing allocation checks;
+- removing third-party checks;
+- removing first-/second-degree checks;
+- removing insurer validation;
+- removing coverage validation;
+- allowing duplicate relationships;
+- allowing duplicate policies;
+- hiding errors;
+- returning hardcoded success;
+- bypassing maker-checker;
+- changing the owner of the collateral;
+- deleting existing relationships.
+
+The objective is:
+
+> CORRECT IMPLEMENTATION OF THE BUSINESS RULE
+
+not:
+
+> MAKE THE TEST GREEN BY REMOVING THE RULE.
+
+---
+
+# 66. TEST EXECUTION REPORT
+
+At the end produce a table:
+
+| Test ID | Area | Result | Error Found | Root Cause | Fix Applied | Retested | Final Result |
+|---|---|---|---|---|---|---|---|
+| CR-001 | Registration | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| CR-002 | Registration | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| LC-001 | 1:1 | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| LC-002 | 1:N | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| LC-003 | N:1 | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| LC-004 | N:N | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| CS-002 | Cross Segment | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+| IR-001 | Insurance | PASS/FAIL | ... | ... | ... | Yes/No | ... |
+
+Continue for every test.
+
+---
+
+# 67. FINAL ACCEPTANCE CRITERIA
+
+This task is complete only when:
+
+### Collateral Registration
+
+- Borrower-owned collateral works.
+- Third-party collateral works.
+- Ownership remains correct.
+- Duplicate collateral is prevented.
+- Mandatory documents are enforced.
+- Applicable exceptions are controlled.
+- Documents and audit history persist.
+
+### Loanâ€“Collateral Relationships
+
+- 1:1 works.
+- 1:N works.
+- N:1 works.
+- N:N works.
+- Duplicate relationship is blocked.
+- Existing relationships are not overwritten.
+- A loan already linked to collateral can receive additional eligible collateral.
+- A collateral already linked to a loan can be linked to additional eligible loans.
+- Collateral-side linkage works.
+- Loan-side linkage works.
+- Both sides use the same authoritative backend rules.
+- Third-party relationships work.
+- First-/second-degree rules remain enforced.
+- Allocation rules remain enforced.
+
+### Cross-Segment
+
+- Same-segment shared collateral works.
+- Cross-segment collateral works.
+- Shared collateral is identifiable.
+- All linked segments are visible.
+- Associated facilities are visible.
+- One collateral master is maintained.
+- Cross-segment linkage does not create duplicate collateral.
+- Cross-collateral exposure remains correct.
+- Insurance calculation remains correct.
+
+### Insurance
+
+- Policy registration works.
+- Mandatory insurance rules work.
+- Approved insurer validation works.
+- Invalid insurer is blocked.
+- Invalid dates are blocked.
+- Expired policy is blocked.
+- Required policy validity is enforced.
+- Coverage adequacy is calculated correctly.
+- Underinsurance is identified.
+- Duplicate policies are prevented.
+- Mandatory insurance documents are enforced.
+- Maker-checker works.
+- Rejection works.
+- Amendment works.
+- Endorsement works.
+- Renewal works.
+- Replacement works.
+- Cancellation works.
+- Close/reopen works.
+- Complete policy history is retained.
+
+### Regression
+
+Most importantly:
+
+> Fixing collateral registration must not break linkage.
+
+> Fixing linkage must not break cross-collateralization.
+
+> Fixing cross-segment logic must not break insurance calculation.
+
+> Fixing insurance must not break collateral or relationship data.
+
+> Fixing frontend behavior must not bypass backend business rules.
+
+---
+
+# 68. FINAL INSTRUCTION TO ANTIGRAVITY
+
+Do not stop after identifying the first error.
+
+Execute the complete test suite.
+
+For every genuine implementation failure:
+
+1. identify root cause;
+2. modify the existing implementation;
+3. preserve the documented business rules;
+4. compile;
+5. test;
+6. regression test;
+7. continue.
+
+At the end provide:
+
+1. Total tests executed.
+2. Tests passed initially.
+3. Tests failed initially.
+4. Defects found.
+5. Defects fixed.
+6. Tests passed after fixes.
+7. Remaining failures.
+8. Requirement gaps that cannot be resolved because the BRD/clarification does not define the behavior.
+9. Files modified.
+10. Database migrations created, if any.
+11. APIs modified, if any.
+12. Final regression status.
+
+Do not claim a test passed unless it was actually executed.
+
+Do not claim a business rule is implemented merely because code appears to support it.
+
+Verify the behavior end-to-end through:
+
+**UI â†’ API â†’ Service â†’ Database â†’ UI**
+
+and verify both linkage directions:
+
+**Collateral â†’ Loan**
+
+and
+
+**Loan â†’ Collateral**.
+
+The final goal is not merely a successful automated test run.
+
+The final goal is:
+
+> **CBAIMS collateral registration, collateralâ€“loan relationships, cross-collateralization, cross-segment collateralization and insurance registration must work together without breaking any existing documented business rule.**
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-11-09T10:18:58+03:00.
+
+The user's current state is as follows:
+Active Document: c:\Users\danie_mdh4j2\Desktop\cims proj\scratch\test_dual_control_exception_approval.ps1 (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\danie_mdh4j2\Desktop\cims proj\frontend\src\components\collateral\wizard\CollateralRegistrationWizard.tsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\danie_mdh4j2\Desktop\cims proj\backend\src\main\java\com\bank\cims\service\ValidationService.java (LANGUAGE_UNSPECIFIED)
+- c:\Users\danie_mdh4j2\Desktop\cims proj\backend\src\main\java\com\bank\cims\service\CimsService.java (LANGUAGE_UNSPECIFIED)
+- c:\Users\danie_mdh4j2\Desktop\cims proj\CIMS_TESTING_PLAYBOOK.md (LANGUAGE_UNSPECIFIED)
+- c:\Users\danie_mdh4j2\Desktop\cims proj\backend\src\main\java\com\bank\cims\config\FlywayConfig.java (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

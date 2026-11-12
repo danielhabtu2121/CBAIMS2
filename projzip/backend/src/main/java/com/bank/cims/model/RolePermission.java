@@ -29,6 +29,9 @@ public class RolePermission {
     @Column(name = "can_delete")
     private boolean canDelete = false;
 
+    @Column(name = "active")
+    private boolean active = true;
+
     public RolePermission() {}
 
     public String getId() { return id; }
@@ -47,4 +50,6 @@ public class RolePermission {
     public void setCanApprove(boolean canApprove) { this.canApprove = canApprove; }
     public boolean isCanDelete() { return canDelete; }
     public void setCanDelete(boolean canDelete) { this.canDelete = canDelete; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

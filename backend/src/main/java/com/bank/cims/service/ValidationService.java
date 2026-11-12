@@ -21,15 +21,20 @@ public class ValidationService {
     @Autowired private CollateralOwnerRepository collateralOwnerRepository;
     @Autowired private OwnershipDocumentRepository ownershipDocumentRepository;
     @Autowired private MandatoryDocumentRuleRepository mandatoryDocumentRuleRepository;
+    @Autowired private CimsExceptionRepository cimsExceptionRepository;
     @Autowired private CollateralTaxonomyRepository collateralTaxonomyRepository;
     @Autowired private CustomerRepository customerRepository;
     @Autowired private ConfigurationService configurationService;
     @Autowired @org.springframework.context.annotation.Lazy private EffectiveInsuranceService effectiveInsuranceService;
     @Autowired private BranchRepository branchRepository;
     @Autowired private BusinessSegmentRepository businessSegmentRepository;
+    @Autowired @org.springframework.context.annotation.Lazy private FirstDegreeSecondDegreeService firstDegreeSecondDegreeService;
+    @Autowired @org.springframework.context.annotation.Lazy private InsuranceCoverageRuleService insuranceCoverageRuleService;
+    @Autowired @org.springframework.context.annotation.Lazy private InsuranceRequirementService insuranceRequirementService;
 
     public void validatePolicy(InsurancePolicy policy) {
         validateBasicPolicy(policy);
+        validateDuplicatePolicy(policy);
     }
 
     public void validatePolicyForActivation(InsurancePolicy policy) {
@@ -42,17 +47,24 @@ public class ValidationService {
             .orElseThrow(() -> new IllegalArgumentException("Linked collateral was not found: " + policy.getCollateralId()));
 
         if (policy.getCustomerId() != null && !policy.getCustomerId().isBlank()) {
-            boolean custExists = customerRepository.findById(policy.getCustomerId()).isPresent() ||
-                    customerRepository.findFirstByCifIgnoreCase(policy.getCustomerId()).isPresent() ||
-                    (collateral.getCustomerId() != null && (
-                        collateral.getCustomerId().equalsIgnoreCase(policy.getCustomerId()) ||
-                        customerRepository.findById(collateral.getCustomerId()).isPresent() ||
-                        customerRepository.findFirstByCifIgnoreCase(collateral.getCustomerId()).isPresent()
-                    ));
-            if (!custExists) {
-                throw new IllegalArgumentException("Customer does not exist: " + policy.getCustomerId());
+            boolean custMatches = false;
+            if (collateral.getCustomerId() != null &&
+                (policy.getCustomerId().equalsIgnoreCase(collateral.getCustomerId()) ||
+                 policy.getCustomerId().trim().equalsIgnoreCase(collateral.getCustomerId().trim()))) {
+                custMatches = true;
+            } else if (collateralOwnerRepository != null) {
+                List<CollateralOwner> owners = collateralOwnerRepository.findByCollateralId(collateral.getId());
+                custMatches = owners != null && owners.stream().anyMatch(o ->
+                        policy.getCustomerId().equalsIgnoreCase(o.getId()) ||
+                        (o.getName() != null && o.getName().equalsIgnoreCase(policy.getCustomerId())));
+            }
+            if (!custMatches) {
+                throw new IllegalArgumentException("Customer mismatch: Policy customer '" + policy.getCustomerId() +
+                        "' does not match collateral owner/borrower '" + collateral.getCustomerId() + "'.");
             }
         }
+
+        validateEmcrAndEsgCompliance(collateral);
 
         if (configurationService.isApprovedInsurerRequired()) {
             if (policy.getInsurerName() == null || policy.getInsurerName().isBlank()) {
@@ -91,9 +103,14 @@ public class ValidationService {
         validateDuplicatePolicy(policy);
         validateCoverage(policy, collateral);
         validatePolicyTerm(policy, collateral);
+        validateMandatoryPolicyDocuments(policy);
     }
 
-    public void validateCollateralForActivation(Collateral collateral) {
+    public void validateCollateral(Collateral collateral) {
+        validateCollateralForActivation(collateral);
+    }
+
+    public void validateCollateralBasicData(Collateral collateral) {
         if (collateral == null) throw new IllegalArgumentException("Collateral is required.");
         if (collateral.getValuationAmount() <= 0) throw new IllegalArgumentException("Collateral valuation amount must be greater than zero.");
         if (collateral.getCode() == null || collateral.getCode().isBlank()) throw new IllegalArgumentException("Collateral code is mandatory.");
@@ -121,9 +138,18 @@ public class ValidationService {
         }
 
         validateTaxonomy(collateral);
+        validateEmcrAndEsgCompliance(collateral);
         validateDuplicateCollateral(collateral);
         validateOwnership(collateral);
-        if (configurationService.areMandatoryDocumentRulesEnabled()) validateMandatoryDocuments(collateral);
+        validateCollateralDegree(collateral);
+        validateCollateralRequiredInformation(collateral);
+    }
+
+    public void validateCollateralForActivation(Collateral collateral) {
+        validateCollateralBasicData(collateral);
+        if (configurationService.areMandatoryDocumentRulesEnabled()) {
+            validateMandatoryDocuments(collateral);
+        }
     }
 
     public void validateOwnership(Collateral collateral) {
@@ -471,19 +497,284 @@ public class ValidationService {
 
     private void validateDuplicateCollateral(Collateral collateral) {
         List<Collateral> existing = collateralRepository.findAll();
+        boolean isSecondDegree = collateral.getCollateralRank() != null && "2nd".equalsIgnoreCase(collateral.getCollateralRank().trim());
+
         for (Collateral c : existing) {
             if (collateral.getId() != null && collateral.getId().equalsIgnoreCase(c.getId())) continue;
             if (collateral.getCode() != null && collateral.getCode().equalsIgnoreCase(c.getCode())) {
                 throw new IllegalArgumentException("Duplicate collateral code: " + collateral.getCode());
             }
-            if (collateral.getTitleDeedNumber() != null && !collateral.getTitleDeedNumber().isBlank()
-                    && collateral.getTitleDeedNumber().equalsIgnoreCase(c.getTitleDeedNumber())) {
-                throw new IllegalArgumentException("Collateral with Title Deed Number '" + collateral.getTitleDeedNumber() + "' already exists.");
+
+            boolean cIsSecondDegree = c.getCollateralRank() != null && "2nd".equalsIgnoreCase(c.getCollateralRank().trim());
+
+            // Check Title Deed match
+            boolean titleDeedMatch = collateral.getTitleDeedNumber() != null && !collateral.getTitleDeedNumber().isBlank()
+                    && collateral.getTitleDeedNumber().equalsIgnoreCase(c.getTitleDeedNumber());
+
+            // Check Property Cert match
+            boolean propertyCertMatch = collateral.getPropertyCertNumber() != null && !collateral.getPropertyCertNumber().isBlank()
+                    && collateral.getPropertyCertNumber().equalsIgnoreCase(c.getPropertyCertNumber());
+
+            if (titleDeedMatch || propertyCertMatch) {
+                String matchedIdentifier = titleDeedMatch ? ("Title Deed Number '" + collateral.getTitleDeedNumber() + "'")
+                        : ("Property Certificate Number '" + collateral.getPropertyCertNumber() + "'");
+
+                if (isSecondDegree) {
+                    if (cIsSecondDegree) {
+                        throw new IllegalArgumentException("A second-degree charge already exists for this property asset: " + c.getCode() + " (" + matchedIdentifier + ").");
+                    } else {
+                        // c is 1st degree. If internal 1st degree, check that this 2nd degree links to c
+                        if (collateral.isFirstDegreeInternal()) {
+                            String parentRef = collateral.getFirstDegreeCollateralId();
+                            boolean matchesParent = parentRef != null && (parentRef.equalsIgnoreCase(c.getId()) || (c.getCode() != null && parentRef.equalsIgnoreCase(c.getCode())));
+                            if (!matchesParent) {
+                                throw new IllegalArgumentException("Collateral with " + matchedIdentifier + " is registered under primary charge " + c.getCode()
+                                        + ". Second-degree charge must reference this primary charge as firstDegreeCollateralId.");
+                            }
+                            // Legitimate link to 1st degree parent charge!
+                            continue;
+                        } else {
+                            // External 1st degree declared, but CIMS has an internal 1st degree on file
+                            throw new IllegalArgumentException("Property with " + matchedIdentifier + " is already registered under Bank primary charge " + c.getCode()
+                                    + ". Cannot register as external first-degree charge.");
+                        }
+                    }
+                } else {
+                    // Current collateral is 1st degree (or unranked)
+                    if (!cIsSecondDegree) {
+                        throw new IllegalArgumentException("Collateral with " + matchedIdentifier + " already exists.");
+                    } else {
+                        throw new IllegalArgumentException("Collateral with " + matchedIdentifier + " already exists under secondary charge " + c.getCode() + ".");
+                    }
+                }
             }
+
+            // Check Registration Number
             if (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank()
                     && collateral.getRegistrationNumber().equalsIgnoreCase(c.getRegistrationNumber())) {
+                if (isSecondDegree && !cIsSecondDegree && collateral.isFirstDegreeInternal()) {
+                    String parentRef = collateral.getFirstDegreeCollateralId();
+                    if (parentRef != null && (parentRef.equalsIgnoreCase(c.getId()) || (c.getCode() != null && parentRef.equalsIgnoreCase(c.getCode())))) {
+                        continue;
+                    }
+                }
                 throw new IllegalArgumentException("Collateral with Registration/VIN Number '" + collateral.getRegistrationNumber() + "' already exists.");
             }
+
+            // Check Vehicle Plate
+            if (collateral.getVehiclePlateNumber() != null && !collateral.getVehiclePlateNumber().isBlank()
+                    && collateral.getVehiclePlateNumber().equalsIgnoreCase(c.getVehiclePlateNumber())) {
+                if (isSecondDegree && !cIsSecondDegree && collateral.isFirstDegreeInternal()) {
+                    String parentRef = collateral.getFirstDegreeCollateralId();
+                    if (parentRef != null && (parentRef.equalsIgnoreCase(c.getId()) || (c.getCode() != null && parentRef.equalsIgnoreCase(c.getCode())))) {
+                        continue;
+                    }
+                }
+                throw new IllegalArgumentException("Collateral with Vehicle Plate Number '" + collateral.getVehiclePlateNumber() + "' already exists.");
+            }
+
+            // Check Vehicle Chassis
+            if (collateral.getVehicleChassisNumber() != null && !collateral.getVehicleChassisNumber().isBlank()
+                    && collateral.getVehicleChassisNumber().equalsIgnoreCase(c.getVehicleChassisNumber())) {
+                if (isSecondDegree && !cIsSecondDegree && collateral.isFirstDegreeInternal()) {
+                    String parentRef = collateral.getFirstDegreeCollateralId();
+                    if (parentRef != null && (parentRef.equalsIgnoreCase(c.getId()) || (c.getCode() != null && parentRef.equalsIgnoreCase(c.getCode())))) {
+                        continue;
+                    }
+                }
+                throw new IllegalArgumentException("Collateral with Chassis Number '" + collateral.getVehicleChassisNumber() + "' already exists.");
+            }
+        }
+    }
+
+    public void validateCollateralRequiredInformation(Collateral collateral) {
+        if (collateral == null) return;
+        String cat = collateral.getCategory() != null ? collateral.getCategory().toLowerCase() : "";
+        String type = collateral.getType() != null ? collateral.getType().toLowerCase() : "";
+
+        boolean isImmovable = cat.contains("immovable") || cat.contains("building") || cat.contains("property") || type.contains("building") || type.contains("property") || type.contains("land");
+        boolean isSiteBasedMachinery = cat.contains("machinery") || type.contains("machinery") || cat.contains("plant");
+        boolean isSiteBasedStock = cat.contains("stock") || cat.contains("inventory");
+        boolean isVehicle = cat.contains("movable") || cat.contains("vehicle") || type.contains("vehicle") || type.contains("automobile");
+
+        // 4.1 Collateral Location Validation
+        if (isImmovable || isSiteBasedMachinery || isSiteBasedStock) {
+            boolean hasLocation = (collateral.getLocationAddress() != null && !collateral.getLocationAddress().isBlank()) ||
+                    (collateral.getLocationCity() != null && !collateral.getLocationCity().isBlank()) ||
+                    (collateral.getGpsCoordinates() != null && !collateral.getGpsCoordinates().isBlank()) ||
+                    (collateral.getZipCode() != null && !collateral.getZipCode().isBlank());
+            if (!hasLocation) {
+                throw new IllegalArgumentException(String.format(
+                        "Collateral Location is mandatory for %s collateral assets (Asset: %s). Location address, city, or coordinates required to match insured risk address.",
+                        isImmovable ? "immovable property" : (isSiteBasedMachinery ? "site-based machinery" : "site-based stock"),
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        }
+
+        // GPS Coordinates validation if provided (BRD-04)
+        if (collateral.getGpsCoordinates() != null && !collateral.getGpsCoordinates().isBlank()) {
+            String gps = collateral.getGpsCoordinates().trim();
+            String[] parts = gps.split(",");
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("Invalid GPS coordinate format: '" + gps + "'. Expected exactly two comma-separated numerical values: 'latitude, longitude'.");
+            }
+            try {
+                double lat = Double.parseDouble(parts[0].trim());
+                double lon = Double.parseDouble(parts[1].trim());
+                if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
+                    throw new IllegalArgumentException("Invalid GPS coordinates range: (" + lat + ", " + lon + "). Latitude must be between -90 and 90, Longitude between -180 and 180.");
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid GPS coordinate format: '" + gps + "'. Numerical latitude and longitude values required.");
+            }
+        }
+
+        // 4.2 Property Certificate or Registration Number
+        if (isImmovable) {
+            boolean hasCert = (collateral.getPropertyCertNumber() != null && !collateral.getPropertyCertNumber().isBlank()) ||
+                    (collateral.getTitleDeedNumber() != null && !collateral.getTitleDeedNumber().isBlank()) ||
+                    (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank());
+            if (!hasCert) {
+                throw new IllegalArgumentException(String.format(
+                        "Property certificate number or title deed registration number is mandatory for immovable property %s for unique identification and land authority verification (BR-16).",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        } else if (isVehicle) {
+            boolean hasVehId = (collateral.getVehiclePlateNumber() != null && !collateral.getVehiclePlateNumber().isBlank()) ||
+                    (collateral.getVehicleChassisNumber() != null && !collateral.getVehicleChassisNumber().isBlank()) ||
+                    (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank());
+            if (!hasVehId) {
+                throw new IllegalArgumentException(String.format(
+                        "Vehicle plate, chassis, or registration number is mandatory for vehicle collateral %s.",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        }
+
+        // 4.2b TIN requirement for Livestock / Farm Products (Credit Policy Requirement)
+        boolean isLivestockOrFarm = cat.contains("livestock") || type.contains("livestock") || cat.contains("agricultural") || type.contains("agricultural") || cat.contains("farm") || type.contains("farm");
+        if (isLivestockOrFarm) {
+            boolean hasTin = false;
+            if (collateral.getCustomerId() != null && customerRepository != null) {
+                Customer cust = customerRepository.findById(collateral.getCustomerId())
+                        .or(() -> customerRepository.findFirstByCifIgnoreCase(collateral.getCustomerId()))
+                        .orElse(null);
+                if (cust != null && cust.getTaxIdNo() != null && !cust.getTaxIdNo().trim().isBlank()) {
+                    hasTin = true;
+                }
+            }
+            if (!hasTin && collateral.getOwners() != null) {
+                for (CollateralOwner o : collateral.getOwners()) {
+                    if (o.getTin() != null && !o.getTin().trim().isBlank()) {
+                        hasTin = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasTin) {
+                throw new IllegalArgumentException(String.format(
+                        "Tax Identification Number (TIN) is mandatory for %s collateral assets (Asset: %s) per Credit Policy.",
+                        cat.contains("livestock") || type.contains("livestock") ? "Livestock" : "Agricultural / Farm Product",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        }
+
+        // 4.2c Livestock Subtype Registration Fields
+        boolean isLivestock = cat.contains("livestock") || type.contains("livestock");
+        if (isLivestock) {
+            boolean hasTag = (collateral.getLivestockTagNumber() != null && !collateral.getLivestockTagNumber().isBlank())
+                    || (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank());
+            if (!hasTag) {
+                throw new IllegalArgumentException(String.format(
+                        "Plastic ear tag registration number / identification certificate is mandatory for livestock collateral %s.",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        }
+
+        // 4.2d Farm Products / Warehouse Receipts
+        boolean isFarmProduct = (cat.contains("farm") || type.contains("farm") || cat.contains("crop") || type.contains("crop") || type.contains("merchandise")) && !isLivestock;
+        if (isFarmProduct) {
+            boolean hasHoldingOrReceipt = (collateral.getFarmLandHoldingCert() != null && !collateral.getFarmLandHoldingCert().isBlank())
+                    || (collateral.getWarehouseReceiptNumber() != null && !collateral.getWarehouseReceiptNumber().isBlank())
+                    || (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank());
+            if (!hasHoldingOrReceipt) {
+                throw new IllegalArgumentException(String.format(
+                        "Land holding certificate number or warehouse receipt number is mandatory for farm products/commodity collateral %s.",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        }
+
+        // 4.2e Warehouse Receipt Subtype
+        boolean isWarehouseReceipt = cat.contains("warehouse") || type.contains("warehouse") || (collateral.getWarehouseReceiptNumber() != null && !collateral.getWarehouseReceiptNumber().isBlank());
+        if (isWarehouseReceipt && (type.contains("warehouse") || cat.contains("warehouse"))) {
+            if (collateral.getWarehouseReceiptNumber() == null || collateral.getWarehouseReceiptNumber().isBlank()) {
+                throw new IllegalArgumentException("Warehouse receipt number is mandatory for warehouse receipt collateral " + (collateral.getCode() != null ? collateral.getCode() : collateral.getId()) + ".");
+            }
+            if (collateral.getWarehouseName() == null || collateral.getWarehouseName().isBlank()) {
+                throw new IllegalArgumentException("Warehouse operator name is mandatory for warehouse receipt collateral " + (collateral.getCode() != null ? collateral.getCode() : collateral.getId()) + ".");
+            }
+        }
+
+        // 4.2f Intellectual Property / Intangible Assets
+        boolean isIp = cat.contains("intangible") || cat.contains("intellectual") || type.contains("intellectual") || type.contains("patent") || type.contains("trademark") || type.contains("copyright");
+        if (isIp) {
+            boolean hasIpReg = (collateral.getIpRegistrationNumber() != null && !collateral.getIpRegistrationNumber().isBlank())
+                    || (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank());
+            if (!hasIpReg) {
+                throw new IllegalArgumentException(String.format(
+                        "Intellectual Property Authority (EIPA) registration certificate number is mandatory for IP/intangible asset %s.",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+        }
+
+        // 4.2g Guarantees (Corporate or Personal)
+        boolean isGuarantee = cat.contains("guarantee") || type.contains("guarantee");
+        if (isGuarantee) {
+            boolean hasGuarantor = (collateral.getGuarantorName() != null && !collateral.getGuarantorName().isBlank())
+                    || (collateral.getDescription() != null && !collateral.getDescription().isBlank());
+            if (!hasGuarantor) {
+                throw new IllegalArgumentException(String.format(
+                        "Guarantor name is mandatory for guarantee collateral %s.",
+                        collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+            }
+            boolean isCorporate = type.contains("corporate");
+            if (isCorporate) {
+                boolean hasBoardRes = (collateral.getBoardResolutionRef() != null && !collateral.getBoardResolutionRef().isBlank())
+                        || (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank());
+                if (!hasBoardRes) {
+                    throw new IllegalArgumentException(String.format(
+                            "Board resolution / power of attorney reference is mandatory for corporate guarantee %s.",
+                            collateral.getCode() != null ? collateral.getCode() : collateral.getId()));
+                }
+            }
+        }
+
+        // 4.3 Construction Completion Information (Conditional for Under Construction)
+        if (collateral.isUnderConstruction()) {
+            Double completed = collateral.getConstructionCompletionPct();
+            Double remaining = collateral.getConstructionRemainingPct();
+
+            if (completed == null || completed < 0 || completed > 100) {
+                throw new IllegalArgumentException("Percentage of work completed is mandatory for collateral marked Under Construction, and must be between 0% and 100%.");
+            }
+            if (remaining == null || remaining < 0 || remaining > 100) {
+                throw new IllegalArgumentException("Percentage of work remaining is mandatory for collateral marked Under Construction, and must be between 0% and 100%.");
+            }
+            if (Math.abs((completed + remaining) - 100.0) > 0.01) {
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
+                        "Construction progress inconsistency: Completed (%.1f%%) and Remaining (%.1f%%) must sum to exactly 100.0%%.",
+                        completed, remaining));
+            }
+            if (collateral.getConstructionInspectionDate() == null || collateral.getConstructionInspectionDate().isBlank()) {
+                throw new IllegalArgumentException("Engineering inspection date is mandatory for collateral marked Under Construction.");
+            }
+            if (collateral.getExpectedCompletionDate() == null || collateral.getExpectedCompletionDate().isBlank()) {
+                throw new IllegalArgumentException("Expected completion date is mandatory for collateral marked Under Construction.");
+            }
+        }
+
+        // 4.5 Bank-Assessed Value
+        if (collateral.getValuationAmount() <= 0) {
+            throw new IllegalArgumentException("Bank-assessed value is mandatory and must be greater than zero.");
         }
     }
 
@@ -527,8 +818,26 @@ public class ValidationService {
                 "Replaced".equalsIgnoreCase(p.getStatus())) {
                 continue;
             }
-            if (same(policy.getCustomerId(), p.getCustomerId()) && same(policy.getCollateralId(), p.getCollateralId()) && same(policy.getInsurerName(), p.getInsurerName())) {
-                throw new IllegalArgumentException("A policy already exists for this customer, collateral and insurer.");
+            // Module 3 Rule 16: Duplicate Policy Prevention Across Collateral and Insurer
+            String pColId = p.getCollateralId();
+            String polColId = policy.getCollateralId();
+            String pInsurer = p.getInsurerName();
+            String polInsurer = policy.getInsurerName();
+            String pCustId = p.getCustomerId();
+            String polCustId = policy.getCustomerId();
+            String pCoverage = p.getCoverageType();
+            String polCoverage = policy.getCoverageType();
+
+            boolean coverageConflict = pCoverage == null || polCoverage == null 
+                    || pCoverage.trim().equalsIgnoreCase(polCoverage.trim())
+                    || isCoverageTypeCompatible(pCoverage, polCoverage);
+
+            if (pColId != null && polColId != null && pColId.trim().equalsIgnoreCase(polColId.trim())
+                    && pInsurer != null && polInsurer != null && pInsurer.trim().equalsIgnoreCase(polInsurer.trim())
+                    && (pCustId == null || polCustId == null || pCustId.trim().equalsIgnoreCase(polCustId.trim()))
+                    && coverageConflict) {
+                throw new IllegalArgumentException("An active or pending insurance policy already exists for this customer, collateral and insurer ("
+                        + p.getPolicyNumber() + ", Insurer: " + p.getInsurerName() + "). Duplicate policies under the same insurer are prohibited.");
             }
         }
     }
@@ -539,26 +848,49 @@ public class ValidationService {
             return;
         }
 
-        double exposure = 0;
-        for (LoanCollateralLink link : loanCollateralLinkRepository.findAll()) {
-            if (!same(link.getCollateralId(), collateral.getId()) && !same(link.getCollateralId(), collateral.getCode())) continue;
+        // Aggregate outstanding exposure across all active, distinct linked facilities (Audit Findings 17 & 19)
+        double aggregateExposure = 0;
+        Set<String> distinctFacilityIds = new HashSet<>();
+        List<LoanCollateralLink> links = loanCollateralLinkRepository.findByCollateralId(collateral.getId());
+        if (links.isEmpty() && collateral.getCode() != null) {
+            links = loanCollateralLinkRepository.findByCollateralId(collateral.getCode());
+        }
+        for (LoanCollateralLink link : links) {
+            if (!link.isEffectiveActive()) continue;
             String fId = link.getLoanAccountId() != null ? link.getLoanAccountId() : link.getFacilityId();
-            if (fId != null) {
+            if (fId != null && distinctFacilityIds.add(fId)) {
                 Optional<LoanAccount> loan = loanAccountRepository.findById(fId)
                         .or(() -> loanAccountRepository.findFirstByLoanReferenceIgnoreCase(fId))
                         .or(() -> loanAccountRepository.findFirstByLineCodeIgnoreCase(fId));
                 if (loan.isPresent()) {
-                    exposure += Math.max(0, loan.get().getOutstandingBalance());
+                    aggregateExposure += Math.max(0, loan.get().getOutstandingBalance());
                 }
             }
         }
-        double required = Math.max(Math.max(0, collateral.getValuationAmount()), exposure);
-        double configured = configurationService.getMinimumCoverageAdequacyPct() / 100.0;
-        double requiredWithThreshold = required * configured;
-        if (policy.getInsuredAmount() + 1e-9 < requiredWithThreshold) {
+
+        // Resolve Credit Policy coverage rule (Primary Test: Bank-assessed insurable value)
+        double reqPct = 100.0;
+        if (insuranceCoverageRuleService != null) {
+            Optional<InsuranceCoverageRule> ruleOpt = insuranceCoverageRuleService.resolveApplicableRule(collateral.getType(), collateral.getOwningSegment());
+            if (ruleOpt.isPresent()) {
+                reqPct = ruleOpt.get().getRequiredCoveragePercentage();
+            } else if (configurationService != null) {
+                reqPct = configurationService.getMinimumCoverageAdequacyPct();
+            }
+        } else if (configurationService != null) {
+            reqPct = configurationService.getMinimumCoverageAdequacyPct();
+        }
+
+        Double insurableVal = collateral.getInsurableValue();
+        if (insurableVal == null || insurableVal <= 0) {
+            insurableVal = collateral.getValuationAmount();
+        }
+        double requiredCoverageAmt = insurableVal * (reqPct / 100.0);
+
+        if (policy.getInsuredAmount() + 1e-6 < requiredCoverageAmt) {
             throw new IllegalArgumentException(String.format(Locale.ROOT,
-                "Insured amount %.2f is below the configured coverage requirement %.2f (collateral value %.2f, outstanding exposure %.2f, threshold %.1f%%).",
-                policy.getInsuredAmount(), requiredWithThreshold, collateral.getValuationAmount(), exposure, configurationService.getMinimumCoverageAdequacyPct()));
+                "Underinsured: Insured amount ETB %,.2f is below the configured coverage requirement of ETB %,.2f (Insurable structure value ETB %,.2f, required coverage %.1f%%, aggregate facility exposure ETB %,.2f).",
+                policy.getInsuredAmount(), requiredCoverageAmt, insurableVal, reqPct, aggregateExposure));
         }
     }
 
@@ -566,71 +898,84 @@ public class ValidationService {
         LocalDate eff = parseDate(policy.getEffectiveDate(), "effective date");
         LocalDate exp = parseDate(policy.getExpiryDate(), "expiry date");
         long days = ChronoUnit.DAYS.between(eff, exp);
-        String facilityType = findFacilityType(collateral.getId(), collateral.getCode());
-        boolean shortTerm = facilityType != null && (facilityType.toLowerCase().contains("short") || facilityType.toLowerCase().contains("merchandise") || facilityType.toLowerCase().contains("shipment"));
-        if (shortTerm) {
-            String loanExpiry = findEarliestLoanExpiry(collateral.getId(), collateral.getCode());
-            if (loanExpiry != null) {
-                LocalDate loanExp = parseDate(loanExpiry, "loan expiry date");
-                if (exp.isBefore(loanExp)) throw new IllegalArgumentException("Policy expiry must cover the linked short-term facility tenor through " + loanExp + ".");
-            }
-        } else if (days < configurationService.getMinimumPolicyValidityDays()) {
-            throw new IllegalArgumentException("Policy validity must be at least " + configurationService.getMinimumPolicyValidityDays() + " days.");
-        }
-    }
 
-    private String findFacilityType(String collateralId, String collateralCode) {
-        for (LoanCollateralLink link : loanCollateralLinkRepository.findAll()) {
-            if (same(link.getCollateralId(), collateralId) || same(link.getCollateralId(), collateralCode)) {
-                String fId = link.getLoanAccountId() != null ? link.getLoanAccountId() : link.getFacilityId();
-                if (fId != null) {
-                    Optional<LoanAccount> l = loanAccountRepository.findById(fId)
-                            .or(() -> loanAccountRepository.findFirstByLoanReferenceIgnoreCase(fId));
-                    if (l.isPresent()) return l.get().getFacilityType();
+        // Fetch all active linked facilities (Audit Finding 18)
+        List<LoanCollateralLink> links = loanCollateralLinkRepository.findByCollateralId(collateral.getId());
+        if (links.isEmpty() && collateral.getCode() != null) {
+            links = loanCollateralLinkRepository.findByCollateralId(collateral.getCode());
+        }
+
+        List<LoanAccount> activeFacilities = new ArrayList<>();
+        Set<String> seenFacs = new HashSet<>();
+        for (LoanCollateralLink link : links) {
+            if (!link.isEffectiveActive()) continue;
+            String fId = link.getLoanAccountId() != null ? link.getLoanAccountId() : link.getFacilityId();
+            if (fId != null && seenFacs.add(fId)) {
+                loanAccountRepository.findById(fId)
+                        .or(() -> loanAccountRepository.findFirstByLoanReferenceIgnoreCase(fId))
+                        .or(() -> loanAccountRepository.findFirstByLineCodeIgnoreCase(fId))
+                        .ifPresent(activeFacilities::add);
+            }
+        }
+
+        boolean hasShortTerm = false;
+        LocalDate latestShortTermExpiry = null;
+        for (LoanAccount fac : activeFacilities) {
+            String fType = fac.getFacilityType() != null ? fac.getFacilityType().toLowerCase() : "";
+            boolean isShort = fType.contains("short") || fType.contains("merchandise") || fType.contains("shipment") || fType.contains("overdraft");
+            if (isShort) {
+                hasShortTerm = true;
+                if (fac.getLineExpiryDate() != null && !fac.getLineExpiryDate().isBlank()) {
+                    try {
+                        LocalDate d = parseDate(fac.getLineExpiryDate(), "loan expiry date");
+                        if (latestShortTermExpiry == null || d.isAfter(latestShortTermExpiry)) {
+                            latestShortTermExpiry = d;
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
         }
-        return null;
-    }
 
-    private String findEarliestLoanExpiry(String collateralId, String collateralCode) {
-        LocalDate earliest = null; String value = null;
-        for (LoanCollateralLink link : loanCollateralLinkRepository.findAll()) {
-            if (!same(link.getCollateralId(), collateralId) && !same(link.getCollateralId(), collateralCode)) continue;
-            String fId = link.getLoanAccountId() != null ? link.getLoanAccountId() : link.getFacilityId();
-            if (fId == null) continue;
-            Optional<LoanAccount> l = loanAccountRepository.findById(fId)
-                    .or(() -> loanAccountRepository.findFirstByLoanReferenceIgnoreCase(fId));
-            if (l.isEmpty() || l.get().getLineExpiryDate() == null) continue;
-            try {
-                LocalDate d = parseDate(l.get().getLineExpiryDate(), "loan expiry date");
-                if (earliest == null || d.isBefore(earliest)) { earliest = d; value = l.get().getLineExpiryDate(); }
-            } catch (Exception ignored) {}
+        if (hasShortTerm && latestShortTermExpiry != null) {
+            if (exp.isBefore(latestShortTermExpiry)) {
+                throw new IllegalArgumentException(String.format(
+                        "Policy expiry (%s) must cover the full tenor of all linked short-term facilities through latest maturity date %s.",
+                        exp, latestShortTermExpiry));
+            }
+        } else if (days < configurationService.getMinimumPolicyValidityDays()) {
+            throw new IllegalArgumentException("Policy validity must be at least " + configurationService.getMinimumPolicyValidityDays() + " days (actual: " + days + " days).");
         }
-        return value;
     }
 
     public void validateMandatoryDocuments(Collateral collateral) {
         if (!configurationService.areMandatoryDocumentRulesEnabled()) return;
         List<MandatoryDocumentRule> rules = mandatoryDocumentRuleRepository.findAll();
-        List<OwnershipDocument> docs = ownershipDocumentRepository.findAll();
+        List<OwnershipDocument> docs = new ArrayList<>(ownershipDocumentRepository.findAll());
+        if (collateral.getDocuments() != null) {
+            docs.addAll(collateral.getDocuments());
+        }
         List<String> missingMandatoryDocs = new ArrayList<>();
 
         for (MandatoryDocumentRule rule : rules) {
-            if (!rule.isMandatory() || !rule.isActive()) continue;
-            if (!categoryMatches(rule.getCollateralCategory(), collateral)) continue;
-
-            if (rule.getOwnershipCondition() != null && !rule.getOwnershipCondition().isBlank() && !"All".equalsIgnoreCase(rule.getOwnershipCondition().trim())) {
-                String cOwnerType = collateral.getOwnerType() != null ? collateral.getOwnerType().trim() : "Borrower-owned";
-                if (!rule.getOwnershipCondition().trim().equalsIgnoreCase(cOwnerType)) {
-                    continue;
-                }
-            }
+            if (!isMandatoryDocumentRuleApplicable(rule, collateral)) continue;
 
             boolean satisfied = docs.stream().anyMatch(d -> {
                 if (!documentBelongsToCollateral(d, collateral)) return false;
                 if ("Rejected".equalsIgnoreCase(d.getVerificationStatus()) || "Archived".equalsIgnoreCase(d.getStatus())) return false;
                 
+                // Must be the latest active version (Audit Finding 13)
+                if (!d.isLatest()) return false;
+
+                // If document has an expiry date, it must not be expired (Audit Finding 13)
+                if (d.getExpiryDate() != null && !d.getExpiryDate().isBlank()) {
+                    try {
+                        LocalDate docExp = LocalDate.parse(d.getExpiryDate().substring(0, 10));
+                        if (docExp.isBefore(LocalDate.now())) {
+                            return false;
+                        }
+                    } catch (Exception ignored) {}
+                }
+
                 // 1. Exact document type matching
                 boolean typeMatch = docTypeMatches(rule.getDocumentType(), d.getType()) || docTypeMatches(rule.getDocumentType(), d.getName());
                 if (!typeMatch) return false;
@@ -642,7 +987,19 @@ public class ValidationService {
             });
 
             if (!satisfied) {
-                missingMandatoryDocs.add(rule.getDocumentType());
+                // Check if an APPROVED exception exists for this exact collateral and requirement
+                boolean approvedExceptionExists = false;
+                if (cimsExceptionRepository != null && collateral.getId() != null) {
+                    List<CimsException> approvedExceptions = cimsExceptionRepository.findByCollateralIdAndStatusIn(
+                            collateral.getId(), List.of("Approved", "Resolved"));
+                    approvedExceptionExists = approvedExceptions.stream().anyMatch(e ->
+                            docTypeMatches(rule.getDocumentType(), e.getFailedRequirement()) ||
+                            (e.getDescription() != null && e.getDescription().toLowerCase().contains(rule.getDocumentType().toLowerCase()))
+                    );
+                }
+                if (!approvedExceptionExists) {
+                    missingMandatoryDocs.add(rule.getDocumentType());
+                }
             }
         }
 
@@ -667,6 +1024,11 @@ public class ValidationService {
         if (d == null || collateral == null) return false;
         if (same(collateral.getId(), d.getCollateralId()) || same(collateral.getCode(), d.getCollateralId())) return true;
         if (same(collateral.getId(), d.getEntityId()) || same(collateral.getCode(), d.getEntityId())) return true;
+        if (collateral.isFirstDegreeInternal() && collateral.getFirstDegreeCollateralId() != null) {
+            if (same(collateral.getFirstDegreeCollateralId(), d.getCollateralId()) || same(collateral.getFirstDegreeCollateralId(), d.getEntityId())) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -688,9 +1050,9 @@ public class ValidationService {
         boolean aIsLetter = a.contains("letter") && a.contains("consent");
         if (rIsLetter && aIsLetter) return true;
 
-        // Title Deed / Property Ownership Certificate
-        boolean rIsTitle = r.contains("title deed") || r.contains("property ownership") || r.contains("ownership cert");
-        boolean aIsTitle = a.contains("title deed") || a.contains("property ownership") || a.contains("ownership cert");
+        // Title Deed / Property Ownership Certificate / Land Holding Certificate (LHC)
+        boolean rIsTitle = r.contains("title deed") || r.contains("property ownership") || r.contains("ownership cert") || r.contains("lhc") || r.contains("land holding");
+        boolean aIsTitle = a.contains("title deed") || a.contains("property ownership") || a.contains("ownership cert") || a.contains("lhc") || a.contains("land holding");
         if (rIsTitle && aIsTitle) return true;
         if (rIsTitle != aIsTitle && (rIsTitle || aIsTitle)) {
             // If one is title deed and other is something else (like valuation or building plan), do NOT match
@@ -713,6 +1075,16 @@ public class ValidationService {
             if (a.contains("title deed") || a.contains("building") || a.contains("machinery")) return false;
         }
 
+        // Loan Agreement / Contracts / Facility Agreement
+        boolean rIsLoanAgree = r.contains("loan agreement") || r.contains("facility agreement") || r.contains("credit agreement") || (r.contains("loan") && r.contains("contract"));
+        boolean aIsLoanAgree = a.contains("loan agreement") || a.contains("facility agreement") || a.contains("credit agreement") || (a.contains("loan") && a.contains("contract"));
+        if (rIsLoanAgree && aIsLoanAgree) return true;
+
+        // Registration Letters / Confirmation Letters
+        boolean rIsRegLetter = r.contains("registration letter") || (r.contains("registration") && r.contains("letter"));
+        boolean aIsRegLetter = a.contains("registration letter") || (a.contains("registration") && a.contains("letter"));
+        if (rIsRegLetter && aIsRegLetter) return true;
+
         // Valuation Report
         boolean rIsVal = r.contains("valuation");
         boolean aIsVal = a.contains("valuation");
@@ -726,12 +1098,89 @@ public class ValidationService {
         boolean aIsMach = a.contains("machinery") || a.contains("purchase invoice") || a.contains("bill of sale");
         if (rIsMach && aIsMach) return true;
 
-        // Commercial Registration / Trade License
-        boolean rIsComm = r.contains("commercial registration") || r.contains("trade license");
-        boolean aIsComm = a.contains("commercial registration") || a.contains("trade license");
-        if (rIsComm && aIsComm) return true;
+        // Mortgage Registration Confirmation Letter (Audit Finding 6 & 50)
+        boolean rIsMortgage = r.contains("mortgage") && (r.contains("registration") || r.contains("confirmation"));
+        boolean aIsMortgage = a.contains("mortgage") && (a.contains("registration") || a.contains("confirmation"));
+        if (rIsMortgage && aIsMortgage) return true;
+
+        // Collateral Custody Agreement
+        boolean rIsCustody = r.contains("custody") && r.contains("agreement");
+        boolean aIsCustody = a.contains("custody") && a.contains("agreement");
+        if (rIsCustody && aIsCustody) return true;
+
+        // Bill of Quantity (BOQ)
+        boolean rIsBoq = r.contains("bill of quantity") || r.contains("boq");
+        boolean aIsBoq = a.contains("bill of quantity") || a.contains("boq");
+        if (rIsBoq && aIsBoq) return true;
+
+        // Lease Agreement and Receipt
+        boolean rIsLease = r.contains("lease");
+        boolean aIsLease = a.contains("lease");
+        if (rIsLease && aIsLease) return true;
+
+        // Warehouse Receipt
+        boolean rIsWh = r.contains("warehouse");
+        boolean aIsWh = a.contains("warehouse");
+        if (rIsWh && aIsWh) return true;
+
+        // Intellectual Property Registration
+        boolean rIsIp = r.contains("intellectual property") || r.contains("ip registration") || r.contains("patent") || r.contains("trademark");
+        boolean aIsIp = a.contains("intellectual property") || a.contains("ip registration") || a.contains("patent") || a.contains("trademark");
+        if (rIsIp && aIsIp) return true;
+
+        // Livestock Ear-tag / Evidence
+        boolean rIsLivestock = r.contains("livestock") || r.contains("ear tag") || r.contains("eartag");
+        boolean aIsLivestock = a.contains("livestock") || a.contains("ear tag") || a.contains("eartag");
+        if (rIsLivestock && aIsLivestock) return true;
+
+        // Land Holding Certificate
+        boolean rIsLand = r.contains("land holding") || r.contains("land use");
+        boolean aIsLand = a.contains("land holding") || a.contains("land use");
+        if (rIsLand && aIsLand) return true;
+
+        // Purchase Document / Invoice / Bill of Sale / Customs Clearance
+        boolean rIsPurchase = r.contains("purchase") || r.contains("invoice") || r.contains("customs") || r.contains("import");
+        boolean aIsPurchase = a.contains("purchase") || a.contains("invoice") || a.contains("customs") || a.contains("import");
+        if (rIsPurchase && aIsPurchase) return true;
+
+        // TIN Information / Evidence
+        boolean rIsTin = r.contains("tin");
+        boolean aIsTin = a.contains("tin");
+        if (rIsTin && aIsTin) return true;
+
+        // Confirmation Letter from Other Financial Institution
+        boolean rIsConf = (r.contains("confirmation") && (r.contains("institution") || r.contains("other") || r.contains("financial") || r.contains("bank"))) || r.contains("clearance letter");
+        boolean aIsConf = (a.contains("confirmation") && (a.contains("institution") || a.contains("other") || a.contains("financial") || a.contains("bank"))) || a.contains("clearance letter");
+        if (rIsConf && aIsConf) return true;
+
+        // Registration Extract
+        boolean rIsExtract = r.contains("extract") || r.contains("registry extract");
+        boolean aIsExtract = a.contains("extract") || a.contains("registry extract");
+        if (rIsExtract && aIsExtract) return true;
 
         return false;
+    }
+
+    public void validateEmcrAndEsgCompliance(Collateral collateral) {
+        if (collateral == null) return;
+        if (collateral.isEsgExclusionFlag() || "Failed".equalsIgnoreCase(collateral.getEsgScreeningStatus())) {
+            throw new IllegalArgumentException("Collateral registration/activation denied: Asset violates Bank Environmental & Social Governance (ESG) Exclusion List under NBE Directives: " +
+                    (collateral.getEsgNotes() != null ? collateral.getEsgNotes() : "Prohibited commercial/environmental activity."));
+        }
+        String cat = collateral.getCategory() != null ? collateral.getCategory().toLowerCase() : "";
+        String type = collateral.getType() != null ? collateral.getType().toLowerCase() : "";
+        boolean isMovable = cat.contains("movable") || cat.contains("vehicle") || cat.contains("machin") ||
+                type.contains("vehicle") || type.contains("machin") || type.contains("movable") || type.contains("livestock");
+        if (isMovable) {
+            boolean hasEmcr = (collateral.getRegistrationNumber() != null && !collateral.getRegistrationNumber().isBlank())
+                    || (collateral.getEmcrRegistrationNumber() != null && !collateral.getEmcrRegistrationNumber().isBlank())
+                    || "Registered".equalsIgnoreCase(collateral.getEmcrStatus());
+            if (!hasEmcr && configurationService != null && configurationService.getBoolean("emcr_mandatory_enabled", true)) {
+                // Movable Property Security Right Proclamation No. 1147/2019 & EMCR Directive MCR/02/2020
+                throw new IllegalArgumentException("Regulatory Compliance Warning (EMCR): Movable collateral '" +
+                        collateral.getCode() + "' must be registered in the Electronic Movable Collateral Registry (EMCR) under Proclamation No. 1147/2019 prior to facility security activation.");
+            }
+        }
     }
 
     public boolean categoryMatches(String ruleCategory, Collateral c) {
@@ -746,6 +1195,12 @@ public class ValidationService {
                                  typ.contains("immovable") || typ.contains("building") || typ.contains("real");
 
         if (isRuleImmovable) {
+            if (x.contains("under construction") || x.contains("construction in progress")) {
+                return typ.contains("under construction") || cat.contains("under construction") || typ.contains("construction");
+            }
+            if (x.contains("leasehold") || x.contains("lease")) {
+                return typ.contains("leasehold") || cat.contains("leasehold") || typ.contains("lease") || (c.getPropertyCertNumber() != null && c.getPropertyCertNumber().toLowerCase().contains("lease"));
+            }
             return isCatImmovable;
         }
 
@@ -771,16 +1226,121 @@ public class ValidationService {
         return false;
     }
 
+    public boolean isMandatoryDocumentRuleApplicable(MandatoryDocumentRule rule, Collateral collateral) {
+        if (rule == null || collateral == null) return false;
+        if (!rule.isActive() || !rule.isMandatory()) return false;
+
+        // 1. Category match
+        if (!categoryMatches(rule.getCollateralCategory(), collateral)) {
+            return false;
+        }
+
+        // 2. Internal 2nd degree collateral exemption (only if this is a 2nd degree collateral linking to an internal 1st degree charge)
+        boolean isSecondDegree = "2nd".equalsIgnoreCase(collateral.getCollateralRank()) || "Second Degree".equalsIgnoreCase(collateral.getCollateralRank()) || collateral.getFirstDegreeCollateralId() != null;
+        if (isSecondDegree && collateral.isFirstDegreeInternal() && collateral.getFirstDegreeCollateralId() != null) {
+            String dt = rule.getDocumentType() != null ? rule.getDocumentType().toLowerCase() : "";
+            if (dt.contains("title") || dt.contains("deed") || dt.contains("valuation") || dt.contains("ownership cert")) {
+                return false;
+            }
+        }
+
+        // 3. Collateral Subtype match
+        if (rule.getCollateralType() != null && !rule.getCollateralType().isBlank() && !"All".equalsIgnoreCase(rule.getCollateralType().trim())) {
+            String cType = collateral.getType() != null ? collateral.getType().trim() : "";
+            String rType = rule.getCollateralType().trim();
+            boolean typeMatches = cType.equalsIgnoreCase(rType)
+                    || cType.toLowerCase().contains(rType.toLowerCase())
+                    || rType.toLowerCase().contains(cType.toLowerCase());
+
+            if (!typeMatches && rType.toLowerCase().contains("construction") && collateral.isUnderConstruction()) {
+                typeMatches = true;
+            }
+            if (!typeMatches) {
+                return false;
+            }
+        }
+
+        // 4. Ownership condition match
+        if (rule.getOwnershipCondition() != null && !rule.getOwnershipCondition().isBlank() && !"All".equalsIgnoreCase(rule.getOwnershipCondition().trim())) {
+            String cond = rule.getOwnershipCondition().trim();
+            String cOwnerType = collateral.getOwnerType() != null ? collateral.getOwnerType().trim() : "Borrower-owned";
+            boolean tpRule = cond.equalsIgnoreCase("Third-party-owned") || cond.toLowerCase().contains("third party") || cond.toLowerCase().contains("thirdparty");
+            boolean tpCollateral = cOwnerType.equalsIgnoreCase("Third-party-owned") || cOwnerType.toLowerCase().contains("third party") || cOwnerType.toLowerCase().contains("thirdparty");
+            if (tpRule != tpCollateral && !cond.equalsIgnoreCase(cOwnerType)) {
+                return false;
+            }
+        }
+
+        // 5. Business / Applicability Condition match
+        if (rule.getApplicabilityCondition() != null && !rule.getApplicabilityCondition().isBlank() && !"All".equalsIgnoreCase(rule.getApplicabilityCondition().trim())) {
+            String appCond = rule.getApplicabilityCondition().trim().toLowerCase();
+            if (appCond.contains("construction") || appCond.contains("boq") || appCond.contains("remaining works")) {
+                String cType = collateral.getType() != null ? collateral.getType().toLowerCase() : "";
+                boolean underCon = collateral.isUnderConstruction() || cType.contains("construction") || cType.contains("under construction");
+                if (!underCon) {
+                    return false;
+                }
+            }
+            if (appCond.contains("leasehold") || appCond.contains("lease fee")) {
+                String cType = collateral.getType() != null ? collateral.getType().toLowerCase() : "";
+                if (!cType.contains("lease")) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public void validateMandatoryPolicyDocuments(InsurancePolicy policy) {
+        if (!configurationService.areMandatoryDocumentRulesEnabled()) return;
+        List<OwnershipDocument> docs = new ArrayList<>(ownershipDocumentRepository.findAll());
+        if (policy.getDocuments() != null) {
+            docs.addAll(policy.getDocuments());
+        }
+
+        String polId = policy.getId() != null ? policy.getId().trim() : "";
+        String polNum = policy.getPolicyNumber() != null ? policy.getPolicyNumber().trim() : "";
+        String colId = policy.getCollateralId() != null ? policy.getCollateralId().trim() : "";
+        String renewedFromId = policy.getRenewedFromPolicyId() != null ? policy.getRenewedFromPolicyId().trim() : "";
+        String replacesId = policy.getReplacesPolicyId() != null ? policy.getReplacesPolicyId().trim() : "";
+
+        boolean hasSchedule = docs.stream().anyMatch(d -> {
+            if ("Rejected".equalsIgnoreCase(d.getVerificationStatus()) || "Archived".equalsIgnoreCase(d.getStatus())) return false;
+            boolean matchesEntity = (polId.length() > 0 && (polId.equalsIgnoreCase(d.getEntityId()) || polId.equalsIgnoreCase(d.getCollateralId())))
+                    || (polNum.length() > 0 && (polNum.equalsIgnoreCase(d.getEntityId()) || polNum.equalsIgnoreCase(d.getCollateralId())))
+                    || (colId.length() > 0 && (colId.equalsIgnoreCase(d.getEntityId()) || colId.equalsIgnoreCase(d.getCollateralId())))
+                    || (renewedFromId.length() > 0 && (renewedFromId.equalsIgnoreCase(d.getEntityId()) || renewedFromId.equalsIgnoreCase(d.getCollateralId())))
+                    || (replacesId.length() > 0 && (replacesId.equalsIgnoreCase(d.getEntityId()) || replacesId.equalsIgnoreCase(d.getCollateralId())));
+            if (!matchesEntity) return false;
+            String dt = ((d.getType() != null ? d.getType() : "") + " " + (d.getName() != null ? d.getName() : "")).toLowerCase();
+            boolean isSched = dt.contains("schedule") || dt.contains("certificate") || dt.contains("policy doc");
+            boolean hasContent = (d.getFileContent() != null && !d.getFileContent().isBlank())
+                    || (d.getDmsRef() != null && !d.getDmsRef().isBlank());
+            return isSched && hasContent;
+        });
+
+        if (!hasSchedule) {
+            throw new IllegalArgumentException("Policy activation rejected. Mandatory Insurance Policy Schedule is missing or has no retrievable file content in DMS repository.");
+        }
+    }
+
     private void validateTaxonomy(Collateral collateral){
-        List<CollateralTaxonomy> rows=collateralTaxonomyRepository.findAll();
-        if(rows.isEmpty()) return;
+        List<CollateralTaxonomy> rows = collateralTaxonomyRepository.findAll();
+        if (rows.isEmpty()) {
+            throw new IllegalStateException("Collateral taxonomy configuration is empty or unseeded. Registration cannot proceed.");
+        }
+        List<CollateralTaxonomy> activeRows = rows.stream().filter(CollateralTaxonomy::isActive).toList();
+        if (activeRows.isEmpty()) {
+            throw new IllegalStateException("No active collateral taxonomy entries configured.");
+        }
 
         String category = collateral.getCategory() == null ? "" : collateral.getCategory().trim();
         String type = collateral.getType() == null ? "" : collateral.getType().trim();
 
         boolean genericType = !type.isBlank() && type.equalsIgnoreCase(category);
 
-        boolean categoryMatch = rows.stream().anyMatch(t ->
+        boolean categoryMatch = activeRows.stream().anyMatch(t ->
             t.getCategory() != null && t.getCategory().trim().equalsIgnoreCase(category));
         if (!categoryMatch) {
             throw new IllegalArgumentException("Collateral category is not present in the active CIMS taxonomy: " + category);
@@ -788,7 +1348,7 @@ public class ValidationService {
 
         if (type.isBlank() || genericType) return;
 
-        boolean subCategoryMatch = rows.stream().anyMatch(t ->
+        boolean subCategoryMatch = activeRows.stream().anyMatch(t ->
             t.getCategory() != null &&
             t.getCategory().trim().equalsIgnoreCase(category) &&
             t.getSubCategory() != null &&
@@ -797,22 +1357,84 @@ public class ValidationService {
              type.toLowerCase().contains(t.getSubCategory().toLowerCase())));
 
         if (!subCategoryMatch) {
-            throw new IllegalArgumentException("Collateral type '" + type + "' is not configured under taxonomy category '" + category + "'.");
+            throw new IllegalArgumentException("Collateral type '" + type + "' is not configured under active taxonomy category '" + category + "'.");
         }
     }
 
     public boolean isCoverageTypeCompatible(String actual, String required) {
-        if (actual == null || required == null) return false;
+        if (insuranceRequirementService != null) {
+            return insuranceRequirementService.isCoverageTypeCompatible(actual, required);
+        }
+        if (required == null || required.isBlank() || "None".equalsIgnoreCase(required.trim())) return true;
+        if (actual == null || actual.isBlank()) return false;
         String a = actual.trim().toLowerCase(Locale.ROOT);
         String r = required.trim().toLowerCase(Locale.ROOT);
-        if (a.equals(r) || a.contains(r) || r.contains(a)) return true;
-        if (r.contains("fire") && (a.contains("fire") || a.contains("allied") || a.contains("property") || a.contains("all risk") || a.contains("commercial") || a.contains("building"))) return true;
-        if (r.contains("motor") && (a.contains("motor") || a.contains("comprehensive") || a.contains("vehicle"))) return true;
-        if (r.contains("machin") && (a.contains("machin") || a.contains("engineering") || a.contains("breakdown") || a.contains("all-risk") || a.contains("all risk") || a.contains("comprehensive"))) return true;
-        if (r.contains("all risk") && (a.contains("all risk") || a.contains("property") || a.contains("commercial"))) return true;
-        if (r.contains("marine") && (a.contains("marine") || a.contains("cargo") || a.contains("transit"))) return true;
-        if (r.contains("commercial") && (a.contains("commercial") || a.contains("property") || a.contains("fire"))) return true;
-        return false;
+        if (a.equals(r)) return true;
+
+        boolean actualIsComprehensiveAllRisk = (a.contains("all-risk") || a.contains("all risk") || a.contains("property all risk") || a.contains("commercial all risk"))
+                && !a.contains("contractor") && !a.contains("machinery");
+
+        Set<String> requiredPerils = new LinkedHashSet<>();
+        if (r.contains("fire")) requiredPerils.add("FIRE");
+        if (r.contains("lightning")) requiredPerils.add("LIGHTNING");
+        if (r.contains("burglary")) requiredPerils.add("BURGLARY");
+        if (r.contains("theft")) requiredPerils.add("THEFT");
+        if (r.contains("combustion")) requiredPerils.add("COMBUSTION");
+        if (r.contains("machin") || r.contains("breakdown")) requiredPerils.add("MACHINERY_BREAKDOWN");
+        if (r.contains("motor") || r.contains("vehicle")) requiredPerils.add("COMPREHENSIVE_MOTOR");
+        if (r.contains("livestock") || r.contains("mortality")) requiredPerils.add("LIVESTOCK_MORTALITY");
+        if (r.contains("crop")) requiredPerils.add("CROP_PROTECTION");
+        if (r.contains("warehouse")) requiredPerils.add("WAREHOUSE_ALL_RISK");
+        if (r.contains("contractor") || r.contains("car")) requiredPerils.add("CONTRACTOR_ALL_RISK");
+
+        if (requiredPerils.isEmpty()) {
+            return a.equals(r);
+        }
+
+        for (String peril : requiredPerils) {
+            boolean satisfied = false;
+            switch (peril) {
+                case "FIRE":
+                    satisfied = a.contains("fire") || a.contains("allied") || actualIsComprehensiveAllRisk;
+                    break;
+                case "LIGHTNING":
+                    satisfied = a.contains("lightning") || a.contains("allied") || actualIsComprehensiveAllRisk;
+                    break;
+                case "BURGLARY":
+                    satisfied = a.contains("burglary") || actualIsComprehensiveAllRisk;
+                    break;
+                case "THEFT":
+                    satisfied = a.contains("theft") || a.contains("burglary") || actualIsComprehensiveAllRisk;
+                    break;
+                case "COMBUSTION":
+                    satisfied = a.contains("combustion") || actualIsComprehensiveAllRisk;
+                    break;
+                case "MACHINERY_BREAKDOWN":
+                    satisfied = a.contains("breakdown") || a.contains("machin") || a.contains("engineering")
+                            || (a.contains("contractor") && a.contains("machin"));
+                    break;
+                case "COMPREHENSIVE_MOTOR":
+                    satisfied = (a.contains("motor") || a.contains("vehicle")) && a.contains("comprehensive");
+                    break;
+                case "LIVESTOCK_MORTALITY":
+                    satisfied = a.contains("livestock") || a.contains("mortality");
+                    break;
+                case "CROP_PROTECTION":
+                    satisfied = a.contains("crop");
+                    break;
+                case "WAREHOUSE_ALL_RISK":
+                    satisfied = a.contains("warehouse") || actualIsComprehensiveAllRisk;
+                    break;
+                case "CONTRACTOR_ALL_RISK":
+                    satisfied = a.contains("contractor") || a.contains("car ") || a.startsWith("car") || a.contains("engineering");
+                    break;
+            }
+            if (!satisfied) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public PolicyPreValidationResultDto evaluatePolicyPreValidation(InsurancePolicy policy, List<Map<String, Object>> attachedDocs) {
@@ -853,8 +1475,13 @@ public class ValidationService {
                     .or(() -> customerRepository.findFirstByCifIgnoreCase(finalCustId))
                     .orElse(null);
             if (cust != null) {
-                result.addCheck(new ValidationCheckItemDto("Customer", "Customer KYC & Relationship", true,
-                        "Customer " + cust.getName() + " (CIF: " + cust.getCif() + ") verified.", false, null, null, "CUSTOMER_VERIFIED"));
+                if ("U".equalsIgnoreCase(cust.getAuthStat()) || "Pending Approval".equalsIgnoreCase(cust.getStatus())) {
+                    result.addCheck(new ValidationCheckItemDto("Customer", "Customer Approval State", false,
+                            "Customer " + cust.getName() + " is unapproved/pending authorization (authStat='U'). Policy activation requires an approved customer profile.", false, null, null, "CUSTOMER_NOT_APPROVED"));
+                } else {
+                    result.addCheck(new ValidationCheckItemDto("Customer", "Customer KYC & Relationship", true,
+                            "Customer " + cust.getName() + " (CIF: " + (cust.getCif() != null ? cust.getCif() : cust.getId()) + ") verified and authorized.", false, null, null, "CUSTOMER_VERIFIED"));
+                }
             } else {
                 result.addCheck(new ValidationCheckItemDto("Customer", "Customer Record", false,
                         "Associated customer CIF/ID '" + custId + "' not found.", false, null, null, "CUSTOMER_NOT_FOUND"));
@@ -972,21 +1599,34 @@ public class ValidationService {
                             }
                         }
                     }
-                    double required = Math.max(Math.max(0, collateral.getValuationAmount()), exposure);
-                    double configuredThreshold = configurationService.getMinimumCoverageAdequacyPct() / 100.0;
-                    double requiredWithThreshold = required * configuredThreshold;
+                    double reqPct = 100.0;
+                    if (insuranceCoverageRuleService != null) {
+                        Optional<InsuranceCoverageRule> ruleOpt = insuranceCoverageRuleService.resolveApplicableRule(collateral.getType(), collateral.getOwningSegment());
+                        if (ruleOpt.isPresent()) {
+                            reqPct = ruleOpt.get().getRequiredCoveragePercentage();
+                        } else if (configurationService != null) {
+                            reqPct = configurationService.getMinimumCoverageAdequacyPct();
+                        }
+                    } else if (configurationService != null) {
+                        reqPct = configurationService.getMinimumCoverageAdequacyPct();
+                    }
+                    Double insurableVal = collateral.getInsurableValue();
+                    if (insurableVal == null || insurableVal <= 0) {
+                        insurableVal = collateral.getValuationAmount();
+                    }
+                    double requiredWithThreshold = insurableVal * (reqPct / 100.0);
 
                     if (policy.getInsuredAmount() + 1e-9 < requiredWithThreshold) {
                         double deficit = requiredWithThreshold - policy.getInsuredAmount();
                         result.addCheck(new ValidationCheckItemDto("Coverage", "Coverage Adequacy Threshold", false,
                                 "Insured amount ETB " + String.format(Locale.ROOT, "%,.2f", policy.getInsuredAmount()) +
                                 " is below required ETB " + String.format(Locale.ROOT, "%,.2f", requiredWithThreshold) +
-                                " (Deficit: ETB " + String.format(Locale.ROOT, "%,.2f", deficit) + "). Credit policy mandates 100% adequacy.",
-                                true, "Underinsured Collateral", "100% Coverage Adequacy Deficit", "COVERAGE_ADEQUACY"));
+                                " (Insurable structure value ETB " + String.format(Locale.ROOT, "%,.2f", insurableVal) + ", required " + reqPct + "%, deficit: ETB " + String.format(Locale.ROOT, "%,.2f", deficit) + ").",
+                                true, "Underinsured Collateral", "Coverage Adequacy Deficit", "COVERAGE_ADEQUACY"));
                     } else {
                         result.addCheck(new ValidationCheckItemDto("Coverage", "Coverage Adequacy Threshold", true,
                                 "Insured amount ETB " + String.format(Locale.ROOT, "%,.2f", policy.getInsuredAmount()) +
-                                " satisfies adequacy requirement (ETB " + String.format(Locale.ROOT, "%,.2f", requiredWithThreshold) + ").",
+                                " satisfies adequacy requirement (ETB " + String.format(Locale.ROOT, "%,.2f", requiredWithThreshold) + " at " + reqPct + "%).",
                                 false, null, null, "COVERAGE_ADEQUATE"));
                     }
                 }
@@ -1025,14 +1665,7 @@ public class ValidationService {
             List<OwnershipDocument> existingDocs = ownershipDocumentRepository.findAll();
 
             for (MandatoryDocumentRule rule : rules) {
-                if (!rule.isMandatory() || !rule.isActive() || !categoryMatches(rule.getCollateralCategory(), targetCol)) continue;
-
-                if (rule.getOwnershipCondition() != null && !rule.getOwnershipCondition().isBlank() && !"All".equalsIgnoreCase(rule.getOwnershipCondition().trim())) {
-                    String cOwnerType = targetCol.getOwnerType() != null ? targetCol.getOwnerType().trim() : "Borrower-owned";
-                    if (!rule.getOwnershipCondition().trim().equalsIgnoreCase(cOwnerType)) {
-                        continue;
-                    }
-                }
+                if (!isMandatoryDocumentRuleApplicable(rule, targetCol)) continue;
 
                 // Check existing repo docs
                 boolean satisfied = existingDocs.stream().anyMatch(d ->
@@ -1092,6 +1725,15 @@ public class ValidationService {
             List<Map<String, Object>> attachedDocs,
             List<Map<String, Object>> allocations,
             List<Map<String, Object>> owners) {
+        return evaluateCollateralPreValidation(collateral, attachedDocs, allocations, owners, null);
+    }
+
+    public PolicyPreValidationResultDto evaluateCollateralPreValidation(
+            Collateral collateral,
+            List<Map<String, Object>> attachedDocs,
+            List<Map<String, Object>> allocations,
+            List<Map<String, Object>> owners,
+            List<Map<String, Object>> attachedExceptions) {
 
         PolicyPreValidationResultDto result = new PolicyPreValidationResultDto();
         if (collateral == null) {
@@ -1116,8 +1758,13 @@ public class ValidationService {
                         "Borrower CIF '" + collateral.getCustomerId() + "' not found in CBS master records.", false, null, null, "CUSTOMER_NOT_FOUND"));
             } else {
                 Customer cust = custOpt.get();
-                result.addCheck(new ValidationCheckItemDto("Customer", "Customer Completeness", true,
-                        "Customer " + cust.getName() + " (CIF: " + cust.getCif() + ") verified in CBS master.", false, null, null, "CUSTOMER_VERIFIED"));
+                if ("U".equalsIgnoreCase(cust.getAuthStat()) || "Pending Approval".equalsIgnoreCase(cust.getStatus())) {
+                    result.addCheck(new ValidationCheckItemDto("Customer", "Customer Approval State", false,
+                            "Customer " + cust.getName() + " is unapproved/pending authorization (authStat='U'). Collateral activation requires an approved customer profile.", false, null, null, "CUSTOMER_NOT_APPROVED"));
+                } else {
+                    result.addCheck(new ValidationCheckItemDto("Customer", "Customer Completeness", true,
+                            "Customer " + cust.getName() + " (CIF: " + (cust.getCif() != null ? cust.getCif() : cust.getId()) + ") verified and authorized.", false, null, null, "CUSTOMER_VERIFIED"));
+                }
             }
         }
 
@@ -1326,15 +1973,7 @@ public class ValidationService {
                     : Collections.emptyList();
 
             for (MandatoryDocumentRule rule : rules) {
-                if (!rule.isMandatory() || !rule.isActive()) continue;
-                if (!categoryMatches(rule.getCollateralCategory(), collateral)) continue;
-
-                if (rule.getOwnershipCondition() != null && !rule.getOwnershipCondition().isBlank() && !"All".equalsIgnoreCase(rule.getOwnershipCondition().trim())) {
-                    String cOwnerType = collateral.getOwnerType() != null ? collateral.getOwnerType().trim() : "Borrower-owned";
-                    if (!rule.getOwnershipCondition().trim().equalsIgnoreCase(cOwnerType)) {
-                        continue;
-                    }
-                }
+                if (!isMandatoryDocumentRuleApplicable(rule, collateral)) continue;
 
                 // Check existing repo docs
                 boolean satisfied = existingDocs.stream().anyMatch(d ->
@@ -1361,9 +2000,54 @@ public class ValidationService {
                     result.addCheck(new ValidationCheckItemDto("Documents", "Mandatory Document: " + rule.getDocumentType(), true,
                             rule.getDocumentType() + " is verified and attached in DMS repository.", false, null, null, "DOC_SATISFIED_" + rule.getId()));
                 } else {
-                    result.addCheck(new ValidationCheckItemDto("Documents", "Mandatory Document: " + rule.getDocumentType(), false,
-                            rule.getDocumentType() + " is required for this collateral type (" + collateral.getCategory() + ") but has not been attached.",
-                            true, "Missing Mandatory Document", rule.getDocumentType(), "MANDATORY_DOC_" + rule.getId()));
+                    boolean hasRequestedException = false;
+                    if (attachedExceptions != null) {
+                        hasRequestedException = attachedExceptions.stream().anyMatch(e -> {
+                            String req = (String) e.get("failedRequirement");
+                            String rType = (String) e.get("documentType");
+                            String rId = (String) e.get("ruleId");
+                            return (rId != null && rId.equalsIgnoreCase(rule.getId()))
+                                    || docTypeMatches(rule.getDocumentType(), req)
+                                    || docTypeMatches(rule.getDocumentType(), rType);
+                        });
+                    }
+
+                    if (!rule.isExceptionAllowed()) {
+                        // Hard Block: Rule does NOT allow exceptions under Admin Policy
+                        result.addCheck(new ValidationCheckItemDto("Documents", "Mandatory Document: " + rule.getDocumentType(), false,
+                                rule.getDocumentType() + " is mandatory and does NOT permit exceptions under Bank Admin Policy. It must be attached before submission.",
+                                false, null, null, "MANDATORY_DOC_HARD_BLOCK_" + rule.getId()));
+                    } else if (hasRequestedException) {
+                        result.addCheck(new ValidationCheckItemDto("Documents", "Mandatory Document: " + rule.getDocumentType(), false,
+                                rule.getDocumentType() + " is missing, but an authorized exception request has been submitted (Pending Checker Approval).",
+                                true, "Missing Mandatory Document", rule.getDocumentType(), "MANDATORY_DOC_EXC_" + rule.getId()));
+                    } else {
+                        result.addCheck(new ValidationCheckItemDto("Documents", "Mandatory Document: " + rule.getDocumentType(), false,
+                                rule.getDocumentType() + " is required by Admin Policy for this collateral (" + collateral.getCategory() + " / " + (collateral.getType() != null ? collateral.getType() : "Standard") + ") but has not been attached. Exception allowed with authorized justification.",
+                                true, "Missing Mandatory Document", rule.getDocumentType(), "MANDATORY_DOC_" + rule.getId()));
+                    }
+                }
+            }
+        }
+
+        // 8. First-Degree / Second-Degree Collateral Priority & Evidence Validation
+        if (firstDegreeSecondDegreeService != null) {
+            List<OwnershipDocument> attachedDocsList = new ArrayList<>();
+            if (attachedDocs != null) {
+                for (Map<String, Object> d : attachedDocs) {
+                    OwnershipDocument doc = new OwnershipDocument();
+                    doc.setId((String) d.get("id"));
+                    doc.setName((String) d.getOrDefault("name", d.get("fileName")));
+                    doc.setType((String) d.getOrDefault("type", d.get("docType")));
+                    doc.setFileContent((String) d.getOrDefault("fileContent", d.get("fileData")));
+                    doc.setFileName((String) d.get("fileName"));
+                    attachedDocsList.add(doc);
+                }
+            }
+            var degreeResult = firstDegreeSecondDegreeService.validateSecondDegreeCollateral(collateral, attachedDocsList);
+            if (degreeResult.getChecks() != null) {
+                for (ValidationCheckItemDto check : degreeResult.getChecks()) {
+                    result.addCheck(check);
                 }
             }
         }
@@ -1386,6 +2070,19 @@ public class ValidationService {
         }
 
         return result;
+    }
+
+    public void validateCollateralDegree(Collateral collateral) {
+        if (collateral == null) return;
+        String rank = collateral.getCollateralRank();
+        if (rank != null && ("2nd".equalsIgnoreCase(rank.trim()) || "Second-degree".equalsIgnoreCase(rank.trim()))) {
+            if (firstDegreeSecondDegreeService != null) {
+                var res = firstDegreeSecondDegreeService.validateSecondDegreeCollateral(collateral, null);
+                if (!res.isCanProceed()) {
+                    throw new IllegalArgumentException(String.join("; ", res.getErrors()));
+                }
+            }
+        }
     }
 
     private LocalDate parseDate(String value,String label){try{return LocalDate.parse(value.substring(0,10));}catch(Exception e){throw new IllegalArgumentException("Invalid " + label + ". Use yyyy-MM-dd.");}}

@@ -65,6 +65,17 @@ export const CONTROLLED_DOCUMENT_TYPES: string[] = [
   'Other Supporting Document',
 ];
 
+export const isDocumentExpired = (expiryDate?: string | null): boolean => {
+  if (!expiryDate || !expiryDate.trim()) return false;
+  const expStr = expiryDate.trim().substring(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  return expStr < todayStr;
+};
+
 interface DocumentRepositoryProps {
   documents: OwnershipDocument[];
   collaterals: Collateral[];
@@ -269,7 +280,7 @@ export const DocumentRepository: React.FC<DocumentRepositoryProps> = ({
     // Trigger backend download which decodes stored binary or provides authenticated vault text
     try {
       const link = document.createElement('a');
-      link.href = `/api/documents/${encodeURIComponent(doc.id)}/download`;
+      link.href = `/api/documents/${encodeURIComponent(doc.id)}/download?userId=${encodeURIComponent(currentUser?.username || 'USER')}`;
       link.download = doc.fileName || `${doc.name}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -311,7 +322,7 @@ export const DocumentRepository: React.FC<DocumentRepositoryProps> = ({
     if (entityFilter !== 'All' && doc.entityType !== entityFilter) return false;
     if (statusFilter !== 'All') {
       if (statusFilter === 'Active' && doc.status !== 'Active') return false;
-      if (statusFilter === 'Expired' && doc.status !== 'Expired' && !(doc.expiryDate && new Date(doc.expiryDate).getTime() < Date.now())) return false;
+      if (statusFilter === 'Expired' && doc.status !== 'Expired' && !isDocumentExpired(doc.expiryDate)) return false;
       if (statusFilter === 'Archived' && doc.status !== 'Archived') return false;
     }
     if (searchQuery.trim()) {
@@ -510,7 +521,7 @@ export const DocumentRepository: React.FC<DocumentRepositoryProps> = ({
       header: 'Expiry Date',
       accessorKey: 'expiryDate',
       cell: (r) => {
-        const isExpired = r.expiryDate && new Date(r.expiryDate).getTime() < Date.now();
+        const isExpired = isDocumentExpired(r.expiryDate);
         return (
           <div className={`font-semibold ${isExpired ? 'text-red-600' : 'text-[#101828]'}`}>
             {r.expiryDate || 'N/A'}
@@ -522,7 +533,7 @@ export const DocumentRepository: React.FC<DocumentRepositoryProps> = ({
       header: 'Document Status',
       accessorKey: 'status',
       cell: (r) => {
-        const isExpired = r.expiryDate && new Date(r.expiryDate).getTime() < Date.now();
+        const isExpired = isDocumentExpired(r.expiryDate);
         const displayStatus = isExpired ? 'Expired' : (r.status || 'Active');
         return (
           <StatusChip
@@ -1207,7 +1218,7 @@ export const DocumentRepository: React.FC<DocumentRepositoryProps> = ({
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs pt-1">
                   <div><span className="text-[#5B6472]">Repository Status:</span> <strong className="text-[#102E4A]">{selectedDoc.status || 'Active'}</strong></div>
-                  <div><span className="text-[#5B6472]">Expiry Status:</span> <strong className={selectedDoc.expiryDate && new Date(selectedDoc.expiryDate).getTime() < Date.now() ? 'text-red-600 font-bold' : 'text-emerald-700 font-semibold'}>{selectedDoc.expiryDate && new Date(selectedDoc.expiryDate).getTime() < Date.now() ? 'Expired' : 'Valid'}</strong></div>
+                  <div><span className="text-[#5B6472]">Expiry Status:</span> <strong className={isDocumentExpired(selectedDoc.expiryDate) ? 'text-red-600 font-bold' : 'text-emerald-700 font-semibold'}>{isDocumentExpired(selectedDoc.expiryDate) ? 'Expired' : 'Valid'}</strong></div>
                   <div><span className="text-[#5B6472]">Rule Compliance:</span> <strong>{mandatoryDocRules.some(r => r.documentType?.toLowerCase() === selectedDoc.type?.toLowerCase()) ? 'Mandatory Document' : 'Optional / Supporting'}</strong></div>
                   <div><span className="text-[#5B6472]">Version Control:</span> <strong className="font-mono">v{selectedDoc.version || 1}</strong></div>
                 </div>
