@@ -524,23 +524,29 @@ export function App() {
       setCbsSyncLogs(cbsLogRes);
 
       if (usersRes && usersRes.length > 0) {
-        const mappedUsers: UserSession[] = usersRes.map((u: any) => {
+        const mappedUsers: any[] = usersRes.map((u: any) => {
           const p = INITIAL_PERSONAS.find(
             (persona) =>
-              persona.username.toLowerCase() === (u.username || '').toLowerCase() ||
-              persona.role === u.role
+              persona.username.toLowerCase() === (u.username || '').toLowerCase()
           );
           return {
+            id: u.id || u.userId,
             userId: u.id || u.username,
             username: u.username,
             name: u.fullName || u.name || p?.name || u.username,
+            fullName: u.fullName || u.name || p?.name || u.username,
             role: (u.role || p?.role || 'BRMGR') as RoleCode,
             roleName: p?.roleName || u.role,
             branch: u.branch || p?.branch || 'Bole Special Branch',
             branchCode: u.branchCode || p?.branchCode || 'BRN-001',
             segment: u.segment || p?.segment || 'Corporate Banking',
-            segmentIds: (u.segmentIds && u.segmentIds.length > 0) ? u.segmentIds : (p?.segmentIds || [u.segment || 'Corporate Banking']),
+            segmentIds: (u.segmentIds && u.segmentIds.length > 0)
+              ? (Array.isArray(u.segmentIds) ? u.segmentIds : [u.segmentIds])
+              : (p?.segmentIds || [u.segment || 'Corporate Banking']),
             token: p?.token || `jwt-token-${u.username}`,
+            active: u.active !== false,
+            email: u.email || '',
+            phone: u.phone || '',
             canApprove: p !== undefined ? p.canApprove : ['BRMGR', 'SRMGMT', 'HODEPT', 'DISTDIR', 'EXEC', 'MGRCOLLDOC', 'COMPLIANCE', 'SRM', 'BRM'].includes(u.role),
             canCreate: p !== undefined ? p.canCreate : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
             canEdit: p !== undefined ? p.canEdit : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
@@ -553,8 +559,7 @@ export function App() {
           const match = mappedUsers.find(
             (u) =>
               u.username.toLowerCase() === prev.username.toLowerCase() ||
-              u.userId === prev.userId ||
-              u.role === prev.role
+              u.userId === prev.userId
           );
           return match ? { ...prev, ...match } : prev;
         });

@@ -779,7 +779,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <div><h3 className="text-sm font-bold text-[#00205B]">Notification Templates</h3><p className="text-xs text-[#5B6472]">Templates are validated and consumed when CIMS generates notifications.</p></div>
             <button onClick={() => setTemplateDraft({ id: '', name: '', type: 'Email', channel: 'Email', triggerDaysBefore: 30, subject: '', body: '', active: true })} className="btn-primary text-xs"><Plus className="w-3.5 h-3.5" /> New Template</button>
           </div>
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs"><thead className="bg-[#EFF5FB] border-b border-[#E2E8F0]"><tr><th className="p-3">Name</th><th className="p-3">Channel</th><th className="p-3">Trigger</th><th className="p-3">Status</th><th className="p-3 text-right">Action</th></tr></thead>
               <tbody className="divide-y divide-[#E2E8F0]">{templates.map(t => <tr key={t.id} className="hover:bg-[#EFF5FB]"><td className="p-3 font-semibold">{t.name}</td><td className="p-3">{t.type || t.channel}</td><td className="p-3">{t.triggerDaysBefore || 0} working days</td><td className="p-3"><StatusChip label={t.active === false ? 'Inactive' : 'Active'} /></td><td className="p-3 text-right"><button onClick={() => setTemplateDraft(t)} className="text-[#00205B] font-semibold hover:underline">Edit</button></td></tr>)}</tbody></table>
           </div>
@@ -992,7 +992,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1088,7 +1088,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1277,7 +1277,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1354,7 +1354,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1443,7 +1443,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1513,7 +1513,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1583,7 +1583,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1644,7 +1644,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1712,7 +1712,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1777,7 +1777,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                 <tr>
@@ -1875,7 +1875,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
 
-          <div className="cims-card overflow-hidden">
+          <div className="cims-card overflow-x-auto">
             {loadingCoverageRules ? (
               <div className="p-8 text-center text-xs text-[#5B6472]">Loading Credit Policy coverage rules…</div>
             ) : coverageRules.length === 0 ? (
@@ -1959,7 +1959,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Segment Modal */}
       {showSegmentModal && editingSegment && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingSegment.id ? 'Edit Business Segment' : 'Add New Business Segment'}
             </h3>
@@ -2028,7 +2028,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* User Modal */}
       {showUserModal && editingUser && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingUser.id ? `Edit User — ${editingUser.username}` : 'Create Staff User Account'}
             </h3>
@@ -2212,7 +2212,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Branch Modal */}
       {showBranchModal && editingBranch && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingBranch.id ? 'Edit Operating Branch' : 'Add New Operating Branch'}
             </h3>
@@ -2347,7 +2347,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Approval Config Modal */}
       {showApprovalModal && editingApproval && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingApproval.id ? `Configure Workflow: ${editingApproval.transactionType}` : 'Add New Approval Workflow Configuration'}
             </h3>
@@ -2562,7 +2562,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Reminder Modal */}
       {showReminderModal && editingReminder && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingReminder.id ? `Configure Expiry Reminder (T - ${editingReminder.daysBeforeExpiry} Days)` : 'Add New Expiry Reminder Schedule'}
             </h3>
@@ -2739,7 +2739,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Insurer Modal */}
       {showInsurerModal && editingInsurer && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingInsurer.id ? 'Edit Approved Underwriter' : 'Add NBE Approved Insurer'}
             </h3>
@@ -2796,7 +2796,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Taxonomy Modal */}
       {showTaxonomyModal && editingTaxonomy && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingTaxonomy.id ? 'Edit Collateral Asset Taxonomy Rule' : 'Add New Collateral Taxonomy Rule'}
             </h3>
@@ -2893,7 +2893,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Doc Rule Modal */}
       {showDocRuleModal && editingDocRule && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingDocRule.id ? 'Edit Mandatory Document Rule' : 'Add Mandatory Document Rule'}
             </h3>
@@ -3013,7 +3013,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Parameter Modal */}
       {showParamModal && editingParam && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               Configure Parameter: <span className="font-mono text-[#00205B]">{editingParam.paramKey}</span>
             </h3>
@@ -3142,7 +3142,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Holiday Modal */}
       {showHolidayModal && editingHoliday && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-[#00205B]">
               {editingHoliday.id ? 'Edit Bank Holiday' : 'Add Bank Holiday to Business Calendar'}
             </h3>
@@ -3202,7 +3202,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* Coverage Rule Modal (BR-18) */}
       {showCoverageRuleModal && editingCoverageRule && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
               <h3 className="text-base font-bold text-[#00205B] flex items-center gap-2">
                 <Shield className="w-5 h-5 text-[#00205B]" />

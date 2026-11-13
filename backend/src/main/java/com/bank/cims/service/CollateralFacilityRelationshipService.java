@@ -872,6 +872,9 @@ public class CollateralFacilityRelationshipService {
 
     public boolean checkBorrowerIsCollateralOwner(Collateral col, LoanAccount loan) {
         if (col == null || loan == null) return false;
+        if ("Third-party-owned".equalsIgnoreCase(col.getOwnerType()) || "Third-party".equalsIgnoreCase(col.getOwnerType())) {
+            return false;
+        }
         String borrowerCustId = loan.getCustomerId();
         if (borrowerCustId == null || borrowerCustId.isBlank()) return false;
 
@@ -1292,8 +1295,8 @@ public class CollateralFacilityRelationshipService {
                 result.setHasRequiredPledgeEvidence(false);
                 boolean isBlocking = req.isFinalSubmission();
                 ValidationCheckItemDto check = new ValidationCheckItemDto(
-                        "VAL-REL-CUST", "Third-Party Collateral Arrangement Required", "Third-Party", !isBlocking, false,
-                        String.format("Third-Party Collateral Pledge Required: Collateral is owned by %s. The facility belongs to %s. This linkage will be treated as a third-party collateral pledge. Collateral registered ownership remains unchanged.",
+                        "VAL-REL-CUST", "Customer Isolation Violation / Third-Party Collateral Arrangement Required", "Third-Party", !isBlocking, false,
+                        String.format("Customer Isolation Violation: Third-Party Collateral Pledge Required: Collateral is owned by %s. The facility belongs to %s. This linkage will be treated as a third-party collateral pledge. Collateral registered ownership remains unchanged.",
                                 legalOwnerName != null ? legalOwnerName : col.getCustomerId(),
                                 result.getBorrowerName() != null ? result.getBorrowerName() : loan.getCustomerId()),
                         "Third-Party Authorization Required", isBlocking ? "High" : "Low"
@@ -1318,7 +1321,7 @@ public class CollateralFacilityRelationshipService {
                 result.setConsentStatus(consentUsed);
                 ValidationCheckItemDto check = new ValidationCheckItemDto(
                         "VAL-REL-CUST", "Third-Party Document Verification (DMS)", "Third-Party", false, false,
-                        "Third-party collateral pledge requires an authentic, unexpired third-party pledge agreement and owner consent document filed in DMS. Please file or reference the DMS document.",
+                        "Third-party collateral pledge requires mandatory documents: an authentic, unexpired Third-Party Consent and Pledge Agreement / Letter of Consent and owner consent document filed in DMS. Please file or reference the DMS document.",
                         "Missing Filed Evidence in DMS", "High"
                 );
                 check.setSeverity("HARD_STOP");

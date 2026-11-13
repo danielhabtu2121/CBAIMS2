@@ -203,20 +203,16 @@ public class DashboardService {
 
         ResolvedScope scope = new ResolvedScope();
         scope.user = user;
-        String role = user.getRole() == null ? "RDONLY" : user.getRole().trim().toUpperCase();
+        String rawRole = user.getRole() == null ? "RDONLY" : user.getRole().trim().toUpperCase();
+        String role = rawRole;
+        if (rawRole.equals("EXECUTIVE") || rawRole.equals("EXEC_MGMT") || rawRole.equals("MANAGEMENT")) role = "EXEC";
+        else if (rawRole.equals("SENIOR_MANAGEMENT") || rawRole.equals("SR_MGMT")) role = "SRMGMT";
+        else if (rawRole.equals("HO_SEGMENT_USER") || rawRole.equals("HO_USER") || rawRole.equals("HODEPT_USER") || rawRole.equals("SEGMENT_USER")) role = "HODEPT";
+        else if (rawRole.equals("BRANCH_MANAGER") || rawRole.equals("BRANCH_MGR")) role = "BRMGR";
+        else if (rawRole.equals("DISTRICT_DIRECTOR") || rawRole.equals("DIST_DIR")) role = "DISTDIR";
         scope.role = role;
 
-        List<String> allSegments = businessSegmentRepository.findAll().stream()
-                .filter(BusinessSegment::isActive)
-                .map(BusinessSegment::getName)
-                .toList();
-        if (allSegments.isEmpty()) {
-            allSegments = customerRepository.findAll().stream()
-                    .map(Customer::getSegment)
-                    .filter(s -> s != null && !s.isBlank())
-                    .distinct()
-                    .toList();
-        }
+        List<String> allSegments = getCanonicalSegments();
 
         List<String> userAssignedSegments = new ArrayList<>();
         if (user.getSegmentIds() != null && !user.getSegmentIds().isBlank()) {
@@ -282,8 +278,12 @@ public class DashboardService {
                 if (scope.allowedSegments.isEmpty()) {
                     scope.allowedSegments = List.of("Corporate Banking");
                 }
-                if (reqSegment != null && !reqSegment.equalsIgnoreCase("ALL") && scope.allowedSegments.contains(reqSegment)) {
-                    scope.effectiveSegment = reqSegment;
+                if (reqSegment != null && !reqSegment.equalsIgnoreCase("ALL")) {
+                    if (scope.allowedSegments.stream().anyMatch(s -> isSegmentMatch(s, reqSegment))) {
+                        scope.effectiveSegment = reqSegment;
+                    } else {
+                        throw new IllegalArgumentException("Access Denied: User is locked to segment " + scope.allowedSegments + ", cannot access requested segment: " + reqSegment);
+                    }
                 } else {
                     scope.effectiveSegment = scope.allowedSegments.get(0);
                 }
@@ -312,12 +312,19 @@ public class DashboardService {
                 scope.effectiveSegment = (reqSegment != null && !reqSegment.equalsIgnoreCase("ALL")) ? reqSegment : null;
                 String resolvedDist = resolveDistrictForBranch(user.getBranch());
                 final String assignedDistrict = (resolvedDist != null && !resolvedDist.isBlank()) ? resolvedDist : (!allDistrictNames.isEmpty() ? allDistrictNames.get(0) : "Central Addis District");
+                if (reqDistrict != null && !reqDistrict.equalsIgnoreCase("ALL") && !reqDistrict.equalsIgnoreCase(assignedDistrict)) {
+                    throw new IllegalArgumentException("Access Denied: District Director is locked to district '" + assignedDistrict + "', cannot access district: " + reqDistrict);
+                }
                 scope.effectiveDistrict = assignedDistrict;
                 scope.lockedSegment = false;
                 scope.lockedDistrict = true;
 
-                if (reqBranch != null && !reqBranch.equalsIgnoreCase("ALL") && isBranchInDistrict(reqBranch, assignedDistrict)) {
-                    scope.effectiveBranch = reqBranch;
+                if (reqBranch != null && !reqBranch.equalsIgnoreCase("ALL")) {
+                    if (isBranchInDistrict(reqBranch, assignedDistrict)) {
+                        scope.effectiveBranch = reqBranch;
+                    } else {
+                        throw new IllegalArgumentException("Access Denied: Branch '" + reqBranch + "' is outside assigned district: " + assignedDistrict);
+                    }
                 } else {
                     scope.effectiveBranch = null;
                 }
@@ -335,6 +342,9 @@ public class DashboardService {
             case "BRMGR":
                 if (user.getBranch() == null || user.getBranch().isBlank()) {
                     user.setBranch("Bole Special Branch");
+                }
+                if (reqBranch != null && !reqBranch.equalsIgnoreCase("ALL") && !reqBranch.equalsIgnoreCase(user.getBranch())) {
+                    throw new IllegalArgumentException("Access Denied: Branch user is locked to branch '" + user.getBranch() + "', cannot access branch: " + reqBranch);
                 }
                 scope.scopeLevel = "BRANCH";
                 scope.isBankWide = false;
@@ -365,6 +375,9 @@ public class DashboardService {
             case "BRO":
                 if (user.getBranch() == null || user.getBranch().isBlank()) {
                     user.setBranch("Bole Special Branch");
+                }
+                if (reqBranch != null && !reqBranch.equalsIgnoreCase("ALL") && !reqBranch.equalsIgnoreCase(user.getBranch())) {
+                    throw new IllegalArgumentException("Access Denied: Relationship officer is locked to branch '" + user.getBranch() + "', cannot access branch: " + reqBranch);
                 }
                 scope.scopeLevel = "PORTFOLIO";
                 scope.isBankWide = false;
@@ -2960,6 +2973,9 @@ public class DashboardService {
     /** Level 1: Bank Overview (All Segments Comparison) */
     public Map<String, Object> getHierarchyBank(String userId) {
         ResolvedScope scope = resolveUserScope(userId, "ALL", "ALL", "ALL");
+        if (!scope.isBankWide || scope.lockedSegment || scope.lockedDistrict || scope.lockedBranch) {
+            throw new IllegalArgumentException("Access Denied: User does not have Bank-Wide authorization");
+        }
         ScopedDataset ds = loadScopedDataset(scope, null, null, null);
 
         List<String> canonicalSegments = getCanonicalSegments();

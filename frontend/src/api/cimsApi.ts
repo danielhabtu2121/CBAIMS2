@@ -474,9 +474,10 @@ export const cimsApi = {
 
   async getUsers(): Promise<any[]> {
     try {
-      const res = await fetch(`${API_BASE}/admin/users`);
+      const res = await fetch(`${API_BASE}/admin/users`, { headers: authHeaders() });
       if (res.ok) return res.json();
-      return [];
+      const state = await this.fetchFullState();
+      return state.users || [];
     } catch {
       return [];
     }

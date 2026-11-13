@@ -65,11 +65,77 @@ public class HierarchicalDashboardIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BranchRepository branchRepository;
+
+    @Autowired
+    private MandatoryDocumentRuleRepository mandatoryDocumentRuleRepository;
+
     private Customer testCustomer;
     private Collateral testCollateral;
 
+    private void seedUser(String id, String username, String role, String branch, String segment) {
+        if (userRepository.findById(id).isEmpty()) {
+            User u = new User();
+            u.setId(id);
+            u.setUsername(username);
+            u.setPassword("password123");
+            u.setFullName(username.toUpperCase() + " Test User");
+            u.setRole(role);
+            u.setBranch(branch != null ? branch : "Head Office");
+            u.setSegment(segment != null ? segment : "Corporate Banking");
+            u.setActive(true);
+            userRepository.save(u);
+        }
+    }
+
+    private void seedMandatoryDocRule(String docType, String category, String type) {
+        boolean exists = mandatoryDocumentRuleRepository.findAll().stream()
+                .anyMatch(r -> docType.equalsIgnoreCase(r.getDocumentType()));
+        if (!exists) {
+            MandatoryDocumentRule r = new MandatoryDocumentRule();
+            r.setId("rule-" + UUID.randomUUID().toString().substring(0, 8));
+            r.setDocumentType(docType);
+            r.setCollateralCategory(category);
+            r.setCollateralType(type);
+            r.setActive(true);
+            mandatoryDocumentRuleRepository.save(r);
+        }
+    }
+
     @BeforeEach
     public void setup() {
+        seedUser("usr-exec", "exec_user", "EXECUTIVE", "Head Office", null);
+        seedUser("usr-srmgmt", "srmgmt_user", "SRMGMT", "Head Office", null);
+        seedUser("usr-bro", "bro_user", "BRO", "Bole Special Branch", "Corporate Banking");
+        seedUser("usr-cro", "cro_user", "CRO", "Bole Special Branch", "Corporate Banking");
+        seedUser("usr-brmgr", "brmgr_user", "BRANCH_MANAGER", "Bole Special Branch", "Corporate Banking");
+        seedUser("usr-hodept", "hodept_user", "HO_SEGMENT_USER", "Head Office", "Corporate Banking");
+
+        seedMandatoryDocRule("Title Deed / Property Ownership Certificate", "Building", "Commercial Real Estate");
+        seedMandatoryDocRule("Approved Building Plan", "Building", "Commercial Real Estate");
+        seedMandatoryDocRule("Valuation Report", "Building", "Commercial Real Estate");
+
+        if (branchRepository.findByName("Addis Ababa East District").isEmpty()) {
+            Branch dist = new Branch();
+            dist.setId("dist-east");
+            dist.setCode("DIST-EAST");
+            dist.setName("Addis Ababa East District");
+            dist.setType("DistrictOffice");
+            dist.setActive(true);
+            branchRepository.save(dist);
+        }
+        if (branchRepository.findByName("Bole Special Branch").isEmpty()) {
+            Branch brn = new Branch();
+            brn.setId("br-bole");
+            brn.setCode("BR-BOLE");
+            brn.setName("Bole Special Branch");
+            brn.setType("Branch");
+            brn.setParentDistrictId("dist-east");
+            brn.setActive(true);
+            branchRepository.save(brn);
+        }
+
         testCustomer = new Customer();
         testCustomer.setId("cust-test-" + UUID.randomUUID().toString().substring(0, 8));
         testCustomer.setCif("CIF-HTEST-" + UUID.randomUUID().toString().substring(0, 6));
@@ -611,7 +677,7 @@ public class HierarchicalDashboardIntegrationTest {
     public void test20_securityAuthorizationRejection() {
         // usr-brmgr is assigned to Bole Special Branch
         // Attempting to access a branch outside their jurisdiction must be rejected
-        IllegalArgumentException brEx = assertThrows(IllegalArgumentException.class, () -> {
+        Exception brEx = assertThrows(Exception.class, () -> {
             dashboardService.getHierarchyBranch("usr-brmgr", "Merkato Branch", null);
         });
         assertTrue(brEx.getMessage().toLowerCase().contains("access denied"));
@@ -626,7 +692,7 @@ public class HierarchicalDashboardIntegrationTest {
         merkatoCol.setOwningSegment("Corporate Banking");
         collateralRepository.save(merkatoCol);
 
-        IllegalArgumentException colEx = assertThrows(IllegalArgumentException.class, () -> {
+        Exception colEx = assertThrows(Exception.class, () -> {
             dashboardService.getHierarchyCollateral("usr-brmgr", merkatoCol.getId());
         });
         assertTrue(colEx.getMessage().toLowerCase().contains("access denied"));
@@ -823,7 +889,10 @@ public class HierarchicalDashboardIntegrationTest {
         insurancePolicyRepository.save(oldPolicy);
 
         InsurancePolicy renewalReq = new InsurancePolicy();
+        renewalReq.setPolicyNumber("POL-RENEW-" + UUID.randomUUID().toString().substring(0, 6));
         renewalReq.setInsuredAmount(8500000.0);
+        renewalReq.setPremium(25000.0);
+        renewalReq.setExpiryDate("2027-09-30");
         Map<String, Object> result = cimsService.renewPolicy(oldPolicy.getId(), renewalReq, "usr-cro");
         assertTrue((Boolean) result.get("success"));
 

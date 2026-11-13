@@ -198,13 +198,15 @@ public class AdminConfigController {
         String cleanUsername = user.getUsername().trim();
         user.setUsername(cleanUsername);
 
-        if (user.getId() == null || user.getId().isBlank()) {
-            user.setId("usr-" + UUID.randomUUID().toString().substring(0, 8));
-        }
-
         // Verify username uniqueness across other users
         Optional<User> byUsername = userRepository.findByUsernameIgnoreCase(cleanUsername);
-        if (byUsername.isPresent() && !byUsername.get().getId().equalsIgnoreCase(user.getId())) {
+        if (user.getId() == null || user.getId().isBlank()) {
+            if (byUsername.isPresent()) {
+                user.setId(byUsername.get().getId());
+            } else {
+                user.setId("usr-" + UUID.randomUUID().toString().substring(0, 8));
+            }
+        } else if (byUsername.isPresent() && !byUsername.get().getId().equalsIgnoreCase(user.getId())) {
             throw new IllegalArgumentException("Username '" + cleanUsername + "' is already taken by another user.");
         }
 
@@ -251,10 +253,11 @@ public class AdminConfigController {
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             @RequestParam(required = false) String adminUserId) {
         String actor = resolveAndVerifyAdminUser(headerUserId, adminUserId);
-        userRepository.findById(id).ifPresent(u -> {
+        Optional<User> userOpt = userRepository.findById(id).or(() -> userRepository.findByUsername(id));
+        userOpt.ifPresent(u -> {
             u.setActive(active);
             userRepository.save(u);
-            cimsService.logAudit(actor, "SYSADMIN", "TOGGLE_USER_STATUS", "User", id, "Active", String.valueOf(!active), String.valueOf(active), "Toggled user active status");
+            cimsService.logAudit(actor, "SYSADMIN", "TOGGLE_USER_STATUS", "User", u.getId(), "Active", String.valueOf(!active), String.valueOf(active), "Toggled user active status");
         });
         return ResponseEntity.ok(Map.of("success", true));
     }
@@ -512,7 +515,7 @@ public class AdminConfigController {
         return ResponseEntity.ok(saved);
     }
 
-    @GetMapping("/document-rules")
+    @GetMapping({"/document-rules", "/mandatory-doc-rules"})
     public List<MandatoryDocumentRule> getDocumentRules() {
         return mandatoryDocumentRuleRepository.findAll();
     }

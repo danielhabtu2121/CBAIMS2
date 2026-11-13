@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface BranchRepository extends JpaRepository<Branch, String> {
     Optional<Branch> findByCode(String code);
+    Optional<Branch> findByName(String name);
     List<Branch> findByParentDistrictId(String parentDistrictId);
 }

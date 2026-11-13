@@ -468,6 +468,17 @@ public class CollateralFacilityRelationshipIntegrationTest {
         List<LoanAccount> allPortfolioEligible = relationshipService.getEligibleFacilitiesForCollateral(col100M.getId(), "ALL", "TEST_MAKER");
         assertTrue(allPortfolioEligible.stream().anyMatch(f -> f.getId().equals(diffLoan.getId())));
 
+        // File third-party pledge agreement in DMS for col100M
+        OwnershipDocument docUS045 = new OwnershipDocument();
+        docUS045.setId("doc-us045-" + UUID.randomUUID().toString().substring(0, 6));
+        docUS045.setCollateralId(col100M.getId());
+        docUS045.setType("Third-Party Consent and Pledge Agreement");
+        docUS045.setName("Third-Party Pledge Agreement");
+        docUS045.setStatus("Active");
+        docUS045.setVerificationStatus("Verified");
+        docUS045.setFileContent("MOCK_BASE64_PLEDGE");
+        documentRepository.save(docUS045);
+
         // 2. Link col100M (owned by custCorporate) to diffLoan (borrower is custDifferent) with US-04.5 metadata
         RelationshipRequestDto req = new RelationshipRequestDto();
         req.setCollateralId(col100M.getId());

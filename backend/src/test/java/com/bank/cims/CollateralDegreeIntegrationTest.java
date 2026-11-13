@@ -512,6 +512,7 @@ public class CollateralDegreeIntegrationTest {
         colNoFac.setType("Commercial Property");
         colNoFac.setValuationAmount(40_000_000.00);
         colNoFac.setCollateralRank("1st");
+        colNoFac.setStatus("Active");
         colNoFac.setFirstDegreeInternal(true);
         collateralRepository.save(colNoFac);
 
@@ -580,6 +581,7 @@ public class CollateralDegreeIntegrationTest {
         parentCol.setCustomerId(testCustomer.getId());
         parentCol.setValuationAmount(60_000_000.00);
         parentCol.setCollateralRank("1st");
+        parentCol.setStatus("Active");
         parentCol.setFirstDegreeInternal(true);
         collateralRepository.save(parentCol);
 

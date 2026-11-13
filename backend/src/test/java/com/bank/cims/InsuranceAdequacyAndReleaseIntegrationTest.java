@@ -476,6 +476,8 @@ public class InsuranceAdequacyAndReleaseIntegrationTest {
         releaseDoc.setCollateralId(c.getId());
         releaseDoc.setVerificationStatus("Verified");
         releaseDoc.setStatus("Active");
+        releaseDoc.setDmsRef("DMS-REL-AUTH-001");
+        releaseDoc.setFileContent("MOCK_RELEASE_AUTH");
         ownershipDocumentRepository.save(releaseDoc);
 
         // 1. Submit release request

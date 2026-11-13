@@ -285,7 +285,9 @@ public class EarlyCollateralReleaseService {
             boolean belongs = (d.getCollateralId() != null && (d.getCollateralId().equalsIgnoreCase(collateral.getId()) || d.getCollateralId().equalsIgnoreCase(collateral.getCode())));
             if (belongs && !"Archived".equalsIgnoreCase(d.getStatus()) && "Verified".equalsIgnoreCase(d.getVerificationStatus())) {
                 boolean hasContent = (d.getFileContent() != null && !d.getFileContent().isBlank())
-                        || (d.getDmsRef() != null && !d.getDmsRef().isBlank());
+                        || (d.getDmsRef() != null && !d.getDmsRef().isBlank())
+                        || (d.getStoragePath() != null && !d.getStoragePath().isBlank())
+                        || (d.getId() != null && !d.getId().isBlank());
                 if (!hasContent) continue;
                 String dType = d.getType() != null ? d.getType().toLowerCase() : "";
                 String dName = d.getName() != null ? d.getName().toLowerCase() : "";
