@@ -9,7 +9,12 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -19,7 +24,8 @@ import java.util.Base64;
 public class TokenService {
     private static final Logger log = LoggerFactory.getLogger(TokenService.class);
     private static final String HMAC_ALGO = "HmacSHA256";
-    private static volatile byte[] runtimeEphemeralKey = null;
+    private static final long MAX_TOKEN_LIFETIME_MS = 12L * 60 * 60 * 1000;
+    private static volatile byte[] developmentSigningKey = null;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -61,18 +67,50 @@ public class TokenService {
             throw new IllegalStateException("CRITICAL SECURITY CONFIGURATION ERROR: Production JWT signing secret (CIMS_JWT_SECRET) is required.");
         }
 
-        // Ephemeral cryptographically random key generated per JVM instance (no hardcoded secret)
-        if (runtimeEphemeralKey == null) {
+        return getOrCreateDevelopmentKey();
+    }
+
+    private byte[] getOrCreateDevelopmentKey() {
+        if (developmentSigningKey == null) {
             synchronized (TokenService.class) {
-                if (runtimeEphemeralKey == null) {
-                    byte[] randomKey = new byte[32];
-                    new SecureRandom().nextBytes(randomKey);
-                    runtimeEphemeralKey = randomKey;
-                    log.info("Initialized secure ephemeral signing key for current instance.");
+                if (developmentSigningKey == null) {
+                    String configuredPath = System.getenv("CIMS_JWT_SECRET_FILE");
+                    Path keyPath = configuredPath == null || configuredPath.isBlank()
+                            ? Path.of(System.getProperty("user.home"), ".cims", "jwt-signing-key")
+                            : Path.of(configuredPath);
+                    try {
+                        Path parent = keyPath.getParent();
+                        if (parent != null) Files.createDirectories(parent);
+                        if (Files.exists(keyPath)) {
+                            developmentSigningKey = readDevelopmentKey(keyPath);
+                        } else {
+                            byte[] generatedKey = new byte[32];
+                            new SecureRandom().nextBytes(generatedKey);
+                            String encodedKey = Base64.getEncoder().encodeToString(generatedKey);
+                            try {
+                                Files.writeString(keyPath, encodedKey, StandardCharsets.US_ASCII,
+                                        StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                                developmentSigningKey = generatedKey;
+                            } catch (FileAlreadyExistsException concurrentCreation) {
+                                developmentSigningKey = readDevelopmentKey(keyPath);
+                            }
+                        }
+                        log.info("Using persistent local JWT signing key.");
+                    } catch (IOException | IllegalArgumentException e) {
+                        throw new IllegalStateException("Unable to load or create the local JWT signing key file.", e);
+                    }
                 }
             }
         }
-        return runtimeEphemeralKey;
+        return developmentSigningKey;
+    }
+
+    private byte[] readDevelopmentKey(Path keyPath) throws IOException {
+        byte[] key = Base64.getDecoder().decode(Files.readString(keyPath, StandardCharsets.US_ASCII).trim());
+        if (key.length < 32) {
+            throw new IllegalArgumentException("The local JWT signing key must contain at least 32 bytes.");
+        }
+        return key;
     }
 
     public String generateToken(String userId, String username, String role, String sessionId) {
@@ -86,7 +124,7 @@ public class TokenService {
         }
 
         long now = System.currentTimeMillis();
-        long exp = now + ((long) timeoutMinutes * 60 * 1000);
+        long exp = now + MAX_TOKEN_LIFETIME_MS;
 
         TokenClaims claims = new TokenClaims(userId, username, role, sessionId, now, exp);
         try {

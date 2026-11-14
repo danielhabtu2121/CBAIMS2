@@ -60,12 +60,26 @@ function getStoredSession(): any {
 
 function authHeaders(): Record<string, string> {
   const session = getStoredSession();
-  const token = session?.token || localStorage.getItem('cims.token');
+  const token = localStorage.getItem('cims.token') || session?.token;
   const headers: Record<string, string> = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
+}
+
+export function authenticatedFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const rawUrl = typeof input === 'string' ? input : input instanceof Request ? input.url : input.toString();
+  let pathname = rawUrl;
+  try { pathname = new URL(rawUrl, window.location.origin).pathname; } catch { }
+
+  const isPublicAuthEndpoint = /\/api\/auth\/(login|forgot-password|reset-password|policy)$/.test(pathname);
+  const headers = new Headers(init.headers);
+  const token = localStorage.getItem('cims.token') || getStoredSession()?.token;
+  if (token && !isPublicAuthEndpoint && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return window.fetch(input, { ...init, headers });
 }
 
 function rememberSession(user: any, token?: string) {
@@ -76,6 +90,8 @@ function rememberSession(user: any, token?: string) {
       localStorage.setItem('cims.token', token);
     } else if (user?.token) {
       localStorage.setItem('cims.token', user.token);
+    } else {
+      localStorage.removeItem('cims.token');
     }
     localStorage.setItem('cims.currentUser', JSON.stringify(sessionToSave));
   } catch { }
@@ -89,9 +105,16 @@ function clearSession() {
   } catch { }
 }
 
+function createApiError(response: Response, payload: any, fallbackMessage: string) {
+  const error = new Error(payload?.error || payload?.message || fallbackMessage) as Error & { status: number };
+  error.status = response.status;
+  return error;
+}
+
 let stateInFlight: Promise<FullCimsState> | null = null;
 let stateCache: FullCimsState | null = null;
 let stateCacheAt = 0;
+let sessionValidationInFlight: Promise<{ valid: boolean; active?: boolean; username?: string }> | null = null;
 const STATE_CACHE_TTL_MS = 1500;
 
 function invalidateStateCache() {
@@ -100,7 +123,7 @@ function invalidateStateCache() {
 }
 
 async function requestJson<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     ...options,
     headers: { ...authHeaders(), 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
@@ -108,8 +131,7 @@ async function requestJson<T>(url: string, options: RequestInit = {}): Promise<T
   let payload: any = null;
   try { payload = text ? JSON.parse(text) : null; } catch { payload = text; }
   if (!response.ok) {
-    const message = payload?.error || payload?.message || `Request failed with HTTP ${response.status}`;
-    throw new Error(message);
+    throw createApiError(response, payload, `Request failed with HTTP ${response.status}`);
   }
   if ((options.method || 'GET').toUpperCase() !== 'GET') invalidateStateCache();
   return payload as T;
@@ -151,7 +173,7 @@ export interface FullCimsState {
 export const cimsApi = {
   async login(identifier: string, password = 'password123'): Promise<{ success: boolean; user?: any; token?: string; message?: string; sessionTimeoutMinutes?: number }> {
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const res = await authenticatedFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password }),
@@ -169,7 +191,7 @@ export const cimsApi = {
 
   async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE}/auth/logout`, {
+      await authenticatedFetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         headers: authHeaders(),
       });
@@ -178,7 +200,7 @@ export const cimsApi = {
   },
 
   async forgotPassword(identifier: string): Promise<{ success: boolean; message: string; simulationResetToken?: string }> {
-    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+    const res = await authenticatedFetch(`${API_BASE}/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier }),
@@ -187,7 +209,7 @@ export const cimsApi = {
   },
 
   async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+    const res = await authenticatedFetch(`${API_BASE}/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, newPassword }),
@@ -196,7 +218,7 @@ export const cimsApi = {
   },
 
   async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
-    const res = await fetch(`${API_BASE}/auth/change-password`, {
+    const res = await authenticatedFetch(`${API_BASE}/auth/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -209,7 +231,7 @@ export const cimsApi = {
 
   async keepSessionAlive(): Promise<{ success: boolean; message?: string }> {
     try {
-      const res = await fetch(`${API_BASE}/auth/session/refresh`, {
+      const res = await authenticatedFetch(`${API_BASE}/auth/session/refresh`, {
         method: 'POST',
         headers: authHeaders(),
       });
@@ -223,17 +245,20 @@ export const cimsApi = {
   },
 
   async validateSession(): Promise<{ valid: boolean; active?: boolean; username?: string }> {
-    try {
-      const res = await fetch(`${API_BASE}/auth/session/validate`, {
-        headers: authHeaders(),
-      });
-      if (res.ok) {
+    if (!sessionValidationInFlight) {
+      sessionValidationInFlight = (async () => {
+        const res = await authenticatedFetch(`${API_BASE}/auth/session/validate`, {
+          headers: authHeaders(),
+        });
+        if (res.status === 401) return { valid: false };
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw createApiError(res, payload, 'Session validation failed.');
+        }
         return await res.json();
-      }
-      return { valid: false };
-    } catch {
-      return { valid: false };
+      })();
     }
+    try { return await sessionValidationInFlight; } finally { sessionValidationInFlight = null; }
   },
 
   async getPasswordPolicy(): Promise<{
@@ -246,7 +271,7 @@ export const cimsApi = {
     sessionTimeoutMinutes: number;
   }> {
     try {
-      const res = await fetch(`${API_BASE}/auth/policy`);
+      const res = await authenticatedFetch(`${API_BASE}/auth/policy`);
       if (res.ok) return await res.json();
     } catch { }
     return {
@@ -273,8 +298,11 @@ export const cimsApi = {
     if (!force && stateCache && now - stateCacheAt < STATE_CACHE_TTL_MS) return stateCache;
     if (!force && stateInFlight) return stateInFlight;
     stateInFlight = (async () => {
-      const res = await fetch(`${API_BASE}/state`, { headers: authHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch system state');
+      const res = await authenticatedFetch(`${API_BASE}/state`, { headers: authHeaders() });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw createApiError(res, payload, 'Failed to fetch system state');
+      }
       const data = await res.json() as FullCimsState;
       stateCache = data;
       stateCacheAt = Date.now();
@@ -344,7 +372,7 @@ export const cimsApi = {
       if (role) params.set('role', role);
       if (status) params.set('status', status);
       if (makerId) params.set('makerId', makerId);
-      const res = await fetch(`${API_BASE}/workflow/tasks?${params.toString()}`, { headers: authHeaders() });
+      const res = await authenticatedFetch(`${API_BASE}/workflow/tasks?${params.toString()}`, { headers: authHeaders() });
       const payload = await res.json();
       if (!res.ok) throw new Error(payload?.error || payload?.message || 'Unable to load workflow tasks.');
       return Array.isArray(payload) ? payload : (payload?.workflowTasks || []);
@@ -355,7 +383,7 @@ export const cimsApi = {
 
   async getTaskHistory(taskId: string): Promise<ApprovalHistory[]> {
     try {
-      const res = await fetch(`${API_BASE}/workflow/tasks/${encodeURIComponent(taskId)}/history`, { headers: authHeaders() });
+      const res = await authenticatedFetch(`${API_BASE}/workflow/tasks/${encodeURIComponent(taskId)}/history`, { headers: authHeaders() });
       if (!res.ok) return [];
       const payload = await res.json();
       return Array.isArray(payload) ? payload : [];
@@ -474,7 +502,7 @@ export const cimsApi = {
 
   async getUsers(): Promise<any[]> {
     try {
-      const res = await fetch(`${API_BASE}/admin/users`, { headers: authHeaders() });
+      const res = await authenticatedFetch(`${API_BASE}/admin/users`, { headers: authHeaders() });
       if (res.ok) return res.json();
       const state = await this.fetchFullState();
       return state.users || [];
@@ -485,12 +513,12 @@ export const cimsApi = {
 
   // CBS Simulator
   async getCbsCustomers(): Promise<CbsCustomer[]> {
-    const res = await fetch(`${API_BASE}/cbs-sim/customers`);
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/customers`);
     return res.ok ? res.json() : [];
   },
 
   async saveCbsCustomer(cust: Partial<CbsCustomer>): Promise<CbsCustomer> {
-    const res = await fetch(`${API_BASE}/cbs-sim/customers`, {
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/customers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cust),
@@ -504,12 +532,12 @@ export const cimsApi = {
   },
 
   async getCbsFacilities(): Promise<CbsFacility[]> {
-    const res = await fetch(`${API_BASE}/cbs-sim/facilities`);
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/facilities`);
     return res.ok ? res.json() : [];
   },
 
   async saveCbsFacility(fac: Partial<CbsFacility>): Promise<CbsFacility> {
-    const res = await fetch(`${API_BASE}/cbs-sim/facilities`, {
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/facilities`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(fac),
@@ -523,12 +551,12 @@ export const cimsApi = {
   },
 
   async getCbsCollaterals(): Promise<CbsCollateral[]> {
-    const res = await fetch(`${API_BASE}/cbs-sim/collaterals`);
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/collaterals`);
     return res.ok ? res.json() : [];
   },
 
   async saveCbsCollateral(col: Partial<CbsCollateral>): Promise<CbsCollateral> {
-    const res = await fetch(`${API_BASE}/cbs-sim/collaterals`, {
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/collaterals`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(col),
@@ -542,7 +570,7 @@ export const cimsApi = {
   },
 
   async syncCbsEntity(entityType: string, id: string, userId = 'SYSADMIN'): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${API_BASE}/cbs-integration/sync/${entityType}/${id}?userId=${userId}`, {
+    const res = await authenticatedFetch(`${API_BASE}/cbs-integration/sync/${entityType}/${id}?userId=${userId}`, {
       method: 'POST',
     });
     invalidateStateCache();
@@ -550,7 +578,7 @@ export const cimsApi = {
   },
 
   async syncAllPending(userId = 'SYSADMIN'): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${API_BASE}/cbs-integration/sync-all?userId=${userId}`, {
+    const res = await authenticatedFetch(`${API_BASE}/cbs-integration/sync-all?userId=${userId}`, {
       method: 'POST',
     });
     invalidateStateCache();
@@ -558,14 +586,14 @@ export const cimsApi = {
   },
 
   async getCbsSyncLogs(): Promise<CbsSyncLog[]> {
-    const res = await fetch(`${API_BASE}/cbs-sim/sync-logs`);
+    const res = await authenticatedFetch(`${API_BASE}/cbs-sim/sync-logs`);
     return res.ok ? res.json() : [];
   },
 
   // Customer Management
   async registerCustomer(cust: Partial<Customer>, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || '';
-    const res = await fetch(`${API_BASE}/customers/add?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/customers/add?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cust),
@@ -578,7 +606,7 @@ export const cimsApi = {
   // The change is submitted for checker approval; nothing changes on screen until approved.
   async updateCustomer(customerId: string, changes: Record<string, any>, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || '';
-    const res = await fetch(`${API_BASE}/customers/${encodeURIComponent(customerId)}/update?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/customers/${encodeURIComponent(customerId)}/update?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(changes),
@@ -593,7 +621,7 @@ export const cimsApi = {
 
   // Collateral Management
   async createCollateral(col: Partial<Collateral>, userId = 'CRO_USER'): Promise<any> {
-    const res = await fetch(`${API_BASE}/collateral/register-native?userId=${encodeURIComponent(userId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/register-native?userId=${encodeURIComponent(userId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(col),
@@ -608,7 +636,7 @@ export const cimsApi = {
   // record - e.g. revised valuation, haircut, or next review date.
   async updateCollateral(collateralId: string, changes: Record<string, any>, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || '';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/update?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/update?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(changes),
@@ -635,7 +663,7 @@ export const cimsApi = {
     if (linkageType) url += `&linkageType=${encodeURIComponent(linkageType)}`;
     if (effectiveDate) url += `&effectiveDate=${encodeURIComponent(effectiveDate)}`;
     if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
       method: 'POST',
     });
     invalidateStateCache();
@@ -648,7 +676,7 @@ export const cimsApi = {
 
   async removeFacilityLink(linkId: string, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || '';
-    const res = await fetch(`${API_BASE}/links/remove?linkId=${encodeURIComponent(linkId)}&userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/links/remove?linkId=${encodeURIComponent(linkId)}&userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
     });
     invalidateStateCache();
@@ -656,7 +684,7 @@ export const cimsApi = {
   },
 
   async validateReleaseCollateral(collateralId: string): Promise<{ canRelease: boolean; pendingExposure: number; activeLoans: string[]; message: string }> {
-    const res = await fetch(`${API_BASE}/collateral/validate-release?collateralId=${collateralId}`);
+    const res = await authenticatedFetch(`${API_BASE}/collateral/validate-release?collateralId=${collateralId}`);
     return res.json();
   },
 
@@ -665,7 +693,7 @@ export const cimsApi = {
     // Backend route is /transfers/initiate with a `destinationSegment` param - this used to
     // point at a /collateral/transfer-segment URL that the backend never exposed, so every
     // segment transfer request silently 404'd.
-    const res = await fetch(`${API_BASE}/transfers/initiate?collateralId=${encodeURIComponent(collateralId)}&destinationSegment=${encodeURIComponent(destSegment)}&reason=${encodeURIComponent(reason)}&userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/transfers/initiate?collateralId=${encodeURIComponent(collateralId)}&destinationSegment=${encodeURIComponent(destSegment)}&reason=${encodeURIComponent(reason)}&userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
     });
     invalidateStateCache();
@@ -674,7 +702,7 @@ export const cimsApi = {
 
   async changeCollateralOwnership(collateralId: string, payload: any, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || '';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/change-ownership?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/change-ownership?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(payload),
@@ -701,7 +729,7 @@ export const cimsApi = {
 
   async verifyCollateralOwner(collateralId: string, ownerId: string, status = 'Verified', comments = '', userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || 'CRO_USER';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/verify-owner?ownerId=${encodeURIComponent(ownerId)}&status=${encodeURIComponent(status)}&comments=${encodeURIComponent(comments)}&userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/verify-owner?ownerId=${encodeURIComponent(ownerId)}&status=${encodeURIComponent(status)}&comments=${encodeURIComponent(comments)}&userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: authHeaders(),
     });
@@ -715,7 +743,7 @@ export const cimsApi = {
 
   async addCollateralOwner(collateralId: string, owner: any, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || 'CRO_USER';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/add-owner?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/add-owner?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(owner),
@@ -730,7 +758,7 @@ export const cimsApi = {
 
   async updateCollateralOwner(collateralId: string, ownerId: string, owner: any, userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || 'CRO_USER';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/update-owner?ownerId=${encodeURIComponent(ownerId)}&userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/update-owner?ownerId=${encodeURIComponent(ownerId)}&userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(owner),
@@ -745,7 +773,7 @@ export const cimsApi = {
 
   async allocateCollateralFacilities(collateralId: string, allocations: any[], userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || 'CRO_USER';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/allocate-facilities?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/allocate-facilities?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(allocations),
@@ -769,7 +797,7 @@ export const cimsApi = {
       userId = arg4;
     }
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || 'CRO_USER';
-    const res = await fetch(`${API_BASE}/collateral/register-with-allocations?userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/register-with-allocations?userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ collateral, allocations, documents }),
@@ -784,7 +812,7 @@ export const cimsApi = {
 
   async requestCollateralRelease(collateralId: string, reason = 'Facility settled', userId?: string): Promise<any> {
     const effectiveUserId = userId || getStoredSession()?.userId || getStoredSession()?.username || 'CRO_USER';
-    const res = await fetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/request-release?reason=${encodeURIComponent(reason)}&userId=${encodeURIComponent(effectiveUserId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/collateral/${encodeURIComponent(collateralId)}/request-release?reason=${encodeURIComponent(reason)}&userId=${encodeURIComponent(effectiveUserId)}`, {
       method: 'POST',
       headers: authHeaders(),
     });
@@ -798,7 +826,7 @@ export const cimsApi = {
 
   // Policy Lifecycle
   async createPolicyDraft(policy: Partial<InsurancePolicy>, userId = 'CRO_USER'): Promise<any> {
-    const res = await fetch(`${API_BASE}/policies/add?userId=${userId}`, {
+    const res = await authenticatedFetch(`${API_BASE}/policies/add?userId=${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(policy),
@@ -810,7 +838,7 @@ export const cimsApi = {
   },
 
   async submitPolicy(policyId: string, userId = 'CRO_USER'): Promise<any> {
-    const res = await fetch(`${API_BASE}/policies/submit?policyId=${encodeURIComponent(policyId)}&userId=${encodeURIComponent(userId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/policies/submit?policyId=${encodeURIComponent(policyId)}&userId=${encodeURIComponent(userId)}`, {
       method: 'POST', headers: authHeaders(),
     });
     const payload = await res.json();
@@ -820,7 +848,7 @@ export const cimsApi = {
   },
 
   async amendPolicy(policyId: string, policy: Partial<InsurancePolicy>, reason: string, userId = 'CRO_USER', documents?: any[]): Promise<any> {
-    const res = await fetch(`${API_BASE}/policies/${encodeURIComponent(policyId)}/amend?reason=${encodeURIComponent(reason)}&userId=${encodeURIComponent(userId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/policies/${encodeURIComponent(policyId)}/amend?reason=${encodeURIComponent(reason)}&userId=${encodeURIComponent(userId)}`, {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ policy, documents }),
@@ -836,7 +864,7 @@ export const cimsApi = {
   },
 
   async renewPolicy(policyId: string, newAmount: number, newPremium: number, newExpiryDate: string, userId = 'CRO_USER', documents?: any[]): Promise<any> {
-    const res = await fetch(`${API_BASE}/policies/${encodeURIComponent(policyId)}/renew?newAmount=${newAmount}&newPremium=${newPremium}&newExpiryDate=${encodeURIComponent(newExpiryDate)}&userId=${encodeURIComponent(userId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/policies/${encodeURIComponent(policyId)}/renew?newAmount=${newAmount}&newPremium=${newPremium}&newExpiryDate=${encodeURIComponent(newExpiryDate)}&userId=${encodeURIComponent(userId)}`, {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ newAmount, newPremium, newExpiryDate, documents }),
@@ -849,7 +877,7 @@ export const cimsApi = {
 
   // Workflow / Dual Control
   async approveWorkflowTask(taskId: string, comments = 'Approved by Checker', userId = 'BRMGR_USER', role = 'BRMGR'): Promise<any> {
-    const res = await fetch(`${API_BASE}/workflow/tasks/${taskId}/approve?userId=${userId}&role=${role}&comments=${encodeURIComponent(comments)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/tasks/${taskId}/approve?userId=${userId}&role=${role}&comments=${encodeURIComponent(comments)}`, {
       method: 'POST',
     });
     const payload = await res.json();
@@ -859,7 +887,7 @@ export const cimsApi = {
   },
 
   async rejectWorkflowTask(taskId: string, comments: string, userId = 'BRMGR_USER', role = 'BRMGR'): Promise<any> {
-    const res = await fetch(`${API_BASE}/workflow/tasks/${taskId}/reject?userId=${userId}&role=${role}&comments=${encodeURIComponent(comments)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/tasks/${taskId}/reject?userId=${userId}&role=${role}&comments=${encodeURIComponent(comments)}`, {
       method: 'POST',
     });
     const payload = await res.json();
@@ -869,7 +897,7 @@ export const cimsApi = {
   },
 
   async returnWorkflowTask(taskId: string, correctionNote: string, userId = 'BRMGR_USER', role = 'BRMGR'): Promise<any> {
-    const res = await fetch(`${API_BASE}/workflow/tasks/${taskId}/return?userId=${userId}&role=${role}&correctionNote=${encodeURIComponent(correctionNote)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/tasks/${taskId}/return?userId=${userId}&role=${role}&correctionNote=${encodeURIComponent(correctionNote)}`, {
       method: 'POST',
     });
     const payload = await res.json();
@@ -879,7 +907,7 @@ export const cimsApi = {
   },
 
   async resubmitWorkflowTask(taskId: string, userId: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/workflow/tasks/${taskId}/resubmit?userId=${encodeURIComponent(userId)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/tasks/${taskId}/resubmit?userId=${encodeURIComponent(userId)}`, {
       method: 'POST', headers: authHeaders(),
     });
     const payload = await res.json();
@@ -889,7 +917,7 @@ export const cimsApi = {
   },
 
   async bulkApproveWorkflowTasks(taskIds: string[], comments = 'Bulk approved', userId = 'BRMGR_USER', role = 'BRMGR'): Promise<any> {
-    const res = await fetch(`${API_BASE}/workflow/bulk-approve?userId=${userId}&role=${role}&comments=${encodeURIComponent(comments)}`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/bulk-approve?userId=${userId}&role=${role}&comments=${encodeURIComponent(comments)}`, {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify(taskIds),
@@ -906,7 +934,7 @@ export const cimsApi = {
   },
 
   async createDelegation(delegation: Partial<Delegation>): Promise<Delegation> {
-    const res = await fetch(`${API_BASE}/workflow/delegations`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/delegations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(delegation),
@@ -916,7 +944,7 @@ export const cimsApi = {
   },
 
   async revokeDelegation(id: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/workflow/delegations/${id}/revoke`, {
+    const res = await authenticatedFetch(`${API_BASE}/workflow/delegations/${id}/revoke`, {
       method: 'POST',
     });
     invalidateStateCache();
@@ -925,7 +953,7 @@ export const cimsApi = {
 
   // Exceptions (US-12.1 - US-12.4)
   async triggerPortfolioScan(): Promise<ScanResultDto> {
-    const res = await fetch(`${API_BASE}/exceptions/scan-now`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/scan-now`, {
       method: 'POST',
       headers: authHeaders(),
     });
@@ -936,7 +964,7 @@ export const cimsApi = {
   },
 
   async getExceptionSummary(): Promise<ExceptionSummaryDto> {
-    const res = await fetch(`${API_BASE}/exceptions/summary`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/summary`, {
       headers: authHeaders(),
     });
     if (!res.ok) throw new Error('Failed to load exception summary.');
@@ -952,7 +980,7 @@ export const cimsApi = {
     if (filters?.slaStatus) params.set('slaStatus', filters.slaStatus);
     if (filters?.search) params.set('search', filters.search);
 
-    const res = await fetch(`${API_BASE}/exceptions?${params.toString()}`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions?${params.toString()}`, {
       headers: authHeaders(),
     });
     if (!res.ok) throw new Error('Failed to load exceptions.');
@@ -968,7 +996,7 @@ export const cimsApi = {
     isOverride?: boolean,
     overrideReason?: string
   ): Promise<any> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/resolve`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/resolve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
@@ -992,7 +1020,7 @@ export const cimsApi = {
     id: string,
     payload: { documentId?: string; documentName?: string; dmsRef?: string; notes?: string; userId?: string }
   ): Promise<any> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/evidence`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/evidence`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(payload),
@@ -1009,7 +1037,7 @@ export const cimsApi = {
     id: string,
     payload: { correctiveAction: string; actionNotes?: string; targetCompletionDate?: string; userId?: string }
   ): Promise<any> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/corrective-action`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/corrective-action`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(payload),
@@ -1029,7 +1057,7 @@ export const cimsApi = {
     targetUserId?: string,
     userId?: string
   ): Promise<any> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/escalate`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/escalate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
@@ -1052,7 +1080,7 @@ export const cimsApi = {
     payload: { assignedToRole?: string; assignedRole?: string; assignedToUserId?: string; assignedUserId?: string; reason?: string; remarks?: string },
     userId?: string
   ): Promise<any> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/assign`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/assign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
@@ -1071,7 +1099,7 @@ export const cimsApi = {
   },
 
   async addExceptionInvestigationNote(id: string, noteText: string, userId?: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/investigation-notes`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/investigation-notes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ noteText, userId }),
@@ -1089,7 +1117,7 @@ export const cimsApi = {
     escalationHistory: CimsExceptionEscalationHistory[];
     assignmentHistory: CimsExceptionAssignmentHistory[];
   }> {
-    const res = await fetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/history`, {
+    const res = await authenticatedFetch(`${API_BASE}/exceptions/${encodeURIComponent(id)}/history`, {
       headers: authHeaders(),
     });
     if (!res.ok) throw new Error('Failed to load exception history.');
@@ -1131,7 +1159,7 @@ export const cimsApi = {
       versionNotes: fileDetails?.versionNotes,
       forceNew: fileDetails?.forceNew,
     };
-    const res = await fetch(`${API_BASE}/documents/upload`, {
+    const res = await authenticatedFetch(`${API_BASE}/documents/upload`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

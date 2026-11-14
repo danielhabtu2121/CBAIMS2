@@ -335,6 +335,7 @@ export function App() {
     } catch { }
     return null;
   });
+  const [sessionVerified, setSessionVerified] = useState(() => !currentUser);
   const [activePage, setActivePage] = useState<NavPageId>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState('Corporate Banking');
@@ -430,11 +431,21 @@ export function App() {
   const [cbsSyncLogs, setCbsSyncLogs] = useState<CbsSyncLog[]>([]);
   const [allUsersList, setAllUsersList] = useState<UserSession[]>(INITIAL_PERSONAS);
   const [dataLoadError, setDataLoadError] = useState<string | null>(null);
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
 
   // Fetch initial data
   const loadData = async () => {
     try {
       setDataLoadError(null);
+      const session = await cimsApi.validateSession();
+      if (!session.valid) {
+        setLoginNotice('Your session expired. Please sign in again.');
+        setCurrentUser(null);
+        cimsApi.setCurrentUser(null);
+        setSessionVerified(true);
+        return;
+      }
+      setSessionVerified(true);
       const [
         custRes,
         facRes,
@@ -543,7 +554,7 @@ export function App() {
             segmentIds: (u.segmentIds && u.segmentIds.length > 0)
               ? (Array.isArray(u.segmentIds) ? u.segmentIds : [u.segmentIds])
               : (p?.segmentIds || [u.segment || 'Corporate Banking']),
-            token: p?.token || `jwt-token-${u.username}`,
+            token: '',
             active: u.active !== false,
             email: u.email || '',
             phone: u.phone || '',
@@ -554,17 +565,17 @@ export function App() {
           };
         });
         setAllUsersList(mappedUsers);
-        setCurrentUser((prev) => {
-          if (!prev) return null;
-          const match = mappedUsers.find(
-            (u) =>
-              u.username.toLowerCase() === prev.username.toLowerCase() ||
-              u.userId === prev.userId
-          );
-          return match ? { ...prev, ...match } : prev;
-        });
       }
     } catch (err: any) {
+      if (err?.status === 401) {
+        setDataLoadError(null);
+        setLoginNotice('Your session expired. Please sign in again.');
+        setCurrentUser(null);
+        cimsApi.setCurrentUser(null);
+        setSessionVerified(true);
+        return;
+      }
+      setSessionVerified(true);
       console.warn('Backend API communication error. Using localized fallback data.');
       setDataLoadError(err?.message || 'Unable to communicate with CIMS backend services');
     }
@@ -572,8 +583,11 @@ export function App() {
 
   useEffect(() => {
     if (currentUser) {
+      setSessionVerified(false);
       cimsApi.setCurrentUser(currentUser);
       loadData();
+    } else {
+      setSessionVerified(true);
     }
   }, [currentUser]);
 
@@ -668,8 +682,10 @@ export function App() {
           canEdit: p !== undefined ? p.canEdit : !['EXEC', 'COMPLIANCE', 'RISK', 'AUDITOR', 'SRMGMT', 'RDONLY'].includes(u.role),
           canDelete: p !== undefined ? p.canDelete : u.role === 'SYSADMIN',
         };
+        setSessionVerified(false);
         setCurrentUser(session);
         cimsApi.setCurrentUser(session);
+        setLoginNotice(null);
         lastActivityRef.current = Date.now();
         if (authRes.sessionTimeoutMinutes) setSessionTimeoutMinutes(authRes.sessionTimeoutMinutes);
         return { success: true };
@@ -689,6 +705,7 @@ export function App() {
     } catch { }
     setCurrentUser(null);
     cimsApi.setCurrentUser(null);
+    setLoginNotice(null);
   };
 
   // CBS Simulator Handlers
@@ -1162,10 +1179,19 @@ export function App() {
   const openExceptions = scopedExceptions.filter((e) => e.status !== 'Resolved').length;
 
   // If not logged in, render Login screen
+  if (currentUser && !sessionVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#EFF5FB] text-sm text-slate-600">
+        Checking your session...
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return (
       <LoginScreen
         onLogin={handleLogin}
+        sessionNotice={loginNotice}
       />
     );
   }

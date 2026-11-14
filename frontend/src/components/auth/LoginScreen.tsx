@@ -25,6 +25,7 @@ import { Input } from '../common/Input';
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<boolean | { success: boolean; message?: string }>;
+  sessionNotice?: string | null;
   onSelectPersona?: (persona: UserSession) => void;
   availablePersonas?: UserSession[];
 }
@@ -40,13 +41,14 @@ interface PasswordPolicy {
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLogin,
+  sessionNotice,
   onSelectPersona,
   availablePersonas = [],
 }) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(sessionNotice || '');
   const [loading, setLoading] = useState(false);
 
   // Policy state
@@ -75,6 +77,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       if (p) setPolicy(p);
     }).catch(() => { });
   }, []);
+
+  useEffect(() => {
+    if (sessionNotice) setError(sessionNotice);
+  }, [sessionNotice]);
 
   // Validation helpers
   const hasMinLength = (pwd: string) => pwd.length >= policy.minLength;

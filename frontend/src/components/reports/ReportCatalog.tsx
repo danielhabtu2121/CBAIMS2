@@ -37,6 +37,7 @@ import {
   BusinessSegment,
 } from '../../types';
 import { StatusChip } from '../layout/StatusChip';
+import { authenticatedFetch } from '../../api/cimsApi';
 
 interface ReportCatalogProps {
   customers: Customer[];
@@ -878,12 +879,10 @@ export const ReportCatalog: React.FC<ReportCatalogProps> = ({
   // ==========================================
   const logExportAudit = async (format: 'PDF' | 'EXCEL' | 'CSV', recordCount: number) => {
     try {
-      const token = localStorage.getItem('cims_token');
-      await fetch('/api/reports/audit-export', {
+      await authenticatedFetch('/api/reports/audit-export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           'X-User-Id': currentUser.username || currentUser.userId || 'sysadmin_user'
         },
         body: JSON.stringify({
