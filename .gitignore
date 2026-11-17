@@ -4,3 +4,16 @@ frontend/dist/
 *.log
 hs_err_pid*.log
 replay_pid*.log
+
+# Temporary testing and debugging
+scratch/
+
+# IDE and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary backups
+*.bak
+*.tmp

@@ -1,0 +1,19 @@
+node_modules
+dist
+*.log
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+
+# Temporary archives and build metadata
+*.zip
+*.tsbuildinfo
+vite.config.*.timestamp-*.mjs
+
+# Temporary documentation and test scripts
+frontend-files.txt
+frontend-tree.txt
+capture_*.js
+generate_user_manual_docx.js
