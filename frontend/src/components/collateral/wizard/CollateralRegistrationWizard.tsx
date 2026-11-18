@@ -48,6 +48,7 @@ import {
   ValidationCheckItemDto,
   CollateralOwner,
 } from '../../../types';
+import { authenticatedFetch } from '../../../api/cimsApi';
 
 export interface CollateralRegistrationWizardProps {
   currentUser: UserSession;
@@ -852,7 +853,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
         status: 'Active',
       })) || [];
 
-      const res = await fetch('/api/collateral/pre-validate', {
+      const res = await authenticatedFetch('/api/collateral/pre-validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -917,7 +918,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
         documents: docsPayload,
       };
 
-      const res = await fetch(`/api/collateral/submit-exception-request?userId=${encodeURIComponent(currentUser.username)}`, {
+      const res = await authenticatedFetch(`/api/collateral/submit-exception-request?userId=${encodeURIComponent(currentUser.username)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -944,7 +945,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
       const docsPayload = buildDocumentsPayload();
       const allocsPayload = buildAllocationsPayload();
 
-      const res = await fetch(`/api/collateral/register-with-allocations?userId=${encodeURIComponent(currentUser.username)}`, {
+      const res = await authenticatedFetch(`/api/collateral/register-with-allocations?userId=${encodeURIComponent(currentUser.username)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -978,7 +979,7 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
       const docsPayload = buildDocumentsPayload();
       const allocsPayload = buildAllocationsPayload();
 
-      const res = await fetch(`/api/collateral/register-with-allocations?userId=${encodeURIComponent(currentUser.username)}`, {
+      const res = await authenticatedFetch(`/api/collateral/register-with-allocations?userId=${encodeURIComponent(currentUser.username)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

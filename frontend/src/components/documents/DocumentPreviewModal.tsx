@@ -32,7 +32,7 @@ import autoTable from 'jspdf-autotable';
 import { renderAsync } from 'docx-preview';
 import mammoth from 'mammoth';
 import { OwnershipDocument, Collateral } from '../../types';
-import { cimsApi } from '../../api/cimsApi';
+import { authenticatedFetch, cimsApi } from '../../api/cimsApi';
 
 interface DocumentPreviewModalProps {
   document: OwnershipDocument | null;
@@ -397,7 +397,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         const token = authUser?.token;
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch(`/api/documents/${encodeURIComponent(target.id)}/content`, { headers });
+        const res = await authenticatedFetch(`/api/documents/${encodeURIComponent(target.id)}/content`, { headers });
         if (res.ok) {
           const ab = await res.arrayBuffer();
           if (ab && ab.byteLength > 20) {

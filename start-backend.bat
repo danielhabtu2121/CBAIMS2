@@ -1,7 +1,19 @@
 @echo off
+setlocal
 echo Starting CIMS Spring Boot Backend...
-set JAVA_HOME=C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot
-set Path=C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot\bin;C:\tools\apache-maven-3.9.16\bin;%Path%
+cd /d "%~dp0"
+docker compose up -d --wait cims-postgres
+if errorlevel 1 (
+	echo Could not start PostgreSQL. Make sure Docker Desktop is running.
+	pause
+	exit /b 1
+)
+powershell -NoProfile -Command "try { $response = Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:8080/api/auth/policy' -TimeoutSec 3; if ($response.StatusCode -eq 200) { exit 0 } } catch {}; exit 1"
+if not errorlevel 1 (
+	echo CIMS backend is already responding at http://localhost:8080
+	exit /b 0
+)
 cd /d "%~dp0backend"
-java -jar "target\cims-backend-0.0.1-SNAPSHOT.jar" --spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+call mvnw.cmd "-Dmaven.test.skip=true" spring-boot:run
+if errorlevel 1 echo Backend startup failed. Check the database connection and Maven output above.
 pause
