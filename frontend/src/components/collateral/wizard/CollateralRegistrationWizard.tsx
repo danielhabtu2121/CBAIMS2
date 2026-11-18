@@ -1087,13 +1087,12 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
             <button
               key={s.step}
               onClick={() => setCurrentStep(s.step)}
-              className={`py-2.5 px-1 transition-all ${
-                currentStep === s.step
+              className={`py-2.5 px-1 transition-all ${currentStep === s.step
                   ? 'bg-white text-[#00205B] font-bold shadow-xs border-b-2 border-[#D48806]'
                   : currentStep > s.step
-                  ? 'text-[#00205B] hover:bg-slate-100 font-semibold'
-                  : 'text-slate-400 hover:bg-slate-100/50'
-              }`}
+                    ? 'text-[#00205B] hover:bg-slate-100 font-semibold'
+                    : 'text-slate-400 hover:bg-slate-100/50'
+                }`}
             >
               <div className="truncate">{s.label}</div>
             </button>
@@ -1395,17 +1394,16 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     key={opt.type}
                     type="button"
                     onClick={() => setOwnershipType(opt.type as any)}
-                    className={`p-3 rounded-lg border text-left transition ${
-                      ownershipType === opt.type
+                    className={`p-3 rounded-lg border text-left transition ${ownershipType === opt.type
                         ? 'border-[#00205B] bg-slate-50 shadow-xs ring-1 ring-[#00205B]'
                         : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                       <input
                         type="radio"
                         checked={ownershipType === opt.type}
-                        onChange={() => {}}
+                        onChange={() => { }}
                         className="text-[#00205B]"
                       />
                       {opt.title}
@@ -1645,11 +1643,10 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-800 text-xs">Joint Legal Owners Register</span>
                     <span
-                      className={`px-2.5 py-0.5 rounded text-xs font-bold ${
-                        Math.abs(jointOwners.reduce((s, o) => s + (o.percentage || 0), 0) - 100) < 0.01
+                      className={`px-2.5 py-0.5 rounded text-xs font-bold ${Math.abs(jointOwners.reduce((s, o) => s + (o.percentage || 0), 0) - 100) < 0.01
                           ? 'bg-emerald-100 text-emerald-800'
                           : 'bg-red-100 text-red-800'
-                      }`}
+                        }`}
                     >
                       Combined Share: {jointOwners.reduce((s, o) => s + (o.percentage || 0), 0).toFixed(2)}%
                     </span>
@@ -2535,14 +2532,13 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 <button
                   type="button"
                   onClick={() => setSecurityRank('1st')}
-                  className={`p-4 rounded-lg border text-left transition ${
-                    securityRank === '1st'
+                  className={`p-4 rounded-lg border text-left transition ${securityRank === '1st'
                       ? 'border-[#00205B] bg-slate-50 ring-1 ring-[#00205B]'
                       : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
-                    <input type="radio" checked={securityRank === '1st'} onChange={() => {}} />
+                    <input type="radio" checked={securityRank === '1st'} onChange={() => { }} />
                     <span className="font-bold text-xs text-slate-900">First-Degree Security (1st Degree Charge)</span>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1">
@@ -2553,14 +2549,13 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 <button
                   type="button"
                   onClick={() => setSecurityRank('2nd')}
-                  className={`p-4 rounded-lg border text-left transition ${
-                    securityRank === '2nd'
+                  className={`p-4 rounded-lg border text-left transition ${securityRank === '2nd'
                       ? 'border-[#00205B] bg-slate-50 ring-1 ring-[#00205B]'
                       : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
-                    <input type="radio" checked={securityRank === '2nd'} onChange={() => {}} />
+                    <input type="radio" checked={securityRank === '2nd'} onChange={() => { }} />
                     <span className="font-bold text-xs text-slate-900">Second-Degree Security (2nd Degree Charge)</span>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1">
@@ -3068,9 +3063,8 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 </div>
                 <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all ${
-                      isAllocationOverflow ? 'bg-red-600' : 'bg-[#00205B]'
-                    }`}
+                    className={`h-full transition-all ${isAllocationOverflow ? 'bg-red-600' : 'bg-[#00205B]'
+                      }`}
                     style={{
                       width: `${Math.min(100, netCollateralValue > 0 ? (totalAllocated / netCollateralValue) * 100 : 0)}%`,
                     }}
@@ -3216,13 +3210,12 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
               {/* Summary Card */}
               {preValidationResult && (
                 <div
-                  className={`p-4 rounded-lg border ${
-                    preValidationResult.valid
+                  className={`p-4 rounded-lg border ${preValidationResult.valid
                       ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                       : preValidationResult.hasHardBlock
-                      ? 'bg-red-50 border-red-200 text-red-900'
-                      : 'bg-amber-50 border-amber-200 text-amber-900'
-                  }`}
+                        ? 'bg-red-50 border-red-200 text-red-900'
+                        : 'bg-amber-50 border-amber-200 text-amber-900'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-sm">
@@ -3251,13 +3244,12 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                 {preValidationResult?.checks?.map((check: ValidationCheckItemDto, idx: number) => (
                   <div
                     key={idx}
-                    className={`p-3 rounded-lg border flex items-start justify-between ${
-                      check.passed
+                    className={`p-3 rounded-lg border flex items-start justify-between ${check.passed
                         ? 'bg-white border-slate-200'
                         : check.overrideable
-                        ? 'bg-amber-50/40 border-amber-200'
-                        : 'bg-red-50/40 border-red-200'
-                    }`}
+                          ? 'bg-amber-50/40 border-amber-200'
+                          : 'bg-red-50/40 border-red-200'
+                      }`}
                   >
                     <div className="flex items-start gap-2.5">
                       {check.passed ? (
@@ -3995,17 +3987,16 @@ export const CollateralRegistrationWizard: React.FC<CollateralRegistrationWizard
                     type="button"
                     onClick={handleFinalSubmit}
                     disabled={isSubmittingFinal}
-                    className={`px-4 py-1.5 rounded font-bold shadow-xs flex items-center gap-1.5 text-white ${
-                      isExcSubmission ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-700 hover:bg-emerald-800'
-                    }`}
+                    className={`px-4 py-1.5 rounded font-bold shadow-xs flex items-center gap-1.5 text-white ${isExcSubmission ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-700 hover:bg-emerald-800'
+                      }`}
                   >
                     {isExcSubmission ? <Shield className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                     <span>
                       {isSubmittingFinal
                         ? 'Submitting to Approver...'
                         : isExcSubmission
-                        ? 'Confirm & Submit with Exceptions'
-                        : 'Confirm & Submit for Authorization'}
+                          ? 'Confirm & Submit with Exceptions'
+                          : 'Confirm & Submit for Authorization'}
                     </span>
                   </button>
                 </div>
