@@ -68,6 +68,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // SEC-15: Whitelist approved application origins (no wildcard origins with credentials)
         configuration.setAllowedOrigins(List.of(
+"https://cbaims.dashenbanksc.com",
 "https://172.22.10.55",
                 "http://localhost:3000",
                 "http://localhost:5173",
