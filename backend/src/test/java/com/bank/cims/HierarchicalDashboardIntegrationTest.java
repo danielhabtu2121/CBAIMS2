@@ -75,18 +75,16 @@ public class HierarchicalDashboardIntegrationTest {
     private Collateral testCollateral;
 
     private void seedUser(String id, String username, String role, String branch, String segment) {
-        if (userRepository.findById(id).isEmpty()) {
-            User u = new User();
-            u.setId(id);
-            u.setUsername(username);
-            u.setPassword("password123");
-            u.setFullName(username.toUpperCase() + " Test User");
-            u.setRole(role);
-            u.setBranch(branch != null ? branch : "Head Office");
-            u.setSegment(segment != null ? segment : "Corporate Banking");
-            u.setActive(true);
-            userRepository.save(u);
-        }
+        User u = userRepository.findById(id).orElseGet(() -> userRepository.findByUsername(username).orElse(new User()));
+        u.setId(id);
+        u.setUsername(username);
+        u.setPassword("password123");
+        u.setFullName(username.toUpperCase() + " Test User");
+        u.setRole(role);
+        u.setBranch(branch != null ? branch : "Head Office");
+        u.setSegment(segment != null ? segment : "Corporate Banking");
+        u.setActive(true);
+        userRepository.save(u);
     }
 
     private void seedMandatoryDocRule(String docType, String category, String type) {

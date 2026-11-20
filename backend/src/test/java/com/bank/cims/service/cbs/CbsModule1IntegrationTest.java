@@ -151,9 +151,11 @@ public class CbsModule1IntegrationTest {
     @DisplayName("RealCbsAdapter: Reports Truthful NOT_CONFIGURED Status without fake connections")
     void testRealCbsAdapterTruthfulNotConfiguredStatus() {
         RealCbsAdapter realAdapter = new RealCbsAdapter();
-        // enabled is false and baseUrl is empty by default
-        ReflectionTestUtils.setField(realAdapter, "enabled", false);
-        ReflectionTestUtils.setField(realAdapter, "baseUrl", "");
+        // Mode REAL with empty jdbcUrl and password by default
+        ReflectionTestUtils.setField(realAdapter, "mode", "REAL");
+        ReflectionTestUtils.setField(realAdapter, "jdbcUrl", "");
+        ReflectionTestUtils.setField(realAdapter, "username", "CBAIMSUSER");
+        ReflectionTestUtils.setField(realAdapter, "password", "");
 
         CbsConnectionStatus status = realAdapter.checkConnectionStatus();
         assertNotNull(status);
@@ -264,6 +266,7 @@ public class CbsModule1IntegrationTest {
         existingCol.setId("cims-col-1");
         existingCol.setCode("COL-IDEM-01");
         existingCol.setValuationAmount(10_000_000.0);
+        existingCol.setOriginType("CBS_IMPORTED");
 
         LoanCollateralLink existingLink = new LoanCollateralLink();
         existingLink.setId("link-1");

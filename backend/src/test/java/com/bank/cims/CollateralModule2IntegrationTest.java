@@ -299,6 +299,9 @@ public class CollateralModule2IntegrationTest {
 
         Map<String, Object> resp = cimsService.changeCollateralOwnership(col.getId(), transferPayload, "CRO_OFFICER");
         assertTrue((Boolean) resp.get("success"));
+        if (resp.get("workflowTaskId") != null) {
+            workflowExecutionService.approveWorkflowTask((String) resp.get("workflowTaskId"), "brmgr_user", "BRMGR", "Approved ownership change");
+        }
 
         Collateral360Dto dto360 = cimsService.getCollateral360(col.getId());
 
@@ -472,6 +475,14 @@ public class CollateralModule2IntegrationTest {
                 Map.of("facilityId", testLoanA2.getId(), "allocatedAmount", 25_000_000.0, "linkageType", "Primary")
         );
         cimsService.allocateCollateralFacilities(approvedCol.getId(), reallocations, "RO_MAKER");
+
+        List<WorkflowTask> pendingTasks = workflowTaskRepository.findAll().stream()
+                .filter(t -> "Pending".equalsIgnoreCase(t.getStatus()) &&
+                        ("LoanCollateralLink".equalsIgnoreCase(t.getEntityType()) || "CollateralFacilityLink".equalsIgnoreCase(t.getEntityType())))
+                .toList();
+        for (WorkflowTask task : pendingTasks) {
+            workflowExecutionService.approveWorkflowTask(task.getId(), "BRMGR_USER", "BRMGR", "Approved link reallocation by checker");
+        }
 
         List<LoanCollateralLink> allLinks = loanCollateralLinkRepository.findByCollateralId(approvedCol.getId());
         assertEquals(2, allLinks.size(), "Both the historical and active links must exist");

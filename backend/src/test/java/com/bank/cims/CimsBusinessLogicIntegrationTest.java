@@ -655,7 +655,10 @@ public class CimsBusinessLogicIntegrationTest {
         initial.setPremium(36000.0);
         initial.setEffectiveDate("2026-01-01");
         initial.setExpiryDate("2027-01-01");
-        cimsService.registerInsurancePolicy(initial, "cro_user");
+        Map<String, Object> regRes = cimsService.registerInsurancePolicy(initial, "cro_user");
+        if (regRes != null && regRes.get("workflowTaskId") != null) {
+            workflowExecutionService.approveWorkflowTask((String) regRes.get("workflowTaskId"), "brmgr_user", "BRMGR", "Approved initial policy");
+        }
 
         // Renew policy
         InsurancePolicy renewalDraft = new InsurancePolicy();

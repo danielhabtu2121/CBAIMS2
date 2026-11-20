@@ -31,25 +31,29 @@ public class RoleHierarchyService {
     @Autowired
     private ApprovalHierarchyConfigRepository approvalHierarchyConfigRepository;
 
-    /** Roles that can never act as a checker, regardless of seniority. */
-    private static final List<String> NEVER_APPROVES = List.of("SYSADMIN", "RDONLY", "AUDITOR");
+    /** Roles that can never act as a checker, regardless of seniority or configuration. */
+    private static final List<String> NEVER_APPROVES = List.of(
+            "SYSADMIN", "RDONLY", "AUDITOR", "AUDIT", "RISK", "COMPLIANCE",
+            "TEST_RISK_VIEW", "TEST_COMPLIANCE_VIEW", "TEST_AUDIT_VIEW", "TEST_SYSADMIN"
+    );
 
     /**
      * Fallback organizational seniority, used when no ApprovalHierarchyConfig entry
      * defines a level2Role escalation path for the transaction. Higher number = more
-     * senior. Roles absent from this map are treated as non-approving front-line roles
-     * (seniority 0) unless they exactly match the candidate role.
+     * senior.
+     * Front-line Maker roles (CRO, BRO, COLLDOCOFF) are rank 1 and cannot approve transactions.
+     * Governance roles (Risk, Compliance, Auditor, SysAdmin) are strictly prohibited from approving.
      */
     private static final Map<String, Integer> SENIORITY = Map.ofEntries(
             Map.entry("BRO", 1),
             Map.entry("CRO", 1),
-            Map.entry("SRM", 1),
-            Map.entry("BRM", 1),
+            Map.entry("RO", 1),
             Map.entry("COLLDOCOFF", 1),
             Map.entry("BRMGR", 2),
+            Map.entry("CRM", 2),
+            Map.entry("SRM", 2),
+            Map.entry("BRM", 2),
             Map.entry("MGRCOLLDOC", 2),
-            Map.entry("COMPLIANCE", 3),
-            Map.entry("RISK", 3),
             Map.entry("DISTDIR", 4),
             Map.entry("HODEPT", 5),
             Map.entry("SRMGMT", 6),
@@ -65,14 +69,19 @@ public class RoleHierarchyService {
         String acting = actingRole.trim().toUpperCase();
         String candidate = candidateRole.trim().toUpperCase();
 
-        if (NEVER_APPROVES.contains(acting)) return false;
+        // Strictly enforce read-only / administrative bounds: NEVER_APPROVES roles cannot approve any transaction
+        if (isNeverApprovesRole(acting)) return false;
 
-        // Exact role match is always allowed.
+        // Maker roles (seniority 1) are strictly makers and cannot act as checkers
+        Integer actingRank = SENIORITY.get(acting);
+        if (actingRank != null && actingRank <= 1) {
+            return false;
+        }
+
+        // Exact role match is allowed for valid checker roles
         if (acting.equals(candidate)) return true;
 
-        // Configured two-level escalation for this specific candidate role: if any active
-        // hierarchy config names `acting` as the level-2 escalation role above `candidate`,
-        // allow it explicitly - this is what the Admin > Approval Hierarchy screen controls.
+        // Configured two-level escalation for this specific candidate role
         for (ApprovalHierarchyConfig cfg : approvalHierarchyConfigRepository.findAll()) {
             if (!cfg.isActive()) continue;
             String lvl1 = cfg.getLevel1Role();
@@ -82,13 +91,17 @@ public class RoleHierarchyService {
             }
         }
 
-        // Otherwise fall back to general organizational seniority: a more senior role may
-        // always stand in for a more junior candidate role (e.g. a District Director can
-        // clear a task routed to a Branch Manager).
-        Integer actingRank = SENIORITY.get(acting);
+        // Fallback to general organizational seniority among authorized checker roles
         Integer candidateRank = SENIORITY.get(candidate);
         if (actingRank == null || candidateRank == null) return false;
         return actingRank > candidateRank;
+    }
+
+    public boolean isNeverApprovesRole(String role) {
+        if (role == null) return true;
+        String r = role.trim().toUpperCase();
+        if (NEVER_APPROVES.contains(r)) return true;
+        return r.contains("RISK") || r.contains("COMPLIANCE") || r.contains("AUDIT") || r.contains("SYSADMIN") || r.contains("RDONLY");
     }
 
     /**

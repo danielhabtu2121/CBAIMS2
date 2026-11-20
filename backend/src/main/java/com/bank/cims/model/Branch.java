@@ -23,9 +23,18 @@ public class Branch {
     
     @Column(name = "parent_district_id")
     private String parentDistrictId;
+
+    @Column(name = "canonical_district_id")
+    private String canonicalDistrictId;
     
     @Column(name = "area_office")
     private String areaOffice;
+
+    @Column(name = "area")
+    private String area;
+
+    @Column(name = "cbs_branch_code")
+    private String cbsBranchCode;
 
     @Column(name = "segment_ids", columnDefinition = "TEXT")
     @JsonDeserialize(using = StringOrArrayDeserializer.class)
@@ -46,8 +55,14 @@ public class Branch {
     public void setType(String type) { this.type = type; }
     public String getParentDistrictId() { return parentDistrictId; }
     public void setParentDistrictId(String parentDistrictId) { this.parentDistrictId = parentDistrictId; }
+    public String getCanonicalDistrictId() { return canonicalDistrictId != null ? canonicalDistrictId : parentDistrictId; }
+    public void setCanonicalDistrictId(String canonicalDistrictId) { this.canonicalDistrictId = canonicalDistrictId; }
     public String getAreaOffice() { return areaOffice; }
     public void setAreaOffice(String areaOffice) { this.areaOffice = areaOffice; }
+    public String getArea() { return area; }
+    public void setArea(String area) { this.area = area; }
+    public String getCbsBranchCode() { return cbsBranchCode; }
+    public void setCbsBranchCode(String cbsBranchCode) { this.cbsBranchCode = cbsBranchCode; }
     public String getSegmentIds() { return segmentIds; }
     public void setSegmentIds(String segmentIds) { this.segmentIds = segmentIds; }
     public boolean isActive() { return active; }

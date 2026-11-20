@@ -133,6 +133,8 @@ public class CollateralOwner {
     public void setOwnerType(String ownerType) { this.ownerType = ownerType; }
     public String getIdNumber() { return idNumber; }
     public void setIdNumber(String idNumber) { this.idNumber = idNumber; }
+    public String getCif() { return idNumber; }
+    public void setCif(String cif) { this.idNumber = cif; }
     public String getTin() { return tin; }
     public void setTin(String tin) { this.tin = tin; }
     public String getPhone() { return phone; }

@@ -452,7 +452,7 @@ public class DashboardService {
         if (distOpt.isPresent()) {
             String distId = distOpt.get().getId();
             return branchRepository.findAll().stream()
-                    .anyMatch(b -> b.getName().equalsIgnoreCase(cleanBranch) && (distId.equalsIgnoreCase(b.getParentDistrictId()) || b.getName().equalsIgnoreCase(cleanDist)));
+                    .anyMatch(b -> b.getName().equalsIgnoreCase(cleanBranch) && (distId.equalsIgnoreCase(b.getParentDistrictId()) || distId.equalsIgnoreCase(b.getCanonicalDistrictId()) || b.getName().equalsIgnoreCase(cleanDist)));
         }
 
         return false;
@@ -520,7 +520,7 @@ public class DashboardService {
             }
         }
         if (scope.lockedDistrict && scope.effectiveDistrict != null) {
-            if (branch == null || branch.isBlank() || !isBranchInDistrict(branch, scope.effectiveDistrict)) {
+            if (branch == null || branch.isBlank() || (!branch.equalsIgnoreCase(scope.effectiveBranch) && !isBranchInDistrict(branch, scope.effectiveDistrict))) {
                 throw new IllegalArgumentException("Access Denied: Record belongs to branch '" + branch + "' outside user authorized district: " + scope.effectiveDistrict);
             }
         }

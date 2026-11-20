@@ -17,3 +17,11 @@ Thumbs.db
 # Temporary backups
 *.bak
 *.tmp
+
+projzip.zip
+projzip/
+ 
+projzip.zip
+projzip/
+
+backend/cims_dms_vault/

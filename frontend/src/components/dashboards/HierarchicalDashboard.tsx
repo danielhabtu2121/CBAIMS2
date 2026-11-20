@@ -2487,44 +2487,44 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                 {(!data.collateralDetails || data.collateralDetails.length === 0) && (!data.collaterals || data.collaterals.length === 0) ? (
                   <div className="text-xs text-[#5B6472] py-4 text-center">No pledged collaterals found.</div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left">
+                  <div className="overflow-x-auto w-full max-w-full">
+                    <table className="w-full text-xs text-left min-w-[1050px]">
                       <thead className="bg-slate-50 border-b border-[#E2E8F0] text-[#5B6472] uppercase text-[10px]">
                         <tr>
-                          <th className="p-3">Collateral Code</th>
-                          <th className="p-3">Category / Type</th>
+                          <th className="p-3 whitespace-nowrap">Collateral Code</th>
+                          <th className="p-3 whitespace-nowrap">Category / Type</th>
                           <th className="p-3">Description</th>
-                          <th className="p-3">Market Value</th>
-                          <th className="p-3">Haircut</th>
-                          <th className="p-3">Net Security</th>
-                          <th className="p-3">Insurance Required</th>
-                          <th className="p-3">Active Cover</th>
-                          <th className="p-3">Coverage %</th>
-                          <th className="p-3">Adequacy</th>
-                          <th className="p-3 text-right">Action</th>
+                          <th className="p-3 whitespace-nowrap">Market Value</th>
+                          <th className="p-3 whitespace-nowrap">Haircut</th>
+                          <th className="p-3 whitespace-nowrap">Net Security</th>
+                          <th className="p-3 whitespace-nowrap">Insurance Required</th>
+                          <th className="p-3 whitespace-nowrap">Active Cover</th>
+                          <th className="p-3 whitespace-nowrap">Coverage %</th>
+                          <th className="p-3 whitespace-nowrap">Adequacy</th>
+                          <th className="p-3 text-right whitespace-nowrap">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E2E8F0]">
                         {(data.collateralDetails || data.collaterals)?.map((c: any) => (
                           <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="p-3 font-mono font-bold text-[#1F4E7A]">{c.code || c.id}</td>
-                            <td className="p-3">{c.category}</td>
-                            <td className="p-3 max-w-xs truncate">{c.description}</td>
-                            <td className="p-3 font-bold">ETB {Number(c.marketValue || c.valuationAmount || 0).toLocaleString()}</td>
-                            <td className="p-3">{c.haircut}%</td>
-                            <td className="p-3 font-bold text-slate-800">
+                            <td className="p-3 font-mono font-bold text-[#1F4E7A] whitespace-nowrap">{c.code || c.id}</td>
+                            <td className="p-3 whitespace-nowrap">{c.category}</td>
+                            <td className="p-3 max-w-xs truncate" title={c.description}>{c.description}</td>
+                            <td className="p-3 font-bold whitespace-nowrap">ETB {Number(c.marketValue || c.valuationAmount || 0).toLocaleString()}</td>
+                            <td className="p-3 whitespace-nowrap">{c.haircut}%</td>
+                            <td className="p-3 font-bold text-slate-800 whitespace-nowrap">
                               ETB {Number(c.netSecurityValue || ((c.valuationAmount ?? 0) * (1 - (c.haircut ?? 0) / 100))).toLocaleString()}
                             </td>
-                            <td className="p-3 font-bold text-slate-800">
+                            <td className="p-3 font-bold text-slate-800 whitespace-nowrap">
                               {c.insuranceRequired !== undefined ? `ETB ${Number(c.insuranceRequired).toLocaleString()}` : '—'}
                             </td>
-                            <td className="p-3 font-bold text-emerald-700">
+                            <td className="p-3 font-bold text-emerald-700 whitespace-nowrap">
                               {c.activeInsurance !== undefined ? `ETB ${Number(c.activeInsurance).toLocaleString()}` : '—'}
                             </td>
-                            <td className="p-3 font-semibold">
+                            <td className="p-3 font-semibold whitespace-nowrap">
                               {c.coveragePct !== undefined ? `${c.coveragePct}%` : '—'}
                             </td>
-                            <td className="p-3">
+                            <td className="p-3 whitespace-nowrap">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${c.adequacyStatus === 'Adequate' || c.adequacyStatus === 'Compliant'
                                   ? 'bg-emerald-100 text-emerald-800'
                                   : c.adequacyStatus === 'Underinsured'
@@ -2534,7 +2534,7 @@ export const HierarchicalDashboard: React.FC<HierarchicalDashboardProps> = ({
                                 {c.adequacyStatus || c.status || 'Active'}
                               </span>
                             </td>
-                            <td className="p-3 text-right">
+                            <td className="p-3 text-right whitespace-nowrap">
                               <button
                                 onClick={() => drillToCollateral(c.id)}
                                 className="px-2.5 py-1 bg-[#EFF5FB] hover:bg-[#DCE9F5] text-[#1F4E7A] text-xs font-bold rounded border border-[#B9D3EB] transition-colors"

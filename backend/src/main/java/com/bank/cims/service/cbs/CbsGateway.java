@@ -27,8 +27,14 @@ public class CbsGateway {
         return cbsMode != null ? cbsMode.trim().toUpperCase() : "SIMULATOR";
     }
 
+    public synchronized void setMode(String mode) {
+        if (mode != null && (mode.equalsIgnoreCase("REAL") || mode.equalsIgnoreCase("SIMULATOR"))) {
+            this.cbsMode = mode.toUpperCase();
+        }
+    }
+
     public CbsAdapter getActiveAdapter() {
-        if ("REAL".equalsIgnoreCase(cbsMode)) {
+        if ("REAL".equalsIgnoreCase(getMode())) {
             return realAdapter;
         }
         return simulatorAdapter;
@@ -80,5 +86,21 @@ public class CbsGateway {
 
     public CbsConnectionStatus checkConnectionStatus() {
         return getActiveAdapter().checkConnectionStatus();
+    }
+
+    public List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRows() {
+        return getActiveAdapter().fetchCustomerViewRows();
+    }
+
+    public List<com.bank.cims.dto.cbs.CbsFacilityViewRow> fetchFacilityViewRows() {
+        return getActiveAdapter().fetchFacilityViewRows();
+    }
+
+    public List<com.bank.cims.dto.cbs.CbsCollateralViewRow> fetchCollateralViewRows() {
+        return getActiveAdapter().fetchCollateralViewRows();
+    }
+
+    public java.util.Map<String, Object> validateSchema() {
+        return getActiveAdapter().validateSchema();
     }
 }

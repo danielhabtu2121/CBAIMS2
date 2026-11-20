@@ -61,6 +61,7 @@ public class CimsPrompt1IntegrityVerificationTest {
         borrowerCust.setName("Main Borrower Enterprise PLC");
         borrowerCust.setCustomerType("Corporate");
         borrowerCust.setSegment("Corporate Banking");
+        borrowerCust.setTaxIdNo("0011223344");
         customerRepository.save(borrowerCust);
 
         thirdPartyCust = new Customer();
@@ -69,6 +70,7 @@ public class CimsPrompt1IntegrityVerificationTest {
         thirdPartyCust.setName("Third Party Pledgor Entity Ltd");
         thirdPartyCust.setCustomerType("Corporate");
         thirdPartyCust.setSegment("Commercial Banking");
+        thirdPartyCust.setTaxIdNo("0055667788");
         customerRepository.save(thirdPartyCust);
     }
 
@@ -1099,7 +1101,7 @@ public class CimsPrompt1IntegrityVerificationTest {
         col.setStatus("Active");
         collateralRepository.save(col);
 
-        LoanAccount loan = createLoan("LN-S30", 5_000_000.0);
+        LoanAccount loan = createLoan("LN-S30", 0.0);
 
         LoanCollateralLink link = new LoanCollateralLink();
         link.setId("link-s30-1");

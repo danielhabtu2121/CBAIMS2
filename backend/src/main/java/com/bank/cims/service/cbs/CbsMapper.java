@@ -215,4 +215,174 @@ public class CbsMapper {
 
         return link;
     }
+
+    /**
+     * Maps incoming 16-column Oracle Customer View Row onto CBAIMS Customer entity.
+     * Preserves exact source CIF string, leading zeros, and original status metadata.
+     */
+    public Customer mapCustomerViewRow(com.bank.cims.dto.cbs.CbsCustomerViewRow row, Customer existing, String sourceSystem) {
+        Customer cust = existing != null ? existing : new Customer();
+        if (cust.getId() == null || cust.getId().isBlank()) {
+            cust.setId("cst-cbs-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+
+        cust.setCif(row.getCustomerNo() != null ? row.getCustomerNo().trim() : null);
+        cust.setCbsSourceRef(row.getCustomerNo() != null ? row.getCustomerNo().trim() : null);
+        cust.setOriginType("CBS_IMPORTED");
+        cust.setName(row.getCustomerName1() != null ? row.getCustomerName1().trim() : "");
+        cust.setCustomerType(row.getCustomerType());
+        cust.setNationalId(row.getPNationalId());
+        cust.setBusinessRegNo(row.getPassportNo());
+        cust.setTaxIdNo(row.getTaxidNo());
+        cust.setPhone(row.getMobileNumber());
+        cust.setEmail(row.getEmail());
+        cust.setAddress(row.getAddress());
+        cust.setSegment(row.getBusinessSegment());
+        cust.setBranch(row.getBranchCode());
+
+        // Status mapping
+        if ("A".equalsIgnoreCase(row.getCustomerStatus())) {
+            cust.setStatus("Active");
+        } else if ("C".equalsIgnoreCase(row.getCustomerStatus())) {
+            cust.setStatus("Closed");
+        } else {
+            cust.setStatus(row.getCustomerStatus());
+        }
+
+        cust.setRecordStat(row.getRecordStat());
+        cust.setAuthStat(row.getAuthStat());
+        cust.setMakerDtStamp(row.getMakerDate());
+
+        cust.setSource(sourceSystem != null ? sourceSystem : "CBS_ORACLE");
+        cust.setCbsSyncStatus("Synced");
+        cust.setCbsSyncedAt(LocalDateTime.now().toString());
+
+        return cust;
+    }
+
+    /**
+     * Maps incoming 15-column Oracle Facility View Row onto CBAIMS LoanAccount entity.
+     * Stores external FACILTY_ID separately from internal CBAIMS ID and account number.
+     * Preserves exact sanction amount and balance without fabricating zeros.
+     */
+    public LoanAccount mapFacilityViewRow(com.bank.cims.dto.cbs.CbsFacilityViewRow row, LoanAccount existing, Customer matchedCustomer, String sourceSystem) {
+        LoanAccount la = existing != null ? existing : new LoanAccount();
+        if (la.getId() == null || la.getId().isBlank()) {
+            la.setId("fac-cbs-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+
+        String accNo = row.getAccountNumber() != null ? row.getAccountNumber().trim() : null;
+        la.setLoanReference(accNo);
+        la.setAccountNumber(accNo);
+        la.setCbsSourceRef(accNo);
+        la.setOriginType("CBS_IMPORTED");
+
+        if (row.getFaciltyId() != null) {
+            la.setCbsFacilityId(row.getFaciltyId().toPlainString());
+            la.setLineCode(row.getFaciltyId().toPlainString());
+        } else {
+            la.setCbsFacilityId(null);
+            la.setLineCode(accNo);
+        }
+
+        if (matchedCustomer != null) {
+            la.setCustomerId(matchedCustomer.getId());
+            la.setCustomerMatchStatus("MATCHED");
+        } else if (row.getCustomerId() != null) {
+            la.setCustomerId(row.getCustomerId().trim());
+            la.setCustomerMatchStatus("UNRESOLVED");
+        }
+
+        la.setFacilityType(row.getProductCode());
+        la.setSegment(row.getBusinessSegment());
+        la.setBranch(row.getBranchCode());
+
+        if (row.getSancationAmount() != null) {
+            la.setApprovedLimit(row.getSancationAmount().doubleValue());
+        } else {
+            la.setApprovedLimit(0.0);
+        }
+
+        if (row.getOutstandingBalance() != null) {
+            la.setOutstandingBalance(row.getOutstandingBalance().doubleValue());
+        } else {
+            la.setOutstandingBalance(0.0);
+        }
+
+        if (row.getMaturityDate() != null) {
+            la.setLineExpiryDate(row.getMaturityDate().toString());
+        }
+        if (row.getValueDate() != null) {
+            la.setLineStartDate(row.getValueDate().toString());
+        }
+
+        // Status mapping
+        String actStatus = row.getAccountStatus();
+        if ("C".equalsIgnoreCase(actStatus) || "Closed".equalsIgnoreCase(actStatus)) {
+            la.setStatus("Closed");
+        } else if ("A".equalsIgnoreCase(actStatus)) {
+            la.setStatus("Active");
+        } else {
+            la.setStatus(actStatus != null ? actStatus : "Active");
+        }
+
+        la.setRecordStat(row.getLoanStatus());
+        la.setAuthStat(row.getAuthStat());
+        la.setSource(sourceSystem != null ? sourceSystem : "CBS_ORACLE");
+        la.setCbsSyncStatus("Synced");
+        la.setCbsSyncedAt(LocalDateTime.now().toString());
+
+        return la;
+    }
+
+    /**
+     * Maps incoming 31-column Oracle Collateral View Row onto CBAIMS Collateral entity.
+     * ZERO fallback defaults: Missing type, currency, or ownership remain explicitly null/unmapped
+     * so that Data Quality workbench can truthfully flag missing required fields.
+     */
+    public Collateral mapCollateralViewRow(com.bank.cims.dto.cbs.CbsCollateralViewRow row, Collateral existing, Customer matchedCustomer, String sourceSystem) {
+        Collateral col = existing != null ? existing : new Collateral();
+        if (col.getId() == null || col.getId().isBlank()) {
+            col.setId("col-cbs-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+
+        String colCode = row.getCollateralCode() != null ? row.getCollateralCode().trim() : null;
+        col.setCode(colCode);
+        col.setCbsCollateralRef(colCode);
+        col.setOriginType("CBS_IMPORTED");
+        col.setDescription(row.getCollateralDescription());
+
+        // Do not default type, currency, ownerType or segment!
+        col.setType(row.getCollateralType());
+        col.setCategory(row.getCollateralCategory() != null ? row.getCollateralCategory().toString() : null);
+        col.setCurrency(row.getCollateralCurrency());
+        col.setOwnerType(row.getOwnerBorrowerRelationship());
+        col.setOwningSegment(null); // Explicitly unmapped until organizational routing resolves it
+        col.setBranch(row.getBranchCode());
+
+        if (row.getCollateralValue() != null) {
+            col.setValuationAmount(row.getCollateralValue().doubleValue());
+        } else {
+            col.setValuationAmount(0.0);
+        }
+
+        col.setChargeType(row.getChargeType());
+        col.setSecured("Y".equalsIgnoreCase(row.getSecured()));
+        col.setTangible("Y".equalsIgnoreCase(row.getTangible()));
+
+        if (row.getStartDate() != null) col.setStartDate(row.getStartDate().toString());
+        if (row.getReviewDate() != null) col.setReviewDate(row.getReviewDate().toString());
+
+        if (matchedCustomer != null) {
+            col.setCustomerId(matchedCustomer.getId());
+        } else if (row.getCollateralOwnerCif() != null) {
+            col.setCustomerId(row.getCollateralOwnerCif().trim());
+        }
+
+        col.setSource(sourceSystem != null ? sourceSystem : "CBS_ORACLE");
+        col.setCbsSyncStatus("Synced");
+        col.setCbsSyncedAt(LocalDateTime.now().toString());
+
+        return col;
+    }
 }

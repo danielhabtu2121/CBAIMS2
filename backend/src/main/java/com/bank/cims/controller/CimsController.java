@@ -325,7 +325,10 @@ public class CimsController {
 
     // --- Collateral Master & 360 Endpoints ---
     @GetMapping({"/collateral", "/collaterals"})
-    public ResponseEntity<List<Collateral>> getAllCollateral() {
+    public ResponseEntity<List<Collateral>> getAllCollateral(@RequestParam(required = false) String origin) {
+        if (origin != null && !origin.isBlank() && !"ALL".equalsIgnoreCase(origin)) {
+            return ResponseEntity.ok(collateralRepository.findByOriginType(origin.toUpperCase()));
+        }
         return ResponseEntity.ok(collateralRepository.findAll());
     }
 
@@ -543,8 +546,11 @@ public class CimsController {
         public void setDocuments(List<Map<String, Object>> documents) { this.documents = documents; }
         public List<Map<String, Object>> getExceptions() { return exceptions; }
         public void setExceptions(List<Map<String, Object>> exceptions) { this.exceptions = exceptions; }
+        @com.fasterxml.jackson.annotation.JsonProperty("isDraft")
         public boolean isDraft() { return isDraft; }
+        @com.fasterxml.jackson.annotation.JsonProperty("isDraft")
         public void setDraft(boolean isDraft) { this.isDraft = isDraft; }
+        public void setIsDraft(boolean isDraft) { this.isDraft = isDraft; }
     }
 
     @PostMapping("/collateral/register-with-allocations")

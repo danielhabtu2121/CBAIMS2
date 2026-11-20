@@ -28,6 +28,7 @@ public class ConfigurationService {
     @Autowired private RolePermissionRepository rolePermissionRepository;
     @Autowired private CollateralTaxonomyRepository collateralTaxonomyRepository;
     @Autowired private CollateralRepository collateralRepository;
+    @Autowired private UserRepository userRepository;
     @Autowired @Lazy private CimsService cimsService;
 
     private final Map<String, String> cache = new ConcurrentHashMap<>();
@@ -79,6 +80,48 @@ public class ConfigurationService {
             if (systemParameterRepository.findById(e.getKey()).isEmpty()) {
                 systemParameterRepository.save(new SystemParameter(e.getKey(), e.getValue(), defaultDescription(e.getKey())));
             }
+        }
+
+        if (approvedInsurerRepository != null && approvedInsurerRepository.count() == 0) {
+            List<ApprovedInsurer> insurers = List.of(
+                new ApprovedInsurer("ins-01", "Ethiopian Insurance Corporation", true),
+                new ApprovedInsurer("ins-02", "Awash Insurance Company", true),
+                new ApprovedInsurer("ins-03", "Nyala Insurance Company", true),
+                new ApprovedInsurer("ins-04", "Africa Insurance Company", true),
+                new ApprovedInsurer("ins-05", "Nile Insurance Company", true),
+                new ApprovedInsurer("ins-06", "The United Insurance Company", true),
+                new ApprovedInsurer("ins-07", "Zemen Insurance Company", true)
+            );
+            approvedInsurerRepository.saveAll(insurers);
+        }
+
+        if (collateralTaxonomyRepository != null && collateralTaxonomyRepository.count() == 0) {
+            List<CollateralTaxonomy> taxonomies = List.of(
+                new CollateralTaxonomy("tax-1", "Immovable Properties", "Commercial/Residential/Mixed-use Buildings", true, "Fire & Lightning"),
+                new CollateralTaxonomy("tax-1b", "Immovable Properties", "Buildings - Commercial", true, "Fire & Lightning"),
+                new CollateralTaxonomy("tax-1c", "Immovable Properties", "Building", true, "Fire & Lightning"),
+                new CollateralTaxonomy("tax-1d", "Immovable Properties", "Commercial Building", true, "Fire & Lightning"),
+                new CollateralTaxonomy("tax-2", "Movable Properties", "Vehicles & Construction Machinery", true, "Comprehensive Motor / All-Risk"),
+                new CollateralTaxonomy("tax-2b", "Movable Properties", "Vehicles/Automobiles", true, "Comprehensive Motor / All-Risk"),
+                new CollateralTaxonomy("tax-3", "Business Mortgages", "Industrial/Office Machinery & Furniture", true, "Fire, Lightning & Burglary"),
+                new CollateralTaxonomy("tax-4", "Financial Assets", "Marketable Shares, Bills, Cash", false, "None"),
+                new CollateralTaxonomy("tax-5", "Agricultural/Other", "Livestock, Farm Products, Warehouse Receipts", true, "Fire, Theft & Combustion"),
+                new CollateralTaxonomy("tax-6", "Guarantees", "Personal / Corporate Guarantee", false, "None")
+            );
+            collateralTaxonomyRepository.saveAll(taxonomies);
+        }
+
+        if (userRepository != null && userRepository.findByUsername("brmgr_user").isEmpty()) {
+            User brmgr = new User();
+            brmgr.setId("usr-brmgr");
+            brmgr.setUsername("brmgr_user");
+            brmgr.setPassword("$2a$10$wE3/bK9j.4L/kL6j7zWqIe7F7vU5N3h1wP4aK0uY9rI3bE6wP1vWy");
+            brmgr.setFullName("Branch Manager");
+            brmgr.setRole("BRMGR");
+            brmgr.setBranch("Addis Ababa Main Branch");
+            brmgr.setSegment("Corporate Banking");
+            brmgr.setActive(true);
+            userRepository.save(brmgr);
         }
     }
 

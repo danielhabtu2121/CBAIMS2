@@ -95,6 +95,35 @@ public class LoanAccount {
     @Column(name = "once_auth")
     private String onceAuth = "Y";
 
+    @Column(name = "origin_type")
+    private String originType = "CBAIMS_REGISTERED";
+
+    @Column(name = "cbs_source_ref")
+    private String cbsSourceRef;
+
+    @Column(name = "cbs_facility_id")
+    private String cbsFacilityId;
+
+    @Column(name = "import_batch_id")
+    private String importBatchId;
+
+    @Column(name = "import_date")
+    private String importDate;
+
+    @Column(name = "data_quality_status")
+    private String dataQualityStatus = "COMPLETE";
+
+    @Column(name = "enrichment_status")
+    private String enrichmentStatus = "NOT_APPLICABLE";
+
+    @Column(name = "assigned_cro")
+    private String assignedCro;
+
+    private String district;
+
+    @Column(name = "customer_match_status")
+    private String customerMatchStatus = "MATCHED";
+
     public LoanAccount() {}
 
     public String getId() { return id; }
@@ -159,4 +188,34 @@ public class LoanAccount {
     public void setModNo(int modNo) { this.modNo = modNo; }
     public String getOnceAuth() { return onceAuth; }
     public void setOnceAuth(String onceAuth) { this.onceAuth = onceAuth; }
+
+    public String getOriginType() { return originType; }
+    public void setOriginType(String originType) { this.originType = originType; }
+
+    public String getCbsSourceRef() { return cbsSourceRef; }
+    public void setCbsSourceRef(String cbsSourceRef) { this.cbsSourceRef = cbsSourceRef; }
+
+    public String getCbsFacilityId() { return cbsFacilityId; }
+    public void setCbsFacilityId(String cbsFacilityId) { this.cbsFacilityId = cbsFacilityId; }
+
+    public String getImportBatchId() { return importBatchId; }
+    public void setImportBatchId(String importBatchId) { this.importBatchId = importBatchId; }
+
+    public String getImportDate() { return importDate; }
+    public void setImportDate(String importDate) { this.importDate = importDate; }
+
+    public String getDataQualityStatus() { return dataQualityStatus; }
+    public void setDataQualityStatus(String dataQualityStatus) { this.dataQualityStatus = dataQualityStatus; }
+
+    public String getEnrichmentStatus() { return enrichmentStatus; }
+    public void setEnrichmentStatus(String enrichmentStatus) { this.enrichmentStatus = enrichmentStatus; }
+
+    public String getAssignedCro() { return assignedCro; }
+    public void setAssignedCro(String assignedCro) { this.assignedCro = assignedCro; }
+
+    public String getDistrict() { return district; }
+    public void setDistrict(String district) { this.district = district; }
+
+    public String getCustomerMatchStatus() { return customerMatchStatus; }
+    public void setCustomerMatchStatus(String customerMatchStatus) { this.customerMatchStatus = customerMatchStatus; }
 }

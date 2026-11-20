@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Users,
@@ -28,6 +28,10 @@ import {
   AlertCircle,
   Info,
   Sparkles,
+  Network,
+  Layers,
+  MapPin,
+  RefreshCw,
 } from 'lucide-react';
 import {
   BusinessSegment,
@@ -44,6 +48,12 @@ import {
   UserSession,
   NotificationTemplate,
   InsuranceCoverageRule,
+  OrganizationalUnit,
+  CbsBranchMapping,
+  CbsSegmentMapping,
+  PortfolioAssignment,
+  UnassignedRecord,
+  ImpactPreview,
 } from '../../types';
 import { StatusChip } from '../layout/StatusChip';
 import { cimsApi } from '../../api/cimsApi';
@@ -116,10 +126,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [activeTab, setActiveTab] = useState<
     | 'overview'
     | 'runtime'
+    | 'org-hierarchy'
     | 'segments'
     | 'users'
     | 'permissions'
     | 'branches'
+    | 'cbs-mappings'
+    | 'portfolio-matrix'
     | 'approval-configs'
     | 'reminders'
     | 'insurers'
@@ -130,6 +143,49 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     | 'templates'
     | 'coverage-rules'
   >('overview');
+
+  // Organizational Hierarchy, CBS Mappings, Portfolio Matrix State
+  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
+  const [cbsBranchMappings, setCbsBranchMappings] = useState<CbsBranchMapping[]>([]);
+  const [cbsSegmentMappings, setCbsSegmentMappings] = useState<CbsSegmentMapping[]>([]);
+  const [portfolioAssignments, setPortfolioAssignments] = useState<PortfolioAssignment[]>([]);
+  const [unassignedRecords, setUnassignedRecords] = useState<UnassignedRecord[]>([]);
+  const [impactPreview, setImpactPreview] = useState<ImpactPreview | null>(null);
+  const [loadingOrgData, setLoadingOrgData] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [reassignForm, setReassignForm] = useState<{ entityType: string; entityId: string; newMakerId: string; newCheckerId: string; reason: string }>({
+    entityType: 'CUSTOMER',
+    entityId: '',
+    newMakerId: '',
+    newCheckerId: '',
+    reason: '',
+  });
+
+  const loadOrgAndMappingData = async () => {
+    setLoadingOrgData(true);
+    try {
+      const [ou, cbm, csm, pa, ur] = await Promise.all([
+        cimsApi.getOrgUnits().catch(() => []),
+        cimsApi.getCbsBranchMappings().catch(() => []),
+        cimsApi.getCbsSegmentMappings().catch(() => []),
+        cimsApi.getPortfolioAssignments().catch(() => []),
+        cimsApi.getUnassignedRecords().catch(() => []),
+      ]);
+      setOrgUnits(ou || []);
+      setCbsBranchMappings(cbm || []);
+      setCbsSegmentMappings(csm || []);
+      setPortfolioAssignments(pa || []);
+      setUnassignedRecords(ur || []);
+    } catch (err) {
+      console.warn('Failed to load org and mapping data:', err);
+    } finally {
+      setLoadingOrgData(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOrgAndMappingData();
+  }, []);
 
   // Coverage Rules State (BR-18 Credit Policy)
   const [coverageRules, setCoverageRules] = useState<InsuranceCoverageRule[]>([]);
@@ -446,6 +502,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             }`}
         >
           Runtime Configuration
+        </button>
+        <button
+          onClick={() => setActiveTab('org-hierarchy')}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'org-hierarchy' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
+        >
+          🏛️ 14 Districts & Areas ({orgUnits.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('cbs-mappings')}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'cbs-mappings' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
+        >
+          🔗 CBS Mappings ({cbsBranchMappings.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('portfolio-matrix')}
+          className={`pb-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap ${activeTab === 'portfolio-matrix' ? 'border-[#00205B] text-[#00205B]' : 'border-transparent text-[#5B6472] hover:text-[#101828]'
+            }`}
+        >
+          📊 Portfolio Matrix ({portfolioAssignments.length})
         </button>
         <button
           onClick={() => setActiveTab('segments')}
@@ -996,6 +1073,439 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* --- Tab: Organization Hierarchy & 14 Districts --- */}
+      {activeTab === 'org-hierarchy' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-[#E2E8F0]">
+            <div>
+              <h3 className="text-sm font-bold text-[#101828]">Bank Organizational Hierarchy & 14 Canonical Districts</h3>
+              <p className="text-xs text-[#5B6472]">Two-dimensional structure: Geographic (HO → District → Area Office → Area → Branch) & Business Hierarchy</p>
+            </div>
+            <button
+              onClick={() => loadOrgAndMappingData()}
+              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingOrgData ? 'animate-spin' : ''}`} />
+              Refresh Hierarchy
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <span className="text-[11px] font-bold text-blue-700 uppercase">Geographic Districts</span>
+              <div className="text-xl font-black text-blue-950 mt-1">14 Canonical</div>
+              <p className="text-[10px] text-blue-600 mt-0.5">4 Addis Ababa + 10 Upcountry</p>
+            </div>
+            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <span className="text-[11px] font-bold text-purple-700 uppercase">Core Segments</span>
+              <div className="text-xl font-black text-purple-950 mt-1">4 Segments</div>
+              <p className="text-[10px] text-purple-600 mt-0.5">Corporate, Retail, MSME, IFB Overlay</p>
+            </div>
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span className="text-[11px] font-bold text-emerald-700 uppercase">Corporate Units</span>
+              <div className="text-xl font-black text-emerald-950 mt-1">5 Operating Units</div>
+              <p className="text-[10px] text-emerald-600 mt-0.5">Center, Institutional, Trade, Imp/Exp, Agri</p>
+            </div>
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <span className="text-[11px] font-bold text-amber-700 uppercase">Pilot Branches</span>
+              <div className="text-xl font-black text-amber-950 mt-1">8 Mapped</div>
+              <p className="text-[10px] text-amber-600 mt-0.5">Bole, Merkato, Arada, Kirkos, Upcountry</p>
+            </div>
+          </div>
+
+          {/* Canonical 14 Districts Table */}
+          <div className="cims-card overflow-x-auto">
+            <div className="p-3 border-b border-[#E2E8F0] font-bold text-xs text-[#00205B] bg-slate-50 flex items-center justify-between">
+              <span>Canonical 14 Districts & Area Structure</span>
+              <span className="text-[11px] font-normal text-slate-500">IFB operates as segment overlay across all 14 districts</span>
+            </div>
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
+                <tr>
+                  <th className="p-3">District Code</th>
+                  <th className="p-3">District Name</th>
+                  <th className="p-3">Region / Scope</th>
+                  <th className="p-3">Unit Type</th>
+                  <th className="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {orgUnits.filter(u => u.unitType === 'DISTRICT').map((d) => (
+                  <tr key={d.id} className="hover:bg-[#EFF5FB]">
+                    <td className="p-3 font-mono font-bold text-blue-900">{d.code}</td>
+                    <td className="p-3 font-semibold text-[#00205B]">{d.name}</td>
+                    <td className="p-3 text-[#5B6472]">{d.code.includes('AA') ? 'Addis Ababa' : 'Upcountry'}</td>
+                    <td className="p-3"><span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-semibold">DISTRICT</span></td>
+                    <td className="p-3"><StatusChip label={d.active ? 'Active' : 'Inactive'} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* --- Tab: CBS Branch & Segment Mappings --- */}
+      {activeTab === 'cbs-mappings' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-[#E2E8F0]">
+            <div>
+              <h3 className="text-sm font-bold text-[#101828]">CBS Source Branch & Segment Mapping Engine</h3>
+              <p className="text-xs text-[#5B6472]">Authoritative translation of FLEXCUBE live views into canonical CBAIMS entities</p>
+            </div>
+            <button
+              onClick={() => loadOrgAndMappingData()}
+              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingOrgData ? 'animate-spin' : ''}`} />
+              Refresh Mappings
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* CBS Branch Mappings */}
+            <div className="cims-card overflow-x-auto">
+              <div className="p-3 border-b border-[#E2E8F0] font-bold text-xs text-[#00205B] bg-slate-50 flex items-center justify-between">
+                <span>CBS Branch Code Aliases ({cbsBranchMappings.length})</span>
+                <span className="text-[10px] text-slate-500">Preserves Leading Zeroes</span>
+              </div>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
+                  <tr>
+                    <th className="p-2.5">CBS Code</th>
+                    <th className="p-2.5">Official Branch Name</th>
+                    <th className="p-2.5">CBAIMS Branch ID</th>
+                    <th className="p-2.5">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0]">
+                  {cbsBranchMappings.map((bm) => (
+                    <tr key={bm.id} className="hover:bg-[#EFF5FB]">
+                      <td className="p-2.5 font-mono font-bold text-blue-900">{bm.sourceBranchCode}</td>
+                      <td className="p-2.5 font-semibold text-[#00205B]">{bm.officialName}</td>
+                      <td className="p-2.5 font-mono text-slate-600">{bm.cbaimsBranchId}</td>
+                      <td className="p-2.5"><StatusChip label={bm.status || (bm.active ? 'ACTIVE' : 'INACTIVE')} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* CBS Segment Mappings */}
+            <div className="cims-card overflow-x-auto">
+              <div className="p-3 border-b border-[#E2E8F0] font-bold text-xs text-[#00205B] bg-slate-50 flex items-center justify-between">
+                <span>CBS Segment Mappings ({cbsSegmentMappings.length})</span>
+                <span className="text-[10px] text-slate-500">Holds Unapproved Values</span>
+              </div>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
+                  <tr>
+                    <th className="p-2.5">CBS Value</th>
+                    <th className="p-2.5">Canonical Segment</th>
+                    <th className="p-2.5">Mapping Status</th>
+                    <th className="p-2.5">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0]">
+                  {cbsSegmentMappings.map((sm) => (
+                    <tr key={sm.id} className="hover:bg-[#EFF5FB]">
+                      <td className="p-2.5 font-mono font-bold text-purple-900">{sm.sourceValue}</td>
+                      <td className="p-2.5 font-semibold text-[#00205B]">{sm.canonicalSegment || '—'}</td>
+                      <td className="p-2.5">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${sm.mappingStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                          {sm.mappingStatus}
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-[11px] text-slate-500 max-w-[150px] truncate" title={sm.reason}>{sm.reason || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Tab: Portfolio Matrix & Routing --- */}
+      {activeTab === 'portfolio-matrix' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-[#E2E8F0]">
+            <div>
+              <h3 className="text-sm font-bold text-[#101828]">Portfolio Assignment Matrix & Unassigned Records Queue</h3>
+              <p className="text-xs text-[#5B6472]">Maker-checker portfolio routing across segment directorates, operating branches, and officers</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setReassignForm({ entityType: 'CUSTOMER', entityId: '', newMakerId: '', newCheckerId: '', reason: '' });
+                  setShowReassignModal(true);
+                }}
+                className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5"
+              >
+                <GitMerge className="w-3.5 h-3.5" />
+                Reassign Portfolio
+              </button>
+              <button
+                onClick={() => loadOrgAndMappingData()}
+                className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingOrgData ? 'animate-spin' : ''}`} />
+                Refresh Matrix
+              </button>
+            </div>
+          </div>
+
+          {/* Impact Analysis Simulator Card */}
+          <div className="cims-card p-4 bg-gradient-to-r from-slate-50 to-blue-50/30 border border-blue-200">
+            <h4 className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-blue-700" />
+              Administrative Impact Simulator
+            </h4>
+            <p className="text-[11px] text-slate-600 mt-1">Preview operational consequences before committing branch relocations, segment reorganizations, or officer deactivations.</p>
+            <div className="mt-3 flex flex-wrap gap-2 items-center">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await cimsApi.getImpactPreview({ changeType: 'REASSIGN_BRANCH', targetId: 'brn-bole' });
+                    setImpactPreview(res);
+                  } catch (e: any) {
+                    showToast(e.message || 'Simulation error');
+                  }
+                }}
+                className="btn-ghost py-1 px-2.5 text-xs border border-blue-300 rounded bg-white hover:bg-blue-50 text-blue-900"
+              >
+                Simulate Bole Branch Relocation
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await cimsApi.getImpactPreview({ changeType: 'DEACTIVATE_USER', targetId: 'TEST_CORP_RO_BOLE' });
+                    setImpactPreview(res);
+                  } catch (e: any) {
+                    showToast(e.message || 'Simulation error');
+                  }
+                }}
+                className="btn-ghost py-1 px-2.5 text-xs border border-purple-300 rounded bg-white hover:bg-purple-50 text-purple-900"
+              >
+                Simulate Corporate RO Deactivation
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await cimsApi.getImpactPreview({ changeType: 'CBS_MAPPING_CHANGE', targetId: '0101' });
+                    setImpactPreview(res);
+                  } catch (e: any) {
+                    showToast(e.message || 'Simulation error');
+                  }
+                }}
+                className="btn-ghost py-1 px-2.5 text-xs border border-amber-300 rounded bg-white hover:bg-amber-50 text-amber-900"
+              >
+                Simulate CBS Code 0101 Re-map
+              </button>
+            </div>
+
+            {impactPreview && (
+              <div className="mt-3 p-3 bg-white rounded border border-blue-200 text-xs space-y-1.5">
+                <div className="font-bold text-[#00205B]">{impactPreview.description}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] mt-2">
+                  <div>Affected Loans: <strong>{impactPreview.affectedFacilitiesCount}</strong></div>
+                  <div>Affected Collaterals: <strong>{impactPreview.affectedCollateralsCount}</strong></div>
+                  <div>Affected Portfolios: <strong>{impactPreview.affectedCustomersCount}</strong></div>
+                  <div>Dual Approval Required: <strong className={impactPreview.requiresDualApproval ? 'text-amber-700' : 'text-emerald-700'}>{impactPreview.requiresDualApproval ? 'YES' : 'NO'}</strong></div>
+                </div>
+                {impactPreview.riskWarnings?.map((w, idx) => (
+                  <div key={idx} className="text-amber-700 text-[11px] flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{w}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Unassigned Records Queue */}
+          {unassignedRecords.length > 0 && (
+            <div className="cims-card overflow-x-auto border-amber-300 bg-amber-50/20">
+              <div className="p-3 border-b border-amber-200 font-bold text-xs text-amber-950 bg-amber-100/40 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600" />
+                  Unassigned / Mapping Review Queue ({unassignedRecords.length})
+                </span>
+                <span className="text-[11px] font-normal text-amber-800">Deterministic routing held pending supervisor resolution</span>
+              </div>
+              <table className="w-full text-left text-xs">
+                <thead className="bg-amber-100/50 border-b border-amber-200 text-amber-900 font-semibold">
+                  <tr>
+                    <th className="p-2.5">Entity Type</th>
+                    <th className="p-2.5">Source Key</th>
+                    <th className="p-2.5">Source Branch</th>
+                    <th className="p-2.5">Source Segment</th>
+                    <th className="p-2.5">Unassigned Reason</th>
+                    <th className="p-2.5">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-amber-100">
+                  {unassignedRecords.map((ur) => (
+                    <tr key={ur.id} className="hover:bg-amber-100/40">
+                      <td className="p-2.5 font-bold text-amber-900">{ur.entityType}</td>
+                      <td className="p-2.5 font-mono">{ur.entityId}</td>
+                      <td className="p-2.5 font-mono">{ur.sourceBranchCode || '—'}</td>
+                      <td className="p-2.5 font-mono">{ur.sourceSegment || '—'}</td>
+                      <td className="p-2.5 text-red-700 font-medium">{ur.reason}</td>
+                      <td className="p-2.5"><span className="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold text-[10px]">{ur.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Active Portfolio Assignments Table */}
+          <div className="cims-card overflow-x-auto">
+            <div className="p-3 border-b border-[#E2E8F0] font-bold text-xs text-[#00205B] bg-slate-50 flex items-center justify-between">
+              <span>Active Portfolio Assignments ({portfolioAssignments.length})</span>
+              <span className="text-[10px] text-slate-500">Strict Segregation of Duties Enforced</span>
+            </div>
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
+                <tr>
+                  <th className="p-2.5">Type</th>
+                  <th className="p-2.5">Entity ID</th>
+                  <th className="p-2.5">Segment</th>
+                  <th className="p-2.5">Branch</th>
+                  <th className="p-2.5">Assigned Maker</th>
+                  <th className="p-2.5">Assigned Checker</th>
+                  <th className="p-2.5">Source</th>
+                  <th className="p-2.5">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {portfolioAssignments.length === 0 ? (
+                  <tr><td colSpan={8} className="p-4 text-center text-[#5B6472]">No active portfolio assignments found.</td></tr>
+                ) : (
+                  portfolioAssignments.map((pa) => (
+                    <tr key={pa.id} className="hover:bg-[#EFF5FB]">
+                      <td className="p-2.5 font-bold text-blue-900">{pa.entityType}</td>
+                      <td className="p-2.5 font-mono font-semibold">{pa.entityId}</td>
+                      <td className="p-2.5">{pa.segmentId || '—'}</td>
+                      <td className="p-2.5">{pa.branchId || '—'}</td>
+                      <td className="p-2.5 font-semibold text-emerald-800">{pa.makerUserId || 'UNASSIGNED'}</td>
+                      <td className="p-2.5 font-semibold text-blue-800">{pa.checkerUserId || 'UNASSIGNED'}</td>
+                      <td className="p-2.5 text-[10px] font-mono text-slate-500">{pa.assignmentSource}</td>
+                      <td className="p-2.5"><StatusChip label={pa.status} /></td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Reassign Portfolio Modal */}
+      {showReassignModal && (
+        <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-5 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-sm text-[#00205B] flex items-center gap-2">
+                <GitMerge className="w-4 h-4 text-blue-700" />
+                Administrative Portfolio Reassignment
+              </h3>
+              <button onClick={() => setShowReassignModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Entity Type</label>
+                <select
+                  value={reassignForm.entityType}
+                  onChange={(e) => setReassignForm({ ...reassignForm, entityType: e.target.value })}
+                  className="w-full border border-slate-300 rounded p-2 text-xs"
+                >
+                  <option value="CUSTOMER">Customer Master</option>
+                  <option value="FACILITY">Credit Facility</option>
+                  <option value="COLLATERAL">Collateral Master</option>
+                </select>
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Entity ID / Account / CIF</label>
+                <input
+                  type="text"
+                  value={reassignForm.entityId}
+                  onChange={(e) => setReassignForm({ ...reassignForm, entityId: e.target.value })}
+                  placeholder="e.g. 000001004 or ACC-CORP-001"
+                  className="w-full border border-slate-300 rounded p-2 text-xs font-mono"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">New Maker User (RO / CRO)</label>
+                <select
+                  value={reassignForm.newMakerId}
+                  onChange={(e) => setReassignForm({ ...reassignForm, newMakerId: e.target.value })}
+                  className="w-full border border-slate-300 rounded p-2 text-xs"
+                >
+                  <option value="">Select Maker...</option>
+                  {allUsers.filter((u: any) => ['CRO', 'BRO', 'RO', 'COLLDOCOFF'].includes(u.role)).map((u: any) => (
+                    <option key={u.id} value={u.username || u.id}>{u.fullName} ({u.username}) - {u.role}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">New Checker User (RM / BM)</label>
+                <select
+                  value={reassignForm.newCheckerId}
+                  onChange={(e) => setReassignForm({ ...reassignForm, newCheckerId: e.target.value })}
+                  className="w-full border border-slate-300 rounded p-2 text-xs"
+                >
+                  <option value="">Select Checker...</option>
+                  {allUsers.filter((u: any) => ['BRMGR', 'SRM', 'CRM', 'BRM', 'DISTDIR', 'HODEPT'].includes(u.role)).map((u: any) => (
+                    <option key={u.id} value={u.username || u.id}>{u.fullName} ({u.username}) - {u.role}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Reassignment Reason</label>
+                <textarea
+                  value={reassignForm.reason}
+                  onChange={(e) => setReassignForm({ ...reassignForm, reason: e.target.value })}
+                  rows={2}
+                  placeholder="Justification for administrative reassignment..."
+                  className="w-full border border-slate-300 rounded p-2 text-xs"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setShowReassignModal(false)}
+                className="btn-secondary py-1.5 px-3 text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!reassignForm.entityId || !reassignForm.newMakerId || !reassignForm.newCheckerId) {
+                    showToast('Entity ID, Maker, and Checker are required.');
+                    return;
+                  }
+                  try {
+                    await cimsApi.reassignPortfolio(reassignForm);
+                    showToast('Portfolio successfully reassigned!');
+                    setShowReassignModal(false);
+                    loadOrgAndMappingData();
+                  } catch (e: any) {
+                    showToast(e.message || 'Reassignment failed.');
+                  }
+                }}
+                className="btn-primary py-1.5 px-3 text-xs"
+              >
+                Confirm Reassignment
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -49,6 +49,9 @@ public class PolicyLifecycleIntegrationTest {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @Autowired
+    private ApprovedInsurerRepository approvedInsurerRepository;
+
     private Customer testCustomer;
     private LoanAccount testFacility;
     private Collateral testCollateral;
@@ -99,6 +102,15 @@ public class PolicyLifecycleIntegrationTest {
         testCollateral.setAuthStat("A");
         testCollateral.setRecordStat("O");
         collateralRepository.save(testCollateral);
+
+        // Ensure Approved Insurer exists
+        if (approvedInsurerRepository.findByNameIgnoreCase("Nyala Insurance Company").isEmpty()) {
+            ApprovedInsurer ins = new ApprovedInsurer();
+            ins.setId("ins-nyala-" + uid);
+            ins.setName("Nyala Insurance Company");
+            ins.setActive(true);
+            approvedInsurerRepository.save(ins);
+        }
 
         // Attach mandatory documents for collateral
         attachMandatoryCollateralDocs(testCollateral.getId());
@@ -284,6 +296,7 @@ public class PolicyLifecycleIntegrationTest {
 
         // Renew Policy
         InsurancePolicy renewalReq = new InsurancePolicy();
+        renewalReq.setPolicyNumber("POL-ORIG-001-REN");
         renewalReq.setInsuredAmount(13000000.0);
         renewalReq.setPremium(39000.0);
         renewalReq.setExpiryDate("2028-08-01");
@@ -326,7 +339,7 @@ public class PolicyLifecycleIntegrationTest {
         InsurancePolicy replacement = new InsurancePolicy();
         replacement.setPolicyNumber("POL-NEW-AWASH-01");
         replacement.setInsurerName("Awash Insurance Company");
-        replacement.setCoverageType("Comprehensive Fire & Engineering");
+        replacement.setCoverageType("Fire & Allied Perils");
         replacement.setInsuredAmount(12000000.0);
         replacement.setPremium(38000.0);
         replacement.setEffectiveDate("2026-08-01");
@@ -541,7 +554,9 @@ public class PolicyLifecycleIntegrationTest {
 
         // Renew Policy 1 -> Creates Policy 2
         InsurancePolicy renReq = new InsurancePolicy();
+        renReq.setPolicyNumber("POL-CUST-001-REN");
         renReq.setInsuredAmount(11000000.0);
+        renReq.setPremium(33000.0);
         renReq.setExpiryDate("2028-08-01");
         Map<String, Object> renRes = cimsService.renewPolicy(pol1.getId(), renReq, "cro_user");
         workflowExecutionService.approveWorkflowTask((String) renRes.get("workflowTaskId"), "brmgr_user", "BRMGR", "Approve Renewal");

@@ -1209,6 +1209,7 @@ public class CimsService {
 
         validationService.validateOwnership(collateral);
         collateralRepository.save(collateral);
+        logAudit(checkerId, "CHECKER", "CHANGE_COLLATERAL_OWNERSHIP", "Collateral", collateral.getId(), "Owner", prevOwnerName, newOwnerName, "Approved ownership transfer to " + newOwnerName);
         logAudit(checkerId, "CHECKER", "APPROVE_CHANGE_COLLATERAL_OWNERSHIP", "Collateral", collateral.getId(), "Owner", prevOwnerName, newOwnerName, "Approved ownership transfer to " + newOwnerName);
     }
 
@@ -4054,92 +4055,12 @@ public class CimsService {
         );
     }
 
+    @Autowired
+    private Customer360Service customer360Service;
+
     // --- Customer 360 Aggregation ---
     public Customer360Dto getCustomer360(String customerId) {
-        Customer customer = customerRepository.findById(customerId)
-                .or(() -> customerRepository.findFirstByCifIgnoreCase(customerId))
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
-
-        Customer360Dto dto = new Customer360Dto();
-        dto.setCustomer(customer);
-
-        List<LoanAccount> facilities = loanAccountRepository.findByCustomerId(customer.getId());
-        if (facilities.isEmpty() && customer.getCif() != null) {
-            facilities = loanAccountRepository.findByCustomerId(customer.getCif());
-        }
-        dto.setFacilities(facilities);
-
-        List<Collateral> collateralsList = collateralRepository.findByCustomerId(customer.getId());
-        if (collateralsList.isEmpty() && customer.getCif() != null) {
-            collateralsList = collateralRepository.findByCustomerId(customer.getCif());
-        }
-        final List<Collateral> collaterals = collateralsList;
-        dto.setCollaterals(collaterals);
-
-        List<LoanCollateralLink> allLinks = new ArrayList<>();
-        for (Collateral c : collaterals) {
-            allLinks.addAll(loanCollateralLinkRepository.findByCollateralId(c.getId()));
-        }
-        dto.setCollateralFacilityLinks(allLinks);
-
-        Set<String> validCustIds = new HashSet<>();
-        if (customer.getId() != null) validCustIds.add(customer.getId().trim().toLowerCase());
-        if (customer.getCif() != null) validCustIds.add(customer.getCif().trim().toLowerCase());
-        if (customer.getName() != null) validCustIds.add(customer.getName().trim().toLowerCase());
-
-        Set<String> collateralIds = collaterals.stream()
-                .flatMap(c -> java.util.stream.Stream.of(c.getId(), c.getCode()))
-                .filter(java.util.Objects::nonNull)
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .collect(java.util.stream.Collectors.toSet());
-
-        Map<String, InsurancePolicy> policyMap = new LinkedHashMap<>();
-        for (InsurancePolicy p : insurancePolicyRepository.findAll()) {
-            boolean matched = false;
-            if (p.getCustomerId() != null && validCustIds.contains(p.getCustomerId().trim().toLowerCase())) {
-                matched = true;
-            } else if (p.getCollateralId() != null && collateralIds.contains(p.getCollateralId().trim().toLowerCase())) {
-                matched = true;
-            }
-            if (matched && p.getId() != null) {
-                policyMap.put(p.getId(), p);
-            }
-        }
-        final List<InsurancePolicy> policies = new ArrayList<>(policyMap.values());
-        dto.setInsurancePolicies(policies);
-
-        List<OwnershipDocument> docs = new ArrayList<>();
-        for (Collateral c : collaterals) {
-            docs.addAll(ownershipDocumentRepository.findByCollateralId(c.getId()));
-        }
-        dto.setDocuments(docs);
-
-        List<WorkflowTask> pending = workflowTaskRepository.findAll().stream()
-                .filter(t -> "Pending".equalsIgnoreCase(t.getStatus()))
-                .filter(t -> collaterals.stream().anyMatch(c -> c.getId().equalsIgnoreCase(t.getEntityId()) || (c.getCode() != null && c.getCode().equalsIgnoreCase(t.getEntityId())))
-                        || policies.stream().anyMatch(p -> p.getId().equalsIgnoreCase(t.getEntityId()) || (p.getPolicyNumber() != null && p.getPolicyNumber().equalsIgnoreCase(t.getEntityId()))))
-                .toList();
-        dto.setPendingApprovals(pending);
-
-        List<CimsException> exceptions = cimsExceptionRepository.findAll().stream()
-                .filter(e -> collaterals.stream().anyMatch(c -> c.getId().equalsIgnoreCase(e.getEntityId()) || (c.getCode() != null && c.getCode().equalsIgnoreCase(e.getEntityId()))))
-                .toList();
-        dto.setExceptions(exceptions);
-
-        List<AuditLog> audits = auditLogRepository.findTop500ByOrderByTimestampDesc().stream()
-                .filter(a -> customer.getId().equalsIgnoreCase(a.getEntityId())
-                        || (customer.getCif() != null && customer.getCif().equalsIgnoreCase(a.getEntityId()))
-                        || collaterals.stream().anyMatch(c -> c.getId().equalsIgnoreCase(a.getEntityId()))
-                        || policies.stream().anyMatch(p -> p.getId().equalsIgnoreCase(a.getEntityId())))
-                .toList();
-        dto.setAuditHistory(audits);
-
-        if (!collaterals.isEmpty()) {
-            dto.setExposureSummary(exposureCalculationService.calculateExposureAndAdequacy(collaterals.get(0).getId()));
-        }
-
-        return dto;
+        return customer360Service.getCustomer360(customerId);
     }
 
     public static Long parseFileSize(Object rawFileSize) {
@@ -4254,6 +4175,9 @@ public class CimsService {
                 owner.setMakerId(userId);
             }
         }
+
+        // Ensure collateral is persisted first to satisfy foreign key integrity on attached documents
+        collateralRepository.save(collateral);
 
         // Save attached documents in DMS before mandatory document validation
         if (documents != null && !documents.isEmpty()) {
@@ -4612,7 +4536,12 @@ public class CimsService {
     // --- Allocate Collateral Facilities (Delegated to Authoritative CollateralFacilityRelationshipService) ---
     @Transactional
     public Map<String, Object> allocateCollateralFacilities(String collateralId, List<Map<String, Object>> allocations, String userId) {
-        return collateralFacilityRelationshipService.allocateCollateralFacilities(collateralId, allocations, userId);
+        return collateralFacilityRelationshipService.allocateCollateralFacilities(collateralId, allocations, true, userId);
+    }
+
+    @Transactional
+    public Map<String, Object> allocateCollateralFacilities(String collateralId, List<Map<String, Object>> allocations, boolean fullReplacement, String userId) {
+        return collateralFacilityRelationshipService.allocateCollateralFacilities(collateralId, allocations, fullReplacement, userId);
     }
 
     // --- Request Collateral Release ---
@@ -5227,6 +5156,7 @@ public class CimsService {
         CimsException exc = new CimsException();
         exc.setId(excId);
         exc.setExceptionType(request.getExceptionType().trim());
+        exc.setFailedRequirement(request.getFailedRequirement() != null ? request.getFailedRequirement().trim() : null);
         exc.setEntityType(resolvedEntityType);
         exc.setEntityId(resolvedEntityId);
         if (col != null) {

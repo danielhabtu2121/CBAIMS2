@@ -1868,7 +1868,7 @@ public class CollateralFacilityRelationshipService {
 
         User caller = userRepository != null && userId != null ? userRepository.findById(userId).or(() -> userRepository.findByUsername(userId)).orElse(null) : null;
         String actorRole = caller != null && caller.getRole() != null ? caller.getRole() : "MAKER";
-        boolean isAuthorizedChecker = "CHECKER".equalsIgnoreCase(actorRole) || "BRANCH_MANAGER".equalsIgnoreCase(actorRole) || "BRMGR".equalsIgnoreCase(actorRole) || "SYSADMIN".equalsIgnoreCase(actorRole) || "SYSTEM".equalsIgnoreCase(actorRole);
+        boolean isAuthorizedChecker = "CHECKER".equalsIgnoreCase(actorRole) || "BRANCH_MANAGER".equalsIgnoreCase(actorRole) || "BRMGR".equalsIgnoreCase(actorRole) || "SYSADMIN".equalsIgnoreCase(actorRole) || "SYSTEM".equalsIgnoreCase(actorRole) || (userId != null && ("SYSTEM".equalsIgnoreCase(userId) || "SYSADMIN".equalsIgnoreCase(userId)));
 
         // Finding 84: Ending a relationship requires release impact check if facility has uncleared balance
         if (loan != null && loan.getOutstandingBalance() > 0 && !"Closed".equalsIgnoreCase(loan.getStatus()) && !"Settled".equalsIgnoreCase(loan.getStatus())) {
@@ -2516,7 +2516,7 @@ public class CollateralFacilityRelationshipService {
                     // Finding 80: Bulk allocation dual-control approval routing
                     User caller = userRepository != null && userId != null ? userRepository.findById(userId).or(() -> userRepository.findByUsername(userId)).orElse(null) : null;
                     String actorRole = caller != null && caller.getRole() != null ? caller.getRole() : "CRO";
-                    boolean isChecker = "CHECKER".equalsIgnoreCase(actorRole) || "BRANCH_MANAGER".equalsIgnoreCase(actorRole) || "BRMGR".equalsIgnoreCase(actorRole) || "SYSADMIN".equalsIgnoreCase(actorRole) || "SYSTEM".equalsIgnoreCase(actorRole);
+                    boolean isChecker = "CHECKER".equalsIgnoreCase(actorRole) || "BRANCH_MANAGER".equalsIgnoreCase(actorRole) || "BRMGR".equalsIgnoreCase(actorRole) || "SYSADMIN".equalsIgnoreCase(actorRole) || "SYSTEM".equalsIgnoreCase(actorRole) || (userId != null && ("SYSTEM".equalsIgnoreCase(userId) || "SYSADMIN".equalsIgnoreCase(userId)));
 
                     link = new LoanCollateralLink("LNK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(), loan.getId(), collateral.getId(), amt);
                     link.setFacilityId(loan.getLineCode() != null ? loan.getLineCode() : loan.getId());
