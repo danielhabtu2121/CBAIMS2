@@ -10,27 +10,27 @@ All CBS Oracle connection settings are managed in **two places**:
 
 ### A. The Spring Boot Configuration File
 **File Path**: `backend/src/main/resources/application.yml`  
-Under the `cims.cbs` section (lines 142–175):
+Under the `cims.cbs.oracle` section (lines 45–58):
 
 ```yaml
 cims:
   cbs:
     # Mode: Set to 'REAL' for production Oracle, or 'SIMULATOR' for local testing
-    mode: ${CIMS_CBS_MODE:SIMULATOR}
+    mode: ${CIMS_CBS_MODE:REAL}
     oracle:
       # CBS Oracle Database JDBC URL
       jdbc-url: ${CIMS_CBS_JDBC_URL:jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT}
       # Oracle Database Username
       username: ${CIMS_CBS_USERNAME:CBAIMSUSER}
-      # Oracle Database Password (KEEP EMPTY IN FILE - pass via environment variable)
-      password: ${CIMS_CBS_PASSWORD:}
+      # Oracle Database Password (you can type your password here directly)
+      password: ${CIMS_CBS_PASSWORD:ENTER_PASSWORD_HERE}
       # Oracle Schema Name
       schema: ${CIMS_CBS_SCHEMA:FCUBSLIVE}
       
       # Three CBS Oracle Views (62 columns total)
-      customer-view: ${CIMS_CBS_ORACLE_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}
-      facility-view: ${CIMS_CBS_ORACLE_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}
-      collateral-view: ${CIMS_CBS_ORACLE_COLLATERAL_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL}
+      customer-view: ${CIMS_CBS_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}
+      facility-view: ${CIMS_CBS_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}
+      collateral-view: ${CIMS_CBS_COLLATERAL_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL}
 ```
 
 ### B. Server Environment Variables (Recommended for Security)
@@ -162,3 +162,4 @@ curl -s -X POST http://localhost:8080/api/cbs/three-views/import \
 4. **Audit Provenance & Snapshots**:
    - Complete unedited source rows are archived in `cbs_customer_raw_snapshots`, `cbs_facility_raw_snapshots`, and `cbs_collateral_raw_snapshots`.
    - Field-level modifications by CROs are logged with timestamp, user ID, previous value, and reason in provenance audit tables.
+

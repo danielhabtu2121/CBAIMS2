@@ -26,7 +26,7 @@ spring:
 
 cims:
   cbs:
-    mode: ${CIMS_CBS_MODE:SIMULATOR} # Set to REAL for production Oracle 3-view integration
+    mode: ${CIMS_CBS_MODE:REAL} # Set to REAL for production Oracle 3-view integration
     sync-mode: MANUAL
     scheduled-interval-ms: 3600000
     real:
@@ -43,9 +43,9 @@ cims:
     # Password: Set via environment variable CIMS_CBS_PASSWORD or edit below
     # =========================================================================
     oracle:
-      jdbc-url: ${CIMS_CBS_JDBC_URL:jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT}
+      jdbc-url: ${CIMS_CBS_JDBC_URL:jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT}
       username: ${CIMS_CBS_USERNAME:CBAIMSUSER}
-      password: ${CIMS_CBS_PASSWORD:}
+      password: ${CIMS_CBS_PASSWORD:ENTER_PASSWORD_HERE}
       schema: ${CIMS_CBS_SCHEMA:FCUBSLIVE}
       customer-view: ${CIMS_CBS_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}
       facility-view: ${CIMS_CBS_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}
