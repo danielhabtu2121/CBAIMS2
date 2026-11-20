@@ -107,3 +107,4 @@ public class CbsCustomerViewRow implements Serializable {
     public String getAuthStat() { return authStat; }
     public void setAuthStat(String authStat) { this.authStat = authStat; }
 }
+

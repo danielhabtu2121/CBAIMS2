@@ -12,3 +12,4 @@ public interface CbsCodeMappingRepository extends JpaRepository<CbsCodeMapping, 
     List<CbsCodeMapping> findByMappingTypeAndActiveTrue(String mappingType);
     Optional<CbsCodeMapping> findFirstByMappingTypeAndSourceCodeIgnoreCaseAndActiveTrue(String mappingType, String sourceCode);
 }
+

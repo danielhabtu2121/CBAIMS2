@@ -139,3 +139,4 @@ public class CbsThreeViewPreviewDto implements Serializable {
     public List<String> getIssuesDetected() { return issuesDetected; }
     public void setIssuesDetected(List<String> issuesDetected) { this.issuesDetected = issuesDetected; }
 }
+

@@ -68,3 +68,4 @@ public class CbsCustomerProvenanceLog {
     public String getChangedAt() { return changedAt; }
     public void setChangedAt(String changedAt) { this.changedAt = changedAt; }
 }
+

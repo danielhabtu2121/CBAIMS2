@@ -12,3 +12,4 @@ public interface CbsDuplicateCollisionRepository extends JpaRepository<CbsDuplic
     List<CbsDuplicateCollision> findByBatchId(String batchId);
     List<CbsDuplicateCollision> findByStatusOrderByCreatedAtDesc(String status);
 }
+

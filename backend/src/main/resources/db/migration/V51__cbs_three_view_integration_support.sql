@@ -183,3 +183,4 @@ VALUES
     ('map-tan-1', 'TANGIBLE', 'Y', 'true', 'Tangible indicator Y', true, CURRENT_TIMESTAMP),
     ('map-tan-2', 'TANGIBLE', 'N', 'false', 'Tangible indicator N', true, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
+

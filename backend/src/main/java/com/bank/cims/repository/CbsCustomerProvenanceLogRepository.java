@@ -10,3 +10,4 @@ import java.util.List;
 public interface CbsCustomerProvenanceLogRepository extends JpaRepository<CbsCustomerProvenanceLog, String> {
     List<CbsCustomerProvenanceLog> findByCustomerIdOrderByChangedAtDesc(String customerId);
 }
+

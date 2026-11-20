@@ -14,3 +14,4 @@ public interface CbsCustomerRawSnapshotRepository extends JpaRepository<CbsCusto
     Optional<CbsCustomerRawSnapshot> findFirstByCustomerIdOrderByCreatedAtDesc(String customerId);
     List<CbsCustomerRawSnapshot> findByBatchId(String batchId);
 }
+

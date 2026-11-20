@@ -12,3 +12,4 @@ public interface CbsUnresolvedEntityRepository extends JpaRepository<CbsUnresolv
     List<CbsUnresolvedEntity> findByBatchId(String batchId);
     List<CbsUnresolvedEntity> findByStatusOrderByCreatedAtDesc(String status);
 }
+

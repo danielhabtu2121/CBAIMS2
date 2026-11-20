@@ -14,3 +14,4 @@ public interface CbsFacilityRawSnapshotRepository extends JpaRepository<CbsFacil
     Optional<CbsFacilityRawSnapshot> findFirstByFacilityIdOrderByCreatedAtDesc(String facilityId);
     List<CbsFacilityRawSnapshot> findByBatchId(String batchId);
 }
+

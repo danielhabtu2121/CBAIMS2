@@ -201,3 +201,4 @@ public class CbsCollateralViewRow implements Serializable {
     public String getGuaranteeIndicator() { return guaranteeIndicator; }
     public void setGuaranteeIndicator(String guaranteeIndicator) { this.guaranteeIndicator = guaranteeIndicator; }
 }
+
