@@ -19,29 +19,29 @@ cims:
     mode: ${CIMS_CBS_MODE:REAL}
     oracle:
       # CBS Oracle Database JDBC URL
-      jdbc-url: ${CIMS_CBS_JDBC_URL:jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT}
+      jdbc-url: "${CIMS_CBS_JDBC_URL:jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT}"
       # Oracle Database Username
-      username: ${CIMS_CBS_USERNAME:CBAIMSUSER}
-      # Oracle Database Password (you can type your password here directly)
-      password: ${CIMS_CBS_PASSWORD:ENTER_PASSWORD_HERE}
+      username: "${CIMS_CBS_USERNAME:CBAIMSUSER}"
+      # Oracle Database Password (quoted for special characters @ and !)
+      password: "${CIMS_CBS_PASSWORD:CBaims@12345!}"
       # Oracle Schema Name
-      schema: ${CIMS_CBS_SCHEMA:FCUBSLIVE}
+      schema: "${CIMS_CBS_SCHEMA:FCUBSLIVE}"
       
       # Three CBS Oracle Views (62 columns total)
-      customer-view: ${CIMS_CBS_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}
-      facility-view: ${CIMS_CBS_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}
-      collateral-view: ${CIMS_CBS_COLLATERAL_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL}
+      customer-view: "${CIMS_CBS_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}"
+      facility-view: "${CIMS_CBS_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}"
+      collateral-view: "${CIMS_CBS_COLLATERAL_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL}"
 ```
 
-### B. Server Environment Variables (Recommended for Security)
-On your deployment server (`172.22.11.55`), set these environment variables directly so that secrets are **never** committed to version control:
+### B. Server Environment Variables (Optional override)
+On your deployment server (`172.22.11.55`), you can override these values if needed:
 
 | Environment Variable | Description | Default Value |
 |---|---|---|
 | `CIMS_CBS_MODE` | Switch to Real Oracle integration | `REAL` |
-| `CIMS_CBS_JDBC_URL` | Oracle JDBC connection string | `jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT` |
+| `CIMS_CBS_JDBC_URL` | Oracle JDBC connection string | `jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT` |
 | `CIMS_CBS_USERNAME` | CBS Database User | `CBAIMSUSER` |
-| `CIMS_CBS_PASSWORD` | **CBS Oracle Password** | *(Enter your bank password here)* |
+| `CIMS_CBS_PASSWORD` | CBS Oracle Password | `CBaims@12345!` |
 | `CIMS_CBS_SCHEMA` | CBS Schema containing the views | `FCUBSLIVE` |
 
 ---
@@ -55,15 +55,15 @@ Open MobaXterm, start a new SSH session to:
 - **Username**: *(your server deploy user)*
 
 ### Step 2: Verify Network Egress to CBS Oracle Database
-From the server shell on `172.22.11.55`, test that port `1521` on the CBS Oracle host `10.41.31.114` is reachable through the bank firewall:
+From the server shell on `172.22.11.55`, test that port `1521` on the CBS Oracle host `10.41.30.114` is reachable through the bank firewall:
 ```bash
 # Using nc (netcat)
-nc -zv 10.41.31.114 1521
+nc -zv 10.41.30.114 1521
 
 # Or using telnet / curl
-telnet 10.41.31.114 1521
+telnet 10.41.30.114 1521
 ```
-*Expected result:* `Connection to 10.41.31.114 1521 port [tcp/oracle] succeeded!`
+*Expected result:* `Connection to 10.41.30.114 1521 port [tcp/oracle] succeeded!`
 
 ### Step 3: Configure Environment Variables
 If running as a `systemd` service (e.g. `/etc/systemd/system/cbaims-backend.service`), add the environment variables to the service definition:
@@ -71,9 +71,9 @@ If running as a `systemd` service (e.g. `/etc/systemd/system/cbaims-backend.serv
 ```ini
 [Service]
 Environment="CIMS_CBS_MODE=REAL"
-Environment="CIMS_CBS_JDBC_URL=jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT"
+Environment="CIMS_CBS_JDBC_URL=jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT"
 Environment="CIMS_CBS_USERNAME=CBAIMSUSER"
-Environment="CIMS_CBS_PASSWORD=YOUR_ORACLE_PASSWORD_HERE"
+Environment="CIMS_CBS_PASSWORD=CBaims@12345!"
 Environment="CIMS_CBS_SCHEMA=FCUBSLIVE"
 ```
 
@@ -86,9 +86,9 @@ sudo systemctl restart cbaims-backend
 If running manually or via Docker / Shell script:
 ```bash
 export CIMS_CBS_MODE=REAL
-export CIMS_CBS_JDBC_URL="jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT"
+export CIMS_CBS_JDBC_URL="jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT"
 export CIMS_CBS_USERNAME="CBAIMSUSER"
-export CIMS_CBS_PASSWORD="YOUR_ORACLE_PASSWORD_HERE"
+export CIMS_CBS_PASSWORD="CBaims@12345!"
 export CIMS_CBS_SCHEMA="FCUBSLIVE"
 
 # Start the backend
@@ -110,7 +110,7 @@ Expected output:
 {
   "mode": "REAL",
   "status": "AVAILABLE",
-  "message": "Real CBS Oracle database connected successfully to jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT (Schema: FCUBSLIVE)",
+  "message": "Real CBS Oracle database connected successfully to jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT (Schema: FCUBSLIVE)",
   "timestamp": "..."
 }
 ```

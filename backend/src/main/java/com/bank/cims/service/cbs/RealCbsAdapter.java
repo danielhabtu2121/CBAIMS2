@@ -20,7 +20,7 @@ import java.util.*;
 /**
  * Production Oracle Three-View CBS Source Adapter (OracleThreeViewCbsAdapter).
  * Connects directly to CBS Oracle database via JDBC:
- * Target Host: 10.41.31.114:1521 / Service: FCUBUAT / Schema: FCUBSLIVE
+ * Target Host: 10.41.30.114:1521 / Service: FCUBUAT / Schema: FCUBSLIVE
  * Permitted Source Egress: CBAIMS Deployment Server 172.22.11.55
  * 
  * Implements strict read-only access to the three CBS Oracle views:
@@ -38,7 +38,7 @@ public class RealCbsAdapter implements CbsAdapter {
     @Value("${cims.cbs.mode:SIMULATOR}")
     private String mode;
 
-    @Value("${cims.cbs.oracle.jdbc-url:jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT}")
+    @Value("${cims.cbs.oracle.jdbc-url:jdbc:oracle:thin:@//10.41.30.114:1521/FCUBUAT}")
     private String jdbcUrl;
 
     @Value("${cims.cbs.oracle.username:CBAIMSUSER}")
@@ -168,27 +168,46 @@ public class RealCbsAdapter implements CbsAdapter {
                 }
             }
         } catch (SQLException e) {
-            String state = e.getSQLState();
-            int errorCode = e.getErrorCode();
-            String msg = e.getMessage() != null ? e.getMessage() : "Unknown Oracle error";
-
-            if (errorCode == 1017) { // ORA-01017: invalid username/password
-                log.error("Oracle authentication failed for user {}", username);
-                return new CbsConnectionStatus("REAL", "AUTHENTICATION_FAILED", "Authentication failed for Oracle user: " + username);
-            } else if (errorCode == 942) { // ORA-00942: table or view does not exist
-                return new CbsConnectionStatus("REAL", "VIEW_ACCESS_DENIED", "One or more required views do not exist or access is denied in schema " + schema);
-            } else if (msg.toLowerCase().contains("the network adapter could not establish the connection")
-                    || msg.toLowerCase().contains("io exception")
-                    || msg.toLowerCase().contains("socket")
-                    || msg.toLowerCase().contains("timed out")) {
+            return classifySqlException(e);
+        } catch (Exception e) {
+            Throwable root = e;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            if (root instanceof SQLException sqlEx) {
+                return classifySqlException(sqlEx);
+            }
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.toLowerCase().contains("the network adapter could not establish the connection")
+                    || msg.toLowerCase().contains("io error")
+                    || msg.toLowerCase().contains("timed out")
+                    || msg.toLowerCase().contains("connection refused")) {
                 return new CbsConnectionStatus("REAL", "NETWORK_UNAVAILABLE", "Cannot reach Oracle server at " + redactJdbcUrl(jdbcUrl) + ": Network connection timed out / host unreachable from this environment.");
             }
-            return new CbsConnectionStatus("REAL", "QUERY_FAILED", "Oracle connection error (ORA-" + errorCode + "): " + msg);
-        } catch (Exception e) {
             return new CbsConnectionStatus("REAL", "ERROR", "Unexpected connection error: " + e.getMessage());
         }
 
         return new CbsConnectionStatus("REAL", "QUERY_FAILED", "Unexpected response from Oracle DUAL check");
+    }
+
+    private CbsConnectionStatus classifySqlException(SQLException e) {
+        int errorCode = e.getErrorCode();
+        String msg = e.getMessage() != null ? e.getMessage() : "Unknown Oracle error";
+
+        if (errorCode == 1017) { // ORA-01017: invalid username/password
+            log.error("Oracle authentication failed for user {}", username);
+            return new CbsConnectionStatus("REAL", "AUTHENTICATION_FAILED", "Authentication failed for Oracle user: " + username);
+        } else if (errorCode == 942) { // ORA-00942: table or view does not exist
+            return new CbsConnectionStatus("REAL", "VIEW_ACCESS_DENIED", "One or more required views do not exist or access is denied in schema " + schema);
+        } else if (msg.toLowerCase().contains("the network adapter could not establish the connection")
+                || msg.toLowerCase().contains("io error")
+                || msg.toLowerCase().contains("io exception")
+                || msg.toLowerCase().contains("socket")
+                || msg.toLowerCase().contains("timed out")
+                || msg.toLowerCase().contains("connection refused")) {
+            return new CbsConnectionStatus("REAL", "NETWORK_UNAVAILABLE", "Cannot reach Oracle server at " + redactJdbcUrl(jdbcUrl) + ": Network connection timed out / host unreachable from this environment.");
+        }
+        return new CbsConnectionStatus("REAL", "QUERY_FAILED", "Oracle connection error (ORA-" + errorCode + "): " + msg);
     }
 
     // =========================================================================
