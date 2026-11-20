@@ -752,4 +752,121 @@ public class NotificationIntegrationTest {
         assertEquals(adminUser.getUsername(), log.getUserId());
         assertTrue(log.getComments().contains("officer@dashenbanksc.com"));
     }
+
+    @Test
+    @DisplayName("17. Internal Relay with Empty Credentials Succeeds Past Credential Validation")
+    public void testInternalRelayWithEmptyCredentialsSucceedsPastCredentialValidation() {
+        systemParameterRepository.save(new SystemParameter("notification_outlook_provider", "OFFICE365_SMTP", "Provider", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_host", "10.40.30.112", "Internal relay", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_username", "", "Empty user", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_password", "", "Empty pass", "password"));
+
+        // Verify internal relay detection
+        assertTrue(outlookIntegrationService.isInternalRelay());
+        assertEquals("10.40.30.112", outlookIntegrationService.getSmtpHost());
+        assertEquals(25, outlookIntegrationService.getSmtpPort());
+        assertFalse(outlookIntegrationService.isStartTlsRequired(), "STARTTLS must default to false for internal relay");
+        assertFalse(outlookIntegrationService.hasSmtpCredentials(), "Credentials should be absent");
+
+        // Attempting to send does NOT get rejected with "Office 365 SMTP authentication credentials not configured"
+        NotificationDispatchResult dispatch = outlookIntegrationService.sendOutlookEmail(
+                "officer@dashenbanksc.com", "Test Officer", "Internal Subject", "Internal Body", "Test", "ID-1"
+        );
+        assertNotNull(dispatch);
+        // In test environment without access to 10.40.30.112, sending fails at transport connect/socket level,
+        // NOT at the credential validation gate.
+        if (!"Sent".equalsIgnoreCase(dispatch.getStatus())) {
+            assertNotNull(dispatch.getErrorMessage());
+            assertFalse(dispatch.getErrorMessage().contains("credentials not configured"),
+                    "Internal relay must never reject email due to missing credentials");
+        }
+
+        // testConnection() proceeds past credential validation and does not return CREDENTIALS_MISSING
+        Map<String, Object> connectionTest = outlookIntegrationService.testConnection();
+        assertNotNull(connectionTest);
+        assertNotEquals("CREDENTIALS_MISSING", connectionTest.get("connectionTest"),
+                "Internal relay testConnection must not report CREDENTIALS_MISSING");
+    }
+
+    @Test
+    @DisplayName("18. External Office 365 SMTP Without Credentials is Rejected")
+    public void testExternalOffice365SmtpWithoutCredentialsIsRejected() {
+        systemParameterRepository.save(new SystemParameter("notification_outlook_provider", "OFFICE365_SMTP", "Provider", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_host", "smtp.office365.com", "External Office 365", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_username", "", "Empty user", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_password", "", "Empty pass", "password"));
+
+        assertFalse(outlookIntegrationService.isInternalRelay());
+        assertFalse(outlookIntegrationService.hasSmtpCredentials());
+
+        // External SMTP without credentials must be immediately rejected
+        NotificationDispatchResult dispatch = outlookIntegrationService.sendOutlookEmail(
+                "officer@dashenbanksc.com", "Test Officer", "External Subject", "External Body", "Test", "ID-2"
+        );
+        assertNotNull(dispatch);
+        assertEquals("Failed", dispatch.getStatus());
+        assertNotNull(dispatch.getErrorMessage());
+        assertTrue(dispatch.getErrorMessage().contains("credentials not configured"),
+                "External SMTP must reject email when credentials are not configured");
+
+        // testConnection must return CONFIG_REQUIRED / CREDENTIALS_MISSING
+        Map<String, Object> connectionTest = outlookIntegrationService.testConnection();
+        assertNotNull(connectionTest);
+        assertEquals("CONFIG_REQUIRED", connectionTest.get("status"));
+        assertEquals("CREDENTIALS_MISSING", connectionTest.get("connectionTest"));
+        assertTrue(String.valueOf(connectionTest.get("message")).contains("CBAIMS_SMTP_PASSWORD"));
+    }
+
+    @Test
+    @DisplayName("19. External Office 365 SMTP With Credentials Retains Authentication")
+    public void testExternalOffice365SmtpWithCredentialsRetainsAuthentication() {
+        systemParameterRepository.save(new SystemParameter("notification_outlook_provider", "OFFICE365_SMTP", "Provider", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_host", "smtp.office365.com", "External Office 365", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_username", "test.user@dashenbanksc.com", "User", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_password", "RealPass123!", "Pass", "password"));
+
+        assertFalse(outlookIntegrationService.isInternalRelay());
+        assertTrue(outlookIntegrationService.hasSmtpCredentials());
+        assertEquals("test.user@dashenbanksc.com", outlookIntegrationService.getSmtpUsername());
+        assertEquals("RealPass123!", outlookIntegrationService.getSmtpPassword());
+
+        org.springframework.mail.javamail.JavaMailSenderImpl mailSender = outlookIntegrationService.createOffice365MailSender();
+        assertNotNull(mailSender);
+        assertEquals("smtp.office365.com", mailSender.getHost());
+        assertEquals(587, mailSender.getPort());
+        assertEquals("test.user@dashenbanksc.com", mailSender.getUsername());
+        assertEquals("RealPass123!", mailSender.getPassword());
+        assertEquals("true", mailSender.getJavaMailProperties().getProperty("mail.smtp.auth"));
+        assertEquals("true", mailSender.getJavaMailProperties().getProperty("mail.smtp.starttls.enable"));
+
+        // Clean up
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_username", "", "User", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_password", "", "Pass", "password"));
+    }
+
+    @Test
+    @DisplayName("20. Internal Relay Uses mail.smtp.auth=false")
+    public void testInternalRelayUsesMailSmtpAuthFalse() {
+        systemParameterRepository.save(new SystemParameter("notification_outlook_provider", "OFFICE365_SMTP", "Provider", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_host", "10.40.30.112", "Internal relay", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_username", "", "Empty user", "string"));
+        systemParameterRepository.save(new SystemParameter("notification_outlook_smtp_password", "", "Empty pass", "password"));
+
+        assertTrue(outlookIntegrationService.isInternalRelay());
+        assertFalse(outlookIntegrationService.hasSmtpCredentials());
+
+        org.springframework.mail.javamail.JavaMailSenderImpl mailSender = outlookIntegrationService.createOffice365MailSender();
+        assertNotNull(mailSender);
+        assertEquals("10.40.30.112", mailSender.getHost());
+        assertEquals(25, mailSender.getPort());
+        assertNull(mailSender.getUsername(), "Username must not be set on JavaMailSender when credentials absent");
+        assertNull(mailSender.getPassword(), "Password must not be set on JavaMailSender when credentials absent");
+        assertEquals("false", mailSender.getJavaMailProperties().getProperty("mail.smtp.auth"),
+                "mail.smtp.auth must be false for internal unauthenticated relay");
+        assertEquals("false", mailSender.getJavaMailProperties().getProperty("mail.smtp.starttls.enable"),
+                "STARTTLS must be disabled by default for internal relay");
+        // Verify TLS certificate verification property is strictly maintained
+        assertEquals("true", mailSender.getJavaMailProperties().getProperty("mail.smtp.ssl.checkserveridentity"),
+                "Strict server identity verification must never be disabled");
+    }
 }

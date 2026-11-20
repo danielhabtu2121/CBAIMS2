@@ -33,6 +33,10 @@ public class OutlookIntegrationService {
     public static final String PROVIDER_MS_GRAPH = "MICROSOFT_GRAPH";
     public static final String PROVIDER_OFFICE365_SMTP = "OFFICE365_SMTP";
 
+    public static final String INTERNAL_RELAY_HOST = "10.40.30.112";
+    public static final int DEFAULT_INTERNAL_RELAY_PORT = 25;
+    public static final int DEFAULT_EXTERNAL_SMTP_PORT = 587;
+
     public static final String EMAIL_DISCLAIMER =
             "This email (including any attachments) is only for the person it is addressed to. " +
             "If you are not the intended recipient, please notify the sender immediately by email and delete this email from your system. " +
@@ -67,20 +71,51 @@ public class OutlookIntegrationService {
         return getParam("notification_outlook_client_id", "cims-bank-app-client-id");
     }
 
+    public boolean isInternalRelay() {
+        return isInternalRelay(getSmtpHost());
+    }
+
+    public boolean isInternalRelay(String host) {
+        if (host == null) return false;
+        String trimmed = host.trim();
+        return INTERNAL_RELAY_HOST.equalsIgnoreCase(trimmed);
+    }
+
     public String getSmtpHost() {
+        String envHost = System.getenv("CBAIMS_SMTP_HOST");
+        if (envHost != null && !envHost.isBlank()) {
+            return envHost.trim();
+        }
         return getParam("notification_outlook_smtp_host", "smtp.office365.com");
     }
 
     public int getSmtpPort() {
+        String envPort = System.getenv("CBAIMS_SMTP_PORT");
+        if (envPort != null && !envPort.isBlank()) {
+            try { return Integer.parseInt(envPort.trim()); } catch (Exception ignored) {}
+        }
         try {
-            return Integer.parseInt(getParam("notification_outlook_smtp_port", "587"));
+            if (isInternalRelay()) {
+                String val = getParam("notification_outlook_smtp_port", "25");
+                if ("587".equals(val)) {
+                    return DEFAULT_INTERNAL_RELAY_PORT;
+                }
+                return Integer.parseInt(val);
+            }
+            return Integer.parseInt(getParam("notification_outlook_smtp_port", String.valueOf(DEFAULT_EXTERNAL_SMTP_PORT)));
         } catch (Exception e) {
-            return 587;
+            return isInternalRelay() ? DEFAULT_INTERNAL_RELAY_PORT : DEFAULT_EXTERNAL_SMTP_PORT;
         }
     }
 
     public boolean isStartTlsRequired() {
-        return Boolean.parseBoolean(getParam("notification_outlook_smtp_starttls", "true"));
+
+        String envTls = System.getenv("CBAIMS_SMTP_STARTTLS");
+        if (envTls != null && !envTls.isBlank()) {
+            return Boolean.parseBoolean(envTls.trim());
+        }
+        String defaultVal = isInternalRelay() ? "false" : "true";
+        return Boolean.parseBoolean(getParam("notification_outlook_smtp_starttls", defaultVal));
     }
 
     public int getConnectionTimeoutMs() {
@@ -115,6 +150,9 @@ public class OutlookIntegrationService {
         if (envUser != null && !envUser.isBlank()) {
             return envUser.trim();
         }
+        if (isInternalRelay()) {
+            return getParam("notification_outlook_smtp_username", "");
+        }
         return getParam("notification_outlook_smtp_username", getSenderMailbox());
     }
 
@@ -136,24 +174,27 @@ public class OutlookIntegrationService {
         return user != null && !user.isBlank() && pass != null && !pass.isBlank();
     }
 
-    private JavaMailSenderImpl createOffice365MailSender() {
+    public JavaMailSenderImpl createOffice365MailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(getSmtpHost());
         mailSender.setPort(getSmtpPort());
         mailSender.setDefaultEncoding(StandardCharsets.UTF_8.name());
 
+        boolean hasAuth = !isInternalRelay() && hasSmtpCredentials();
         String username = getSmtpUsername();
         String password = getSmtpPassword();
-        if (username != null && !username.isBlank()) {
+
+        // Configure authentication only when credentials are present and non-empty
+        if (hasAuth && username != null && !username.isBlank()) {
             mailSender.setUsername(username);
         }
-        if (password != null && !password.isBlank()) {
+        if (hasAuth && password != null && !password.isBlank()) {
             mailSender.setPassword(password);
         }
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", String.valueOf(password != null && !password.isBlank()));
+        props.put("mail.smtp.auth", String.valueOf(hasAuth));
         props.put("mail.smtp.starttls.enable", String.valueOf(isStartTlsRequired()));
         props.put("mail.smtp.starttls.required", String.valueOf(isStartTlsRequired()));
         props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
@@ -195,7 +236,8 @@ public class OutlookIntegrationService {
             String deliveryRef;
 
             if (PROVIDER_OFFICE365_SMTP.equals(provider)) {
-                if (!hasSmtpCredentials()) {
+                // External hosts require credentials; trusted internal relay allows sending without credentials
+                if (!isInternalRelay() && !hasSmtpCredentials()) {
                     String missingMsg = "Office 365 SMTP authentication credentials not configured. Please supply CBAIMS_SMTP_USERNAME and CBAIMS_SMTP_PASSWORD environment variables.";
                     log.error("Failed to dispatch Office 365 email to {}: {}", recipient, missingMsg);
                     NotificationDispatchResult failure = NotificationDispatchResult.failure(provider, missingMsg);
@@ -212,11 +254,11 @@ public class OutlookIntegrationService {
                 helper.setSubject(subject != null && !subject.isBlank() ? subject : "CBAIMS Notification");
                 helper.setText(effectiveBody, htmlContent);
 
-                // Dispatch message to Office 365 SMTP relay
+                // Dispatch message to SMTP relay
                 mailSender.send(message);
 
-                deliveryRef = "O365-SMTP-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8);
-                log.info("Dispatched live Office 365 SMTP email to {} from {} - Ref: {}", recipient, sender, deliveryRef);
+                deliveryRef = (isInternalRelay() ? "RELAY-SMTP-" : "O365-SMTP-") + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8);
+                log.info("Dispatched live SMTP email to {} from {} via {} (Ref: {})", recipient, sender, getSmtpHost(), deliveryRef);
 
             } else if (PROVIDER_MS_GRAPH.equals(provider)) {
                 // Microsoft Graph API Dispatch
@@ -245,19 +287,19 @@ public class OutlookIntegrationService {
             return result;
 
         } catch (AuthenticationFailedException | MailAuthenticationException e) {
-            String err = "Office 365 SMTP authentication failed. Check credentials for user: " + getSmtpUsername();
-            log.error("Failed to authenticate with Office 365 SMTP: {}", err);
+            String err = (isInternalRelay() ? "Internal relay" : "Office 365") + " SMTP authentication failed: " + e.getMessage();
+            log.error("Failed to authenticate with SMTP: {}", err);
             NotificationDispatchResult failure = NotificationDispatchResult.failure(provider, err);
             failure.setLatencyMs(System.currentTimeMillis() - startTime);
             return failure;
         } catch (MailException | MessagingException e) {
-            String err = "Office 365 SMTP delivery failure: " + e.getMessage();
-            log.error("Failed to dispatch Outlook email to {}: {}", recipient, err, e);
+            String err = (isInternalRelay() ? "Internal relay" : "Office 365") + " SMTP delivery failure: " + e.getMessage();
+            log.error("Failed to dispatch email to {}: {}", recipient, err, e);
             NotificationDispatchResult failure = NotificationDispatchResult.failure(provider, err);
             failure.setLatencyMs(System.currentTimeMillis() - startTime);
             return failure;
         } catch (Exception e) {
-            String err = "Unexpected Outlook email dispatch error: " + e.getMessage();
+            String err = "Unexpected email dispatch error: " + e.getMessage();
             log.error("Unexpected email delivery failure to {}: {}", recipient, err, e);
             NotificationDispatchResult failure = NotificationDispatchResult.failure(provider, err);
             failure.setLatencyMs(System.currentTimeMillis() - startTime);
@@ -287,6 +329,7 @@ public class OutlookIntegrationService {
         health.put("starttls", isStartTlsRequired());
         health.put("credentialsConfigured", hasSmtpCredentials());
         health.put("smtpUsername", getSmtpUsername());
+        health.put("isInternalRelay", isInternalRelay());
 
         boolean isSim = PROVIDER_SIMULATOR.equals(getProviderMode());
         health.put("isSimulated", isSim);
@@ -300,10 +343,13 @@ public class OutlookIntegrationService {
             return health;
         }
 
-        // Real connection test to Office 365 SMTP
+        // Real connection test to SMTP relay
         long testStart = System.currentTimeMillis();
         try {
-            if (!hasSmtpCredentials()) {
+            boolean internalRelay = isInternalRelay();
+            boolean hasAuth = !isInternalRelay() && hasSmtpCredentials();
+
+            if (!internalRelay && !hasAuth) {
                 health.put("status", "CONFIG_REQUIRED");
                 health.put("readyForProduction", false);
                 health.put("connectionTest", "CREDENTIALS_MISSING");
@@ -315,7 +361,7 @@ public class OutlookIntegrationService {
 
             Properties props = new Properties();
             props.put("mail.transport.protocol", "smtp");
-            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.auth", String.valueOf(hasAuth));
             props.put("mail.smtp.starttls.enable", String.valueOf(isStartTlsRequired()));
             props.put("mail.smtp.starttls.required", String.valueOf(isStartTlsRequired()));
             props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
@@ -325,13 +371,18 @@ public class OutlookIntegrationService {
 
             Session session = Session.getInstance(props, null);
             try (Transport transport = session.getTransport("smtp")) {
-                transport.connect(getSmtpHost(), getSmtpPort(), getSmtpUsername(), getSmtpPassword());
+                if (hasAuth) {
+                    transport.connect(getSmtpHost(), getSmtpPort(), getSmtpUsername(), getSmtpPassword());
+                } else {
+                    transport.connect(getSmtpHost(), getSmtpPort(), null, null);
+                }
                 long latency = System.currentTimeMillis() - testStart;
                 health.put("status", "ONLINE");
                 health.put("readyForProduction", true);
                 health.put("connectionTest", "SUCCESS");
                 health.put("latencyMs", latency);
-                health.put("message", "Successfully connected and authenticated with Office 365 SMTP (" + getSmtpHost() + ":" + getSmtpPort() + ").");
+                String relayName = internalRelay ? "Dashen Bank internal SMTP relay" : "Office 365 SMTP";
+                health.put("message", "Successfully connected to " + relayName + " (" + getSmtpHost() + ":" + getSmtpPort() + ").");
             }
 
         } catch (AuthenticationFailedException e) {
@@ -339,7 +390,7 @@ public class OutlookIntegrationService {
             health.put("readyForProduction", false);
             health.put("connectionTest", "AUTH_FAILURE");
             health.put("latencyMs", System.currentTimeMillis() - testStart);
-            health.put("message", "Connected to " + getSmtpHost() + ":" + getSmtpPort() + ", but Office 365 SMTP authentication failed for user " + getSmtpUsername() + ".");
+            health.put("message", "Connected to " + getSmtpHost() + ":" + getSmtpPort() + ", but SMTP authentication failed for user " + getSmtpUsername() + ".");
         } catch (Exception e) {
             health.put("status", "CONNECTIVITY_FAILED");
             health.put("readyForProduction", false);
@@ -350,6 +401,7 @@ public class OutlookIntegrationService {
 
         health.put("supportedFeatures", List.of(
                 "Office 365 SMTP Relay (STARTTLS Port 587)",
+                "Dashen Bank Internal SMTP Relay (10.40.30.112:25)",
                 "Strict TLS 1.2/1.3 Server Identity Verification",
                 "Bank Standard Legal Disclaimer Appending",
                 "Environment Variable Credential Injection (CBAIMS_SMTP_USERNAME / CBAIMS_SMTP_PASSWORD)",
