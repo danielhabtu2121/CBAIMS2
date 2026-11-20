@@ -294,4 +294,98 @@ public class BankOrganizationAndCustomer360IntegrationTest {
         assertEquals(1, dto.getInsurancePolicies().size());
         assertEquals("POL-FIRE-001", dto.getInsurancePolicies().get(0).getPolicyNumber());
     }
+
+    @Test
+    @DisplayName("Official CBS Branch Directory: Ingested codes (014 Adama, 058 Assela, 008 Imperial Akababi, 001 Beklo Bet, 000 Central) route deterministically")
+    void testOfficialCbsBranchDirectoryRouting() {
+        // Mock CBS branch mappings for official branches
+        CbsBranchMapping bmAdama = new CbsBranchMapping("cbm-cbs-014", "014", "brn-cbs-014", "Adama Branch", "014, Adama Branch, Adama, Denbela Sub-Branch", "ACTIVE", true);
+        CbsBranchMapping bmAssela = new CbsBranchMapping("cbm-cbs-058", "058", "brn-cbs-058", "Assela Branch", "058, Assela Branch, Assela", "ACTIVE", true);
+        CbsBranchMapping bmImperial = new CbsBranchMapping("cbm-cbs-008", "008", "brn-cbs-008", "Imperial Akababi", "008, Imperial Akababi, Addis Ababa", "ACTIVE", true);
+        CbsBranchMapping bmBeklo = new CbsBranchMapping("cbm-cbs-001", "001", "brn-cbs-001", "Beklo Bet Branch", "001, Beklo Bet Branch, Addis Ababa", "ACTIVE", true);
+        CbsBranchMapping bmCentral = new CbsBranchMapping("cbm-cbs-000", "000", "brn-cbs-000", "Head Office / Central Processing", "CSC_CP,HO,000", "ACTIVE", true);
+
+        when(cbsBranchMappingRepository.findBySourceBranchCodeAndActiveTrue("014")).thenReturn(Optional.of(bmAdama));
+        when(cbsBranchMappingRepository.findBySourceBranchCodeAndActiveTrue("058")).thenReturn(Optional.of(bmAssela));
+        when(cbsBranchMappingRepository.findBySourceBranchCodeAndActiveTrue("008")).thenReturn(Optional.of(bmImperial));
+        when(cbsBranchMappingRepository.findBySourceBranchCodeAndActiveTrue("001")).thenReturn(Optional.of(bmBeklo));
+        when(cbsBranchMappingRepository.findBySourceBranchCodeAndActiveTrue("000")).thenReturn(Optional.of(bmCentral));
+
+        Branch brnAdama = new Branch();
+        brnAdama.setId("brn-cbs-014");
+        brnAdama.setCode("CBS-014");
+        brnAdama.setName("Adama Branch");
+        brnAdama.setCanonicalDistrictId("org-dist-adama");
+        brnAdama.setArea("Adama District office");
+        brnAdama.setActive(true);
+        when(branchRepository.findById("brn-cbs-014")).thenReturn(Optional.of(brnAdama));
+
+        Branch brnAssela = new Branch();
+        brnAssela.setId("brn-cbs-058");
+        brnAssela.setCode("CBS-058");
+        brnAssela.setName("Assela Branch");
+        brnAssela.setCanonicalDistrictId("org-dist-adama");
+        brnAssela.setArea("Assela Area");
+        brnAssela.setActive(true);
+        when(branchRepository.findById("brn-cbs-058")).thenReturn(Optional.of(brnAssela));
+
+        Branch brnImperial = new Branch();
+        brnImperial.setId("brn-cbs-008");
+        brnImperial.setCode("CBS-008");
+        brnImperial.setName("Imperial Akababi");
+        brnImperial.setCanonicalDistrictId("org-dist-aa-east");
+        brnImperial.setArea("East Area Office");
+        brnImperial.setActive(true);
+        when(branchRepository.findById("brn-cbs-008")).thenReturn(Optional.of(brnImperial));
+
+        Branch brnBeklo = new Branch();
+        brnBeklo.setId("brn-cbs-001");
+        brnBeklo.setCode("CBS-001");
+        brnBeklo.setName("Beklo Bet Branch");
+        brnBeklo.setCanonicalDistrictId("org-corp-center");
+        brnBeklo.setArea("Corporate center");
+        brnBeklo.setActive(true);
+        when(branchRepository.findById("brn-cbs-001")).thenReturn(Optional.of(brnBeklo));
+
+        Branch brnCentral = new Branch();
+        brnCentral.setId("brn-cbs-000");
+        brnCentral.setCode("CBS-000");
+        brnCentral.setName("Head Office / Central Processing");
+        brnCentral.setCanonicalDistrictId("org-corp-center");
+        brnCentral.setArea("Corporate Center");
+        brnCentral.setActive(true);
+        when(branchRepository.findById("brn-cbs-000")).thenReturn(Optional.of(brnCentral));
+
+        CbsSegmentMapping smCorp = new CbsSegmentMapping("csm-corp", "FLEXCUBE_CBS", "CORPORATE", "Corporate Banking", "ACTIVE", true, "Canonical");
+        CbsSegmentMapping smRet = new CbsSegmentMapping("csm-ret", "FLEXCUBE_CBS", "RETAIL", "Retail Banking", "ACTIVE", true, "Canonical");
+        when(cbsSegmentMappingRepository.findBySourceValueIgnoreCase("CORPORATE")).thenReturn(Optional.of(smCorp));
+        when(cbsSegmentMappingRepository.findBySourceValueIgnoreCase("RETAIL")).thenReturn(Optional.of(smRet));
+
+        // Test 1: Adama branch facility
+        PortfolioRoutingService.RoutingResult resAdama = portfolioRoutingService.routeEntity("FACILITY", "FAC_ADAMA_01", "014", "CORPORATE", "CBS_IMPORT");
+        assertEquals("brn-cbs-014", resAdama.getResolvedBranchId());
+        assertEquals("org-dist-adama", resAdama.getResolvedDistrictId());
+        assertEquals("Adama District office", resAdama.getResolvedAreaId());
+
+        // Test 2: Assela branch facility
+        PortfolioRoutingService.RoutingResult resAssela = portfolioRoutingService.routeEntity("FACILITY", "FAC_ASSELA_01", "058", "RETAIL", "CBS_IMPORT");
+        assertEquals("brn-cbs-058", resAssela.getResolvedBranchId());
+        assertEquals("org-dist-adama", resAssela.getResolvedDistrictId());
+        assertEquals("Assela Area", resAssela.getResolvedAreaId());
+
+        // Test 3: Imperial Akababi facility
+        PortfolioRoutingService.RoutingResult resImperial = portfolioRoutingService.routeEntity("FACILITY", "FAC_IMP_01", "008", "CORPORATE", "CBS_IMPORT");
+        assertEquals("brn-cbs-008", resImperial.getResolvedBranchId());
+        assertEquals("org-dist-aa-east", resImperial.getResolvedDistrictId());
+
+        // Test 4: Beklo Bet facility
+        PortfolioRoutingService.RoutingResult resBeklo = portfolioRoutingService.routeEntity("FACILITY", "FAC_BEKLO_01", "001", "CORPORATE", "CBS_IMPORT");
+        assertEquals("brn-cbs-001", resBeklo.getResolvedBranchId());
+        assertEquals("org-corp-center", resBeklo.getResolvedDistrictId());
+
+        // Test 5: Central Processing customer
+        PortfolioRoutingService.RoutingResult resCentral = portfolioRoutingService.routeEntity("CUSTOMER", "CUST_CENTRAL_01", "000", "RETAIL", "CBS_IMPORT");
+        assertEquals("brn-cbs-000", resCentral.getResolvedBranchId());
+        assertEquals("org-corp-center", resCentral.getResolvedDistrictId());
+    }
 }
