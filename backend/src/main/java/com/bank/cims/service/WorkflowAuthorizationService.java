@@ -52,6 +52,11 @@ public class WorkflowAuthorizationService {
             }
         }
 
+        // Check NEVER_APPROVES restriction first
+        if (roleHierarchyService.isNeverApprovesRole(user.getRole())) {
+            throw new IllegalStateException("Role " + user.getRole() + " is a non-approving governance/read-only role and is strictly prohibited from approving transactions.");
+        }
+
         if (task.getCandidateRole() != null && !roleHierarchyService.isAuthorizedToActOn(user.getRole(), task.getCandidateRole())) {
             throw new IllegalStateException("User role " + user.getRole() + " is not authorized for candidate role " + task.getCandidateRole() + ".");
         }
@@ -63,7 +68,7 @@ public class WorkflowAuthorizationService {
                 throw new IllegalStateException("User does not have approval permission for the Approvals module (permission inactive or approval not granted).");
             }
         } else {
-            boolean defaultAllowed = java.util.Arrays.asList("BRMGR", "EXEC", "SRMGMT", "HODEPT", "DISTDIR", "MGRCOLLDOC", "COMPLIANCE")
+            boolean defaultAllowed = java.util.Arrays.asList("BRMGR", "EXEC", "SRMGMT", "HODEPT", "DISTDIR", "MGRCOLLDOC", "CRM", "SRM", "BRM")
                     .contains(user.getRole().toUpperCase());
             if (!defaultAllowed) {
                 throw new IllegalStateException("User does not have approval permission for the Approvals module.");

@@ -59,9 +59,108 @@ export interface Branch {
   name: string;
   type: 'HeadOffice' | 'DistrictOffice' | 'CorporateCenter' | 'Branch' | string;
   parentDistrictId?: string;
+  canonicalDistrictId?: string;
   areaOffice?: string;
+  area?: string;
+  cbsBranchCode?: string;
   segmentIds?: string;
   active: boolean;
+}
+
+export interface OrganizationalUnit {
+  id: string;
+  code: string;
+  name: string;
+  unitType: 'HEAD_OFFICE' | 'DISTRICT' | 'AREA_OFFICE' | 'AREA' | 'OPERATING_UNIT' | string;
+  parentId?: string;
+  sortOrder?: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BranchSegmentAssignment {
+  id: string;
+  branchId: string;
+  segmentId: string;
+  active: boolean;
+  createdAt?: string;
+}
+
+export interface CbsBranchMapping {
+  id: string;
+  sourceBranchCode: string;
+  cbaimsBranchId: string;
+  officialName: string;
+  aliases?: string;
+  status: 'ACTIVE' | 'PENDING_REVIEW' | 'INACTIVE' | string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CbsSegmentMapping {
+  id: string;
+  sourceSystem: string;
+  sourceValue: string;
+  canonicalSegment?: string;
+  mappingStatus: 'ACTIVE' | 'PENDING_REVIEW' | 'REJECTED' | string;
+  active: boolean;
+  reason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserOrgAssignment {
+  id: string;
+  userId: string;
+  unitId?: string;
+  branchId?: string;
+  segmentId?: string;
+  primary: boolean;
+  active: boolean;
+  createdAt?: string;
+}
+
+export interface PortfolioAssignment {
+  id: string;
+  entityType: 'CUSTOMER' | 'FACILITY' | 'COLLATERAL' | string;
+  entityId: string;
+  segmentId?: string;
+  branchId?: string;
+  districtId?: string;
+  areaId?: string;
+  makerUserId?: string;
+  checkerUserId?: string;
+  assignmentSource: 'CBS_IMPORT' | 'AUTOMATIC_ROUTING' | 'MANUAL' | 'REASSIGNED' | string;
+  status: 'ASSIGNED' | 'UNASSIGNED' | 'PENDING_REVIEW' | string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UnassignedRecord {
+  id: string;
+  entityType: string;
+  entityId: string;
+  sourceBranchCode?: string;
+  sourceSegment?: string;
+  reason: string;
+  status: string;
+  createdAt?: string;
+}
+
+export interface ImpactPreview {
+  changeType: string;
+  targetId: string;
+  description: string;
+  affectedCustomersCount: number;
+  affectedFacilitiesCount: number;
+  affectedCollateralsCount: number;
+  affectedPoliciesCount: number;
+  affectedWorkflowTasksCount: number;
+  affectedOfficers: string[];
+  riskWarnings: string[];
+  requiresDualApproval: boolean;
 }
 
 export interface RolePermission {
@@ -230,6 +329,8 @@ export interface LoanCollateralLink {
   endDate?: string;
   changeReason?: string;
   collateralId: string;
+  collateralCode?: string;
+  cbsCollateralRef?: string;
   allocatedAmount: number;
   linkageType?: 'Primary' | 'Secondary' | 'Cross-Collateral' | string;
   utilizationPct?: number;
@@ -280,6 +381,9 @@ export interface Collateral {
   utilizationPercentage?: number;
   status: 'Pending Approval' | 'Active' | 'Insured' | 'Under-Insured' | 'Uninsured' | 'Draft' | 'Release Pending' | 'Released' | string;
   ownerType: 'Borrower-owned' | 'Third-party-owned' | string;
+  ownerName?: string;
+  ownerCif?: string;
+  borrowerCif?: string;
   tangible?: boolean;
   secured?: boolean;
   chargeType?: string;

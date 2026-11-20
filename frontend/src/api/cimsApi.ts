@@ -1250,6 +1250,28 @@ export const cimsApi = {
   async deleteHolidayCalendar(holidayId: string, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/holidays/${encodeURIComponent(holidayId)}/delete?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST' }); },
   async getDistricts(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/districts`); },
   async saveDistrict(district: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/districts/save?userId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(district) }); },
+
+  // --- Organization & Hierarchy APIs ---
+  async getOrgUnits(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/org-units`); },
+  async saveOrgUnit(unit: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/org-units/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(unit) }); },
+  async getCanonicalDistricts(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/canonical-districts`); },
+  async getBranchSegments(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/branch-segments`); },
+  async saveBranchSegment(bsa: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/branch-segments/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(bsa) }); },
+
+  // --- CBS Branch & Segment Mapping APIs ---
+  async getCbsBranchMappings(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/cbs-branch-mappings`); },
+  async saveCbsBranchMapping(mapping: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/cbs-branch-mappings/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(mapping) }); },
+  async getCbsSegmentMappings(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/cbs-segment-mappings`); },
+  async saveCbsSegmentMapping(mapping: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/cbs-segment-mappings/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(mapping) }); },
+
+  // --- User Org & Portfolio Assignment APIs ---
+  async getUserOrgAssignments(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/user-org-assignments`); },
+  async saveUserOrgAssignment(uoa: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/user-org-assignments/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(uoa) }); },
+  async getPortfolioAssignments(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/portfolio-assignments`); },
+  async savePortfolioAssignment(pa: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/portfolio-assignments/save?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(pa) }); },
+  async reassignPortfolio(payload: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/portfolio-assignments/reassign?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(payload) }); },
+  async getUnassignedRecords(): Promise<any[]> { return requestJson<any[]>(`${API_BASE}/admin/unassigned-records`); },
+  async getImpactPreview(payload: any, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/impact-preview?adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST', body: JSON.stringify(payload) }); },
   async toggleSegmentStatus(segmentId: string, active: boolean, userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/segments/${encodeURIComponent(segmentId)}/toggle-status?active=${active}&adminUserId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
   async toggleUserStatus(userId: string, active: boolean, adminUserId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/users/${encodeURIComponent(userId)}/toggle-status?active=${active}&adminUserId=${encodeURIComponent(adminUserId)}`, { method: 'POST' }); },
 

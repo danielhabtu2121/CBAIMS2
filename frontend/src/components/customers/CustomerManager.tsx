@@ -509,8 +509,42 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                     <span>{c.code}</span>
                                     <ArrowUpRight className="w-3 h-3 opacity-60 group-hover:opacity-100" />
                                   </button>
+                                  {/* Ownership Badge */}
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {(c.ownerType === 'Third Party' || (c.ownerCif && selectedCustomer && c.ownerCif !== selectedCustomer.cif)) ? (
+                                      <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded font-medium border border-purple-200">
+                                        Third-Party ({c.ownerName || c.ownerCif || 'External'})
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium border border-emerald-200">
+                                        Borrower-Owned
+                                      </span>
+                                    )}
+                                    {currentLinks.filter(l => l.collateralId === c.id || (c.code && l.collateralCode === c.code)).length > 1 && (
+                                      <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium border border-blue-200">
+                                        Shared Asset ({currentLinks.filter(l => l.collateralId === c.id || (c.code && l.collateralCode === c.code)).length} Facilities)
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
-                                <td className="p-2.5 max-w-[220px] truncate" title={c.description}>{c.description}</td>
+                                <td className="p-2.5 max-w-[220px]">
+                                  <div className="truncate font-medium text-slate-800" title={c.description}>{c.description}</div>
+                                  {/* Secured Facilities list for shared / linked assets */}
+                                  {(() => {
+                                    const linkedFacs = currentLinks.filter(l => l.collateralId === c.id || (c.code && l.collateralCode === c.code));
+                                    if (linkedFacs.length === 0) return null;
+                                    return (
+                                      <div className="mt-1 text-[10px] text-slate-500">
+                                        <span className="font-semibold text-slate-700">Secures: </span>
+                                        {linkedFacs.map((lf, idx) => (
+                                          <span key={lf.id || idx} className="inline-block bg-slate-100 text-slate-700 px-1 rounded mr-1">
+                                            {lf.accountNumber || lf.facilityId || lf.loanAccountId}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
+                                </td>
                                 <td className="p-2.5 whitespace-nowrap">{c.category}</td>
                                 <td className="p-2.5 text-right tabular-nums whitespace-nowrap">
                                   {c.currency || 'ETB'} {c.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}

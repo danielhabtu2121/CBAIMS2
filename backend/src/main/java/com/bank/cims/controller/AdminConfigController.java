@@ -91,6 +91,45 @@ public class AdminConfigController {
     @Autowired
     private DmsStorageService dmsStorageService;
 
+    @Autowired
+    private OrganizationalUnitRepository organizationalUnitRepository;
+
+    @Autowired
+    private CbsBranchMappingRepository cbsBranchMappingRepository;
+
+    @Autowired
+    private CbsSegmentMappingRepository cbsSegmentMappingRepository;
+
+    @Autowired
+    private BranchSegmentAssignmentRepository branchSegmentAssignmentRepository;
+
+    @Autowired
+    private UserOrgAssignmentRepository userOrgAssignmentRepository;
+
+    @Autowired
+    private PortfolioAssignmentRepository portfolioAssignmentRepository;
+
+    @Autowired
+    private PortfolioAssignmentHistoryRepository portfolioAssignmentHistoryRepository;
+
+    @Autowired
+    private UnassignedRecordRepository unassignedRecordRepository;
+
+    @Autowired
+    private LoanAccountRepository loanAccountRepository;
+
+    @Autowired
+    private CollateralRepository collateralRepository;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private InsurancePolicyRepository insurancePolicyRepository;
+
+    @Autowired
+    private WorkflowTaskRepository workflowTaskRepository;
+
     /**
      * Resolves the acting user identity from header, param, or default persona.
      * Unrestricted to allow seamless testing with the top persona dropdown.
@@ -778,5 +817,204 @@ public class AdminConfigController {
         m.put("dmsStorageMode", dmsStorageService.getActiveMode());
         m.put("dmsStatus", dmsStorageService.isHealthy() ? "UP" : "DOWN");
         return ResponseEntity.ok(m);
+    }
+
+    // =========================================================================
+    // ORGANIZATION HIERARCHY & CBS INTEGRATION ENDPOINTS
+    // =========================================================================
+
+    @GetMapping("/org-units")
+    public ResponseEntity<List<OrganizationalUnit>> getAllOrgUnits() {
+        return ResponseEntity.ok(organizationalUnitRepository.findAll());
+    }
+
+    @PostMapping("/org-units/save")
+    public ResponseEntity<?> saveOrgUnit(@RequestBody OrganizationalUnit unit) {
+        if (unit.getId() == null || unit.getId().isBlank()) {
+            unit.setId("org-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        unit.setUpdatedAt(java.time.LocalDateTime.now());
+        OrganizationalUnit saved = organizationalUnitRepository.save(unit);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/canonical-districts")
+    public ResponseEntity<List<OrganizationalUnit>> getCanonicalDistricts() {
+        return ResponseEntity.ok(organizationalUnitRepository.findByUnitTypeAndActiveTrue("DISTRICT"));
+    }
+
+    @GetMapping("/branch-segments")
+    public ResponseEntity<List<BranchSegmentAssignment>> getAllBranchSegments() {
+        return ResponseEntity.ok(branchSegmentAssignmentRepository.findAll());
+    }
+
+    @PostMapping("/branch-segments/save")
+    public ResponseEntity<?> saveBranchSegment(@RequestBody BranchSegmentAssignment bsa) {
+        if (bsa.getId() == null || bsa.getId().isBlank()) {
+            bsa.setId("bsa-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        BranchSegmentAssignment saved = branchSegmentAssignmentRepository.save(bsa);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/cbs-branch-mappings")
+    public ResponseEntity<List<CbsBranchMapping>> getAllCbsBranchMappings() {
+        return ResponseEntity.ok(cbsBranchMappingRepository.findAll());
+    }
+
+    @PostMapping("/cbs-branch-mappings/save")
+    public ResponseEntity<?> saveCbsBranchMapping(@RequestBody CbsBranchMapping mapping) {
+        if (mapping.getId() == null || mapping.getId().isBlank()) {
+            mapping.setId("cbm-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        mapping.setUpdatedAt(java.time.LocalDateTime.now());
+        CbsBranchMapping saved = cbsBranchMappingRepository.save(mapping);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/cbs-segment-mappings")
+    public ResponseEntity<List<CbsSegmentMapping>> getAllCbsSegmentMappings() {
+        return ResponseEntity.ok(cbsSegmentMappingRepository.findAll());
+    }
+
+    @PostMapping("/cbs-segment-mappings/save")
+    public ResponseEntity<?> saveCbsSegmentMapping(@RequestBody CbsSegmentMapping mapping) {
+        if (mapping.getId() == null || mapping.getId().isBlank()) {
+            mapping.setId("csm-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        mapping.setUpdatedAt(java.time.LocalDateTime.now());
+        CbsSegmentMapping saved = cbsSegmentMappingRepository.save(mapping);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/user-org-assignments")
+    public ResponseEntity<List<UserOrgAssignment>> getAllUserOrgAssignments() {
+        return ResponseEntity.ok(userOrgAssignmentRepository.findAll());
+    }
+
+    @PostMapping("/user-org-assignments/save")
+    public ResponseEntity<?> saveUserOrgAssignment(@RequestBody UserOrgAssignment uoa) {
+        if (uoa.getId() == null || uoa.getId().isBlank()) {
+            uoa.setId("uoa-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        UserOrgAssignment saved = userOrgAssignmentRepository.save(uoa);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/portfolio-assignments")
+    public ResponseEntity<List<PortfolioAssignment>> getAllPortfolioAssignments() {
+        return ResponseEntity.ok(portfolioAssignmentRepository.findAll());
+    }
+
+    @PostMapping("/portfolio-assignments/save")
+    public ResponseEntity<?> savePortfolioAssignment(@RequestBody PortfolioAssignment pa) {
+        if (pa.getId() == null || pa.getId().isBlank()) {
+            pa.setId("pa-" + UUID.randomUUID().toString().substring(0, 8));
+        }
+        pa.setUpdatedAt(java.time.LocalDateTime.now());
+        PortfolioAssignment saved = portfolioAssignmentRepository.save(pa);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/portfolio-assignments/reassign")
+    public ResponseEntity<?> reassignPortfolio(@RequestBody Map<String, String> payload) {
+        String entityType = payload.get("entityType");
+        String entityId = payload.get("entityId");
+        String newMakerId = payload.get("newMakerId");
+        String newCheckerId = payload.get("newCheckerId");
+        String reason = payload.get("reason");
+        String changedBy = payload.getOrDefault("changedBy", "ADMIN");
+
+        if (entityType == null || entityId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "entityType and entityId are required."));
+        }
+
+        Optional<PortfolioAssignment> opt = portfolioAssignmentRepository.findByEntityTypeAndEntityId(entityType, entityId);
+        PortfolioAssignment pa = opt.orElseGet(() -> {
+            PortfolioAssignment p = new PortfolioAssignment();
+            p.setId("pa-" + UUID.randomUUID().toString().substring(0, 8));
+            p.setEntityType(entityType);
+            p.setEntityId(entityId);
+            return p;
+        });
+
+        String prevMaker = pa.getMakerUserId();
+        String prevChecker = pa.getCheckerUserId();
+
+        if (newMakerId != null && !newMakerId.isBlank()) pa.setMakerUserId(newMakerId);
+        if (newCheckerId != null && !newCheckerId.isBlank()) pa.setCheckerUserId(newCheckerId);
+        pa.setAssignmentSource("REASSIGNED");
+        pa.setStatus("ASSIGNED");
+        pa.setUpdatedAt(java.time.LocalDateTime.now());
+
+        portfolioAssignmentRepository.save(pa);
+
+        PortfolioAssignmentHistory hist = new PortfolioAssignmentHistory(
+                "pah-" + UUID.randomUUID().toString().substring(0, 8),
+                pa.getId(),
+                entityType,
+                entityId,
+                prevMaker,
+                pa.getMakerUserId(),
+                prevChecker,
+                pa.getCheckerUserId(),
+                "REASSIGNED",
+                reason != null ? reason : "Administrative portfolio reassignment",
+                changedBy
+        );
+        portfolioAssignmentHistoryRepository.save(hist);
+
+        return ResponseEntity.ok(Map.of("success", true, "assignment", pa));
+    }
+
+    @GetMapping("/unassigned-records")
+    public ResponseEntity<List<UnassignedRecord>> getUnassignedRecords() {
+        return ResponseEntity.ok(unassignedRecordRepository.findAll());
+    }
+
+    @PostMapping("/impact-preview")
+    public ResponseEntity<com.bank.cims.dto.ImpactPreviewDto> calculateImpactPreview(@RequestBody Map<String, Object> req) {
+        String changeType = String.valueOf(req.getOrDefault("changeType", "BRANCH_CHANGE"));
+        String targetId = String.valueOf(req.getOrDefault("targetId", ""));
+
+        com.bank.cims.dto.ImpactPreviewDto dto = new com.bank.cims.dto.ImpactPreviewDto();
+        dto.setChangeType(changeType);
+        dto.setTargetId(targetId);
+
+        List<String> warnings = new ArrayList<>();
+        List<String> officers = new ArrayList<>();
+
+        if ("DEACTIVATE_USER".equalsIgnoreCase(changeType)) {
+            dto.setDescription("Deactivating user " + targetId + " will orphan assigned portfolios.");
+            long custs = portfolioAssignmentRepository.findByMakerUserId(targetId).size();
+            long checkCusts = portfolioAssignmentRepository.findByCheckerUserId(targetId).size();
+            dto.setAffectedCustomersCount((int) (custs + checkCusts));
+            dto.setAffectedFacilitiesCount((int) loanAccountRepository.findAll().stream()
+                    .filter(f -> targetId.equalsIgnoreCase(f.getAssignedCro()) || targetId.equalsIgnoreCase(f.getRmUserId())).count());
+            officers.add(targetId);
+            warnings.add("User is currently assigned to " + (custs + checkCusts) + " active portfolios. Reassignment required before deactivation.");
+            dto.setRequiresDualApproval(true);
+        } else if ("REASSIGN_BRANCH".equalsIgnoreCase(changeType)) {
+            dto.setDescription("Reassigning branch " + targetId + " affects all assigned loans, facilities, and local collaterals.");
+            dto.setAffectedFacilitiesCount((int) loanAccountRepository.findAll().stream()
+                    .filter(f -> targetId.equalsIgnoreCase(f.getBranch())).count());
+            dto.setAffectedCollateralsCount((int) collateralRepository.findAll().stream()
+                    .filter(c -> targetId.equalsIgnoreCase(c.getBranch())).count());
+            warnings.add("Branch reassignment alters the geographic reporting boundary for all linked collateral assets.");
+            dto.setRequiresDualApproval(true);
+        } else if ("CBS_MAPPING_CHANGE".equalsIgnoreCase(changeType)) {
+            dto.setDescription("Modifying CBS mapping for code " + targetId + " impacts subsequent CBS synchronization and reconciliation.");
+            dto.setAffectedFacilitiesCount((int) loanAccountRepository.findAll().stream()
+                    .filter(f -> targetId.equalsIgnoreCase(f.getBranch())).count());
+            warnings.add("Changing this mapping affects the auto-routing of newly imported facilities from CBS Oracle views.");
+            dto.setRequiresDualApproval(false);
+        } else {
+            dto.setDescription("Administrative configuration modification for entity " + targetId);
+            dto.setRequiresDualApproval(false);
+        }
+
+        dto.setRiskWarnings(warnings);
+        dto.setAffectedOfficers(officers);
+        return ResponseEntity.ok(dto);
     }
 }
