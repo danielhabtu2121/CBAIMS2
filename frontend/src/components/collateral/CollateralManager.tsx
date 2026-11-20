@@ -4274,9 +4274,15 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
                                   </div>
                                 </td>
                                 <td className="p-2.5">
-                                  <div className="font-semibold text-slate-900">
-                                    {borrowerName}
-                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => onNavigate && borrowerCif !== '—' && onNavigate('customers', { customerId: borrowerCif, cif: borrowerCif })}
+                                    className="font-semibold text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 cursor-pointer text-left"
+                                    title="Open Customer 360"
+                                  >
+                                    <span>{borrowerName}</span>
+                                    <ArrowUpRight className="w-3 h-3 opacity-60 inline" />
+                                  </button>
                                   <div className="text-[10px] text-slate-500 flex flex-col gap-0.5 mt-0.5">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <span>CIF: {borrowerCif}</span>

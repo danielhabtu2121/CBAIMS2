@@ -97,7 +97,17 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
       header: 'Customer',
       cell: (r) => {
         const cust = customers.find((c) => c.id === r.customerId || c.cif === r.customerId);
-        return <span>{cust ? cust.name : r.customerId}</span>;
+        return (
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate('customers', { customerId: cust?.id || r.customerId, cif: cust?.cif || r.customerId })}
+            className="text-left font-medium text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
+            title="Open Customer 360"
+          >
+            <span>{cust ? cust.name : r.customerId}</span>
+            <ArrowUpRight className="w-3 h-3 opacity-60 inline" />
+          </button>
+        );
       },
       sortable: true,
     },
@@ -346,7 +356,15 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
                         </h4>
                         <div>
                           <span className="text-slate-500 block text-[11px]">Customer:</span>
-                          <strong className="text-sm text-[#00205B]">{linkedCust ? `${linkedCust.name} (${linkedCust.cif})` : selectedFacility.customerId}</strong>
+                          <button
+                            type="button"
+                            onClick={() => onNavigate && onNavigate('customers', { customerId: linkedCust?.id || selectedFacility.customerId, cif: linkedCust?.cif || selectedFacility.customerId })}
+                            className="text-left font-bold text-sm text-blue-700 hover:text-blue-900 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                            title="Open Customer 360"
+                          >
+                            <span>{linkedCust ? `${linkedCust.name} (${linkedCust.cif})` : selectedFacility.customerId}</span>
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                         <div className="grid grid-cols-2 gap-2 pt-1">
                           <div>
