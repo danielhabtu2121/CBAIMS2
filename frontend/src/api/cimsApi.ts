@@ -1950,6 +1950,234 @@ export const cimsApi = {
       body: JSON.stringify(payload),
     });
   },
+
+  // --- Production CBS-Imported Collateral Management & Data Enrichment ---
+  async getCbsSyncedCollaterals(params?: {
+    page?: number;
+    size?: number;
+    search?: string;
+    segment?: string;
+    district?: string;
+    branch?: string;
+    collateralType?: string;
+    dataQualityStatus?: string;
+    assignedCro?: string;
+    insuranceStatus?: string;
+  }): Promise<{ content: any[]; totalElements: number; totalPages: number; currentPage: number; pageSize: number }> {
+    const q = new URLSearchParams();
+    if (params) {
+      if (params.page !== undefined) q.append('page', params.page.toString());
+      if (params.size !== undefined) q.append('size', params.size.toString());
+      if (params.search) q.append('search', params.search);
+      if (params.segment) q.append('segment', params.segment);
+      if (params.district) q.append('district', params.district);
+      if (params.branch) q.append('branch', params.branch);
+      if (params.collateralType) q.append('collateralType', params.collateralType);
+      if (params.dataQualityStatus) q.append('dataQualityStatus', params.dataQualityStatus);
+      if (params.assignedCro) q.append('assignedCro', params.assignedCro);
+      if (params.insuranceStatus) q.append('insuranceStatus', params.insuranceStatus);
+    }
+    return requestJson(`${API_BASE}/collateral/cbs-synced?${q.toString()}`);
+  },
+
+  async getCollateralOverview(params?: {
+    page?: number;
+    size?: number;
+    search?: string;
+    originType?: string;
+    segment?: string;
+    branch?: string;
+    dataQualityStatus?: string;
+  }): Promise<{ content: any[]; totalElements: number; totalPages: number; currentPage: number; pageSize: number }> {
+    const q = new URLSearchParams();
+    if (params) {
+      if (params.page !== undefined) q.append('page', params.page.toString());
+      if (params.size !== undefined) q.append('size', params.size.toString());
+      if (params.search) q.append('search', params.search);
+      if (params.originType) q.append('originType', params.originType);
+      if (params.segment) q.append('segment', params.segment);
+      if (params.branch) q.append('branch', params.branch);
+      if (params.dataQualityStatus) q.append('dataQualityStatus', params.dataQualityStatus);
+    }
+    return requestJson(`${API_BASE}/collateral/overview?${q.toString()}`);
+  },
+
+  async getDataQualitySummary(): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/data-quality-summary`);
+  },
+
+  async getQualityFindings(id: string): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/collateral/${encodeURIComponent(id)}/quality-findings`);
+  },
+
+  async getCbsSnapshot(id: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/${encodeURIComponent(id)}/cbs-snapshot`);
+  },
+
+  async getCollateralProvenance(id: string): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/collateral/${encodeURIComponent(id)}/provenance`);
+  },
+
+  async enrichCollateral(id: string, payload: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/${encodeURIComponent(id)}/enrich`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async submitEnrichmentForChecker(id: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/${encodeURIComponent(id)}/submit-enrichment`, {
+      method: 'POST',
+    });
+  },
+
+  async approveEnrichment(id: string, notes?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/${encodeURIComponent(id)}/approve-enrichment`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  },
+
+  async rejectEnrichment(id: string, reason?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/${encodeURIComponent(id)}/reject-enrichment`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  async previewCbsImport(): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/import/preview`);
+  },
+
+  async runCbsImport(batchRef?: string, chunkSize?: number): Promise<any> {
+    const q = new URLSearchParams();
+    if (batchRef) q.append('batchRef', batchRef);
+    if (chunkSize) q.append('chunkSize', chunkSize.toString());
+    return requestJson<any>(`${API_BASE}/collateral/import/run?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async getCbsImportBatches(): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/collateral/import/batches`);
+  },
+
+  async getCbsDuplicateQueue(status?: string): Promise<any[]> {
+    const q = new URLSearchParams();
+    if (status) q.append('status', status);
+    return requestJson<any[]>(`${API_BASE}/collateral/duplicate-queue?${q.toString()}`);
+  },
+
+  async resolveCbsDuplicate(payload: { queueId: string; decision: string; notes?: string }): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/duplicate-queue/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getCbsUnresolvedLinks(status?: string): Promise<any[]> {
+    const q = new URLSearchParams();
+    if (status) q.append('status', status);
+    return requestJson<any[]>(`${API_BASE}/collateral/unresolved-links?${q.toString()}`);
+  },
+
+  async resolveCbsUnresolvedLink(payload: { linkId: string; loanId: string }): Promise<any> {
+    return requestJson<any>(`${API_BASE}/collateral/unresolved-links/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // --- Production CBS Oracle 3-View Integration Operations ---
+  async getCbsHealth(): Promise<{ mode: string; status: string; message: string; timestamp: string }> {
+    return requestJson<any>(`${API_BASE}/cbs/health`);
+  },
+
+  async validateCbsSchema(): Promise<{ status: string; message: string; totalColumnsVerified?: number; missingColumns?: any; verifiedColumns?: any }> {
+    return requestJson<any>(`${API_BASE}/cbs/schema/validate`);
+  },
+
+  async previewCbsThreeViews(): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/three-views/preview`);
+  },
+
+  async executeCbsThreeViewsImport(batchRef?: string, chunkSize?: number): Promise<any> {
+    const q = new URLSearchParams();
+    if (batchRef) q.append('batchRef', batchRef);
+    if (chunkSize) q.append('chunkSize', chunkSize.toString());
+    return requestJson<any>(`${API_BASE}/cbs/three-views/import?${q.toString()}`, {
+      method: 'POST',
+    });
+  },
+
+  async getCustomerCbsSnapshot(cifOrId: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/snapshots/customer/${encodeURIComponent(cifOrId)}`);
+  },
+
+  async getFacilityCbsSnapshot(accOrId: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/snapshots/facility/${encodeURIComponent(accOrId)}`);
+  },
+
+  async getCustomerProvenance(customerId: string): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/cbs/provenance/customer/${encodeURIComponent(customerId)}`);
+  },
+
+  async getFacilityProvenance(facilityId: string): Promise<any[]> {
+    return requestJson<any[]>(`${API_BASE}/cbs/provenance/facility/${encodeURIComponent(facilityId)}`);
+  },
+
+  async enrichCustomer(customerId: string, payload: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/customers/${encodeURIComponent(customerId)}/enrich`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async enrichFacility(facilityId: string, payload: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/facilities/${encodeURIComponent(facilityId)}/enrich`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getCbsUnresolvedEntities(status?: string): Promise<any[]> {
+    const q = new URLSearchParams();
+    if (status) q.append('status', status);
+    return requestJson<any[]>(`${API_BASE}/cbs/unresolved-entities?${q.toString()}`);
+  },
+
+  async resolveCbsEntity(id: string, notes?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/unresolved-entities/${encodeURIComponent(id)}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  },
+
+  async getCbsDuplicateCollisions(status?: string): Promise<any[]> {
+    const q = new URLSearchParams();
+    if (status) q.append('status', status);
+    return requestJson<any[]>(`${API_BASE}/cbs/duplicate-collisions?${q.toString()}`);
+  },
+
+  async resolveCbsDuplicateCollision(id: string, decision: string, notes?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/duplicate-collisions/${encodeURIComponent(id)}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, notes }),
+    });
+  },
+
+  async getCbsCodeMappings(type?: string): Promise<any[]> {
+    const q = new URLSearchParams();
+    if (type) q.append('type', type);
+    return requestJson<any[]>(`${API_BASE}/cbs/code-mappings?${q.toString()}`);
+  },
+
+  async saveCbsCodeMapping(mapping: any): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/code-mappings`, {
+      method: 'POST',
+      body: JSON.stringify(mapping),
+    });
+  },
 };
 
 

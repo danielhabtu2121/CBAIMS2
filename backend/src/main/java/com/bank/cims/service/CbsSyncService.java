@@ -162,6 +162,20 @@ public class CbsSyncService {
                     String colKey = ccol.getCollateralCode().trim().toUpperCase();
                     Collateral existing = cimsColByCode.get(colKey);
 
+                    // Safeguard: Never overwrite CBAIMS_REGISTERED records
+                    if (existing != null && "CBAIMS_REGISTERED".equalsIgnoreCase(existing.getOriginType())) {
+                        log.warn("Safeguard triggered: skipping collateral overwrite for CBAIMS_REGISTERED code: {}", colKey);
+                        collateralsSucceeded++;
+                        continue;
+                    }
+
+                    // Safeguard: Never overwrite locally enriched fields on CBS_IMPORTED collateral
+                    if (existing != null && "CBS_IMPORTED".equalsIgnoreCase(existing.getOriginType())) {
+                        log.info("Safeguard triggered: preserving locally enriched CBS_IMPORTED collateral code: {}", colKey);
+                        collateralsSucceeded++;
+                        continue;
+                    }
+
                     Customer matchedCust = null;
                     if (ccol.getCustomerCif() != null) {
                         matchedCust = cimsCustByCif.get(ccol.getCustomerCif().trim().toUpperCase());

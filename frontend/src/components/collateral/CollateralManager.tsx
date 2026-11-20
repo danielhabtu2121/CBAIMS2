@@ -37,6 +37,8 @@ import {
   Calendar,
   ArrowUpRight,
   Info,
+  Database,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   Collateral,
@@ -75,6 +77,10 @@ import { CollateralFacilityLinkModal } from '../relationships/CollateralFacility
 import { RelationshipHistoryModal } from '../relationships/RelationshipHistoryModal';
 import { CbsRelationshipReconcileModal } from '../relationships/CbsRelationshipReconcileModal';
 import { CollateralRegistrationWizard } from './wizard/CollateralRegistrationWizard';
+import { CbsSyncedCollateralView } from './cbs/CbsSyncedCollateralView';
+import { DataQualityWorkbench } from './cbs/DataQualityWorkbench';
+import { CollateralEnrichmentModal } from './cbs/CollateralEnrichmentModal';
+import { CbsOriginalSnapshotModal } from './cbs/CbsOriginalSnapshotModal';
 
 interface WizardDocItem {
   id: string;
@@ -193,6 +199,16 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
   const [manualCbsRef, setManualCbsRef] = useState('');
   const [manualCbsNotes, setManualCbsNotes] = useState('');
   const [submittingManualCbs, setSubmittingManualCbs] = useState(false);
+
+  // Top-Level Sub-Tabs (Section 4)
+  const [mainSubTab, setMainSubTab] = useState<'overview' | 'cbaims' | 'cbs' | 'quality'>('overview');
+  const [filterOrigin, setFilterOrigin] = useState<'ALL' | 'CBAIMS_REGISTERED' | 'CBS_IMPORTED'>('ALL');
+
+  // CBS Modals State
+  const [showEnrichmentModal, setShowEnrichmentModal] = useState(false);
+  const [colToEnrich, setColToEnrich] = useState<Collateral | null>(null);
+  const [showCbsSnapshotModal, setShowCbsSnapshotModal] = useState(false);
+  const [colForSnapshot, setColForSnapshot] = useState<Collateral | null>(null);
 
   const loadAdequacyAssessment = async (colId: string) => {
     setLoadingAdequacy(true);
@@ -1343,6 +1359,25 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
       ),
     },
     {
+      header: 'Origin',
+      accessorKey: 'originType',
+      cell: (c) => {
+        const isCbs = c.originType === 'CBS_IMPORTED';
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+              isCbs
+                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            }`}
+          >
+            {isCbs ? <Database className="w-3 h-3 text-blue-600" /> : <ShieldCheck className="w-3 h-3 text-emerald-600" />}
+            {isCbs ? 'CBS Imported' : 'CBAIMS Registered'}
+          </span>
+        );
+      },
+    },
+    {
       header: 'Customer / CIF',
       accessorKey: 'customerId',
       cell: (c) => {
@@ -1506,6 +1541,20 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
             <Eye className="w-3.5 h-3.5" />
             Collateral 360
           </button>
+          {c.originType === 'CBS_IMPORTED' && isMaker && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setColToEnrich(c);
+                setShowEnrichmentModal(true);
+              }}
+              className="py-1 px-2.5 text-xs flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded shadow-2xs"
+              title="Complete or Correct CBAIMS Data"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              Enrich
+            </button>
+          )}
           {isMaker && (
             <button
               onClick={(e) => {
@@ -1881,13 +1930,18 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
   const filteredCollaterals = useMemo(() => {
     return collaterals.filter((c) => {
+      // Subtab filtering
+      if (mainSubTab === 'cbaims' && c.originType === 'CBS_IMPORTED') return false;
+      if (mainSubTab === 'overview' && filterOrigin === 'CBAIMS_REGISTERED' && c.originType === 'CBS_IMPORTED') return false;
+      if (mainSubTab === 'overview' && filterOrigin === 'CBS_IMPORTED' && c.originType !== 'CBS_IMPORTED') return false;
+
       if (filterRank === '1ST') return c.collateralRank !== '2nd';
       if (filterRank === '2ND_INTERNAL') return c.collateralRank === '2nd' && c.isFirstDegreeInternal;
       if (filterRank === '2ND_EXTERNAL') return c.collateralRank === '2nd' && !c.isFirstDegreeInternal;
       if (filterRank === 'PROMOTION_ELIGIBLE') return Boolean(c.promotionEligible);
       return true;
     });
-  }, [collaterals, filterRank]);
+  }, [collaterals, filterRank, mainSubTab, filterOrigin]);
 
   const count1st = collaterals.filter((c) => c.collateralRank !== '2nd').length;
   const count2ndInt = collaterals.filter((c) => c.collateralRank === '2nd' && c.isFirstDegreeInternal).length;
@@ -1896,98 +1950,211 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
 
   return (
     <div className="p-6 space-y-6">
-      {/* 1st / 2nd Degree Mortgage Priority Quick Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-slate-500" />
-          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Mortgage Rank Filter:</span>
+      {/* 4-Screen Navigation Sub-Tabs (Section 4) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setMainSubTab('overview')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              mainSubTab === 'overview'
+                ? 'bg-[#00205B] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            1. Collateral Overview
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMainSubTab('cbaims')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              mainSubTab === 'cbaims'
+                ? 'bg-[#00205B] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            2. CBAIMS Registered Collateral
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMainSubTab('cbs')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              mainSubTab === 'cbs'
+                ? 'bg-[#00205B] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Database className="w-4 h-4 text-blue-400" />
+            3. CBS Synced Collateral
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMainSubTab('quality')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              mainSubTab === 'quality'
+                ? 'bg-[#00205B] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            4. Data Quality & Enrichment
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setFilterRank('ALL')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-              filterRank === 'ALL'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            All Charges ({collaterals.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterRank('1ST')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-              filterRank === '1ST'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-            }`}
-          >
-            1st Degree ({count1st})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterRank('2ND_INTERNAL')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-              filterRank === '2ND_INTERNAL'
-                ? 'bg-purple-700 text-white shadow-xs'
-                : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-            }`}
-          >
-            🔗 2nd Degree (Internal) ({count2ndInt})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterRank('2ND_EXTERNAL')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-              filterRank === '2ND_EXTERNAL'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
-            }`}
-          >
-            🏛️ 2nd Degree (External) ({count2ndExt})
-          </button>
-          {countPromo > 0 && (
-            <button
-              type="button"
-              onClick={() => setFilterRank('PROMOTION_ELIGIBLE')}
-              className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
-                filterRank === 'PROMOTION_ELIGIBLE'
-                  ? 'bg-emerald-600 text-white shadow-xs animate-none'
-                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 animate-pulse'
-              }`}
+
+        {mainSubTab === 'overview' && (
+          <div className="flex items-center gap-1.5 text-xs pr-2">
+            <span className="font-semibold text-slate-500">Origin Filter:</span>
+            <select
+              value={filterOrigin}
+              onChange={(e) => setFilterOrigin(e.target.value as any)}
+              className="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-medium text-slate-700"
             >
-              <span>⚡ Promotion Ready ({countPromo})</span>
-            </button>
-          )}
-        </div>
+              <option value="ALL">All Origins</option>
+              <option value="CBAIMS_REGISTERED">CBAIMS Registered</option>
+              <option value="CBS_IMPORTED">CBS Imported</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      <DataGrid
-        title="Collateral Master & Securities"
-        subtitle="Manage Pledged Assets, First/Second Degree Priorities, Multi-Facility Security Allocations, Haircuts, and Insurance Coverages"
-        data={filteredCollaterals}
-        columns={collateralColumns}
-        keyExtractor={(c) => c.id}
-        onRowClick={(c) => {
-          setSelectedCol(c);
-          setShowDetailModal(true);
-          loadExposureSummary(c.id);
-          loadCollateral360(c.id);
-          loadM3SecuredFacilities(c.id);
-        }}
-        actions={
-          isMaker ? (
-            <button
-              onClick={handleStartWizard}
-              className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Register New Collateral
-            </button>
-          ) : undefined
-        }
-      />
+      {mainSubTab === 'cbs' ? (
+        <CbsSyncedCollateralView
+          currentUser={currentUser}
+          onOpenDetail={(col) => {
+            setSelectedCol(col);
+            setShowDetailModal(true);
+            loadExposureSummary(col.id);
+            loadCollateral360(col.id);
+            loadM3SecuredFacilities(col.id);
+            loadAdequacyAssessment(col.id);
+          }}
+          onOpenEnrichment={(col) => {
+            setColToEnrich(col);
+            setShowEnrichmentModal(true);
+          }}
+          onOpenInsurance={(col) => {
+            setSelectedCol(col);
+            setShowDetailModal(true);
+            setActiveTab('policies');
+          }}
+        />
+      ) : mainSubTab === 'quality' ? (
+        <DataQualityWorkbench
+          currentUser={currentUser}
+          facilities={facilities}
+          onOpenDetail={(col) => {
+            setSelectedCol(col);
+            setShowDetailModal(true);
+            loadExposureSummary(col.id);
+            loadCollateral360(col.id);
+          }}
+          onOpenEnrichment={(col) => {
+            setColToEnrich(col);
+            setShowEnrichmentModal(true);
+          }}
+          onRefreshData={onRefreshData}
+        />
+      ) : (
+        <>
+          {/* 1st / 2nd Degree Mortgage Priority Quick Filter Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-slate-500" />
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Mortgage Rank Filter:</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setFilterRank('ALL')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  filterRank === 'ALL'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                All Charges ({filteredCollaterals.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterRank('1ST')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  filterRank === '1ST'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                }`}
+              >
+                1st Degree ({count1st})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterRank('2ND_INTERNAL')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  filterRank === '2ND_INTERNAL'
+                    ? 'bg-purple-700 text-white shadow-xs'
+                    : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                }`}
+              >
+                🔗 2nd Degree (Internal) ({count2ndInt})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterRank('2ND_EXTERNAL')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  filterRank === '2ND_EXTERNAL'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                }`}
+              >
+                🏛️ 2nd Degree (External) ({count2ndExt})
+              </button>
+              {countPromo > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFilterRank('PROMOTION_ELIGIBLE')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                    filterRank === 'PROMOTION_ELIGIBLE'
+                      ? 'bg-emerald-600 text-white shadow-xs animate-none'
+                      : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 animate-pulse'
+                  }`}
+                >
+                  <span>⚡ Promotion Ready ({countPromo})</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <DataGrid
+            title={mainSubTab === 'cbaims' ? 'CBAIMS Registered Collateral Portfolio' : 'Collateral Master & Securities Overview'}
+            subtitle={mainSubTab === 'cbaims' ? 'Manual registration portfolio created and managed in CBAIMS' : 'Manage Consolidated Pledged Assets, First/Second Degree Priorities, Allocations, and CBS Imports'}
+            data={filteredCollaterals}
+            columns={collateralColumns}
+            keyExtractor={(c) => c.id}
+            onRowClick={(c) => {
+              setSelectedCol(c);
+              setShowDetailModal(true);
+              loadExposureSummary(c.id);
+              loadCollateral360(c.id);
+              loadM3SecuredFacilities(c.id);
+            }}
+            actions={
+              isMaker ? (
+                <button
+                  onClick={handleStartWizard}
+                  className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Register New Collateral
+                </button>
+              ) : undefined
+            }
+          />
+        </>
+      )}
 
       {/* Collateral 360 Detail Modal */}
       {showDetailModal && selectedCol && (
@@ -6092,6 +6259,32 @@ export const CollateralManager: React.FC<CollateralManagerProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {showEnrichmentModal && colToEnrich && (
+        <CollateralEnrichmentModal
+          collateral={colToEnrich}
+          branches={branches}
+          segments={segments}
+          onClose={() => {
+            setShowEnrichmentModal(false);
+            setColToEnrich(null);
+          }}
+          onSuccess={(updated) => {
+            if (onRefreshData) onRefreshData();
+            setSelectedCol(updated);
+          }}
+        />
+      )}
+
+      {showCbsSnapshotModal && colForSnapshot && (
+        <CbsOriginalSnapshotModal
+          collateral={colForSnapshot}
+          onClose={() => {
+            setShowCbsSnapshotModal(false);
+            setColForSnapshot(null);
+          }}
+        />
       )}
     </div>
   );

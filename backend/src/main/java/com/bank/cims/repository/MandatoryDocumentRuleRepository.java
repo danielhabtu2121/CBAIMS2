@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface MandatoryDocumentRuleRepository extends JpaRepository<MandatoryDocumentRule, String> {
     List<MandatoryDocumentRule> findByCollateralCategory(String collateralCategory);
+    List<MandatoryDocumentRule> findByActiveTrue();
 }

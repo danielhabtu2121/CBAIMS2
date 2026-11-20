@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface BusinessSegmentRepository extends JpaRepository<BusinessSegment, String> {
     Optional<BusinessSegment> findByName(String name);
+    Optional<BusinessSegment> findFirstByNameIgnoreCase(String name);
 }

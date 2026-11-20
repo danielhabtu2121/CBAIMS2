@@ -445,6 +445,139 @@ export interface Collateral {
   coffeeSiteLocation?: string;
   coffeeSiteCertRef?: string;
   landUseRightCertRef?: string;
+  // CBS Imported Collateral Management & Enrichment
+  originType?: 'CBAIMS_REGISTERED' | 'CBS_IMPORTED' | string;
+  dataQualityStatus?: 'COMPLETE' | 'INCOMPLETE' | 'UNDER_REVIEW' | 'BLOCKED' | 'ORGANIZATIONAL_MAPPING_REQUIRED' | 'CLASSIFICATION_REVIEW' | string;
+  assignedCro?: string;
+  district?: string;
+  cbsCollateralRef?: string;
+  importBatchId?: string;
+  importDate?: string;
+  enrichmentStatus?: 'NOT_APPLICABLE' | 'DRAFT' | 'PENDING_CHECKER' | 'APPROVED' | 'RETURNED' | 'REJECTED' | string;
+}
+
+export interface CbsImportBatch {
+  id: string;
+  batchReference: string;
+  startTime?: string;
+  endTime?: string;
+  totalRows: number;
+  importedCount: number;
+  quarantinedCount: number;
+  failedCount: number;
+  potentialDuplicatesCount: number;
+  unresolvedLinksCount: number;
+  status: 'RUNNING' | 'COMPLETED' | 'COMPLETED_WITH_WARNINGS' | 'FAILED' | string;
+  sourceSystem?: string;
+  createdBy?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CbsCollateralRawSnapshot {
+  id: string;
+  collateralId?: string;
+  cbsCollateralRef: string;
+  batchId: string;
+  rawPayloadJson: string;
+  sourceStatus?: string;
+  createdAt: string;
+}
+
+export interface CbsCollateralProvenanceLog {
+  id: string;
+  collateralId: string;
+  fieldName: string;
+  originalCbsValue?: string;
+  previousCbaimsValue?: string;
+  newCbaimsValue?: string;
+  changeReason?: string;
+  supportingDocRef?: string;
+  changedBy: string;
+  changedAt: string;
+}
+
+export interface CbsUnresolvedLinkage {
+  id: string;
+  batchId: string;
+  cbsCollateralRef: string;
+  cimsCollateralId?: string;
+  accountNumber?: string;
+  branchCode?: string;
+  linkageType?: string;
+  linkedAmount?: number;
+  status: 'UNRESOLVED' | 'RESOLVED' | 'DISMISSED' | string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CbsCollateralDuplicateReview {
+  id: string;
+  batchId: string;
+  cbsCollateralRef: string;
+  potentialCbaimsCollateralId: string;
+  matchReason?: string;
+  status: 'PENDING_REVIEW' | 'CONFIRMED_SAME' | 'CONFIRMED_DIFFERENT' | string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  createdAt: string;
+}
+
+export interface CbsDataQualitySummaryDto {
+  totalCbsImported: number;
+  completeCount: number;
+  incompleteCount: number;
+  underReviewCount: number;
+  pendingCheckerCount: number;
+  approvedExceptionsCount: number;
+  missingOrgAssignmentCount: number;
+  unclassifiedCount: number;
+  insuranceNotRegisteredCount: number;
+  insuranceDeficienciesCount: number;
+  unresolvedLinksCount: number;
+  duplicateReviewCount: number;
+}
+
+export interface CbsImportPreviewDto {
+  totalSourceRows: number;
+  validRecords: number;
+  missingCriticalIdentifiers: number;
+  missingOptionalFields: number;
+  invalidRecords: number;
+  unmappedTaxonomy: number;
+  unmappedBranches: number;
+  unmappedSegments: number;
+  unmatchedCustomers: number;
+  unmatchedFacilities: number;
+  potentialDuplicates: number;
+  eligibleForImport: number;
+  requiringReview: number;
+  previewRows: Array<Record<string, any>>;
+  warnings: string[];
+}
+
+export interface CbsImportResultDto {
+  batchId: string;
+  batchReference: string;
+  startTime: string;
+  completionTime: string;
+  totalRows: number;
+  importedCount: number;
+  quarantinedCount: number;
+  failedCount: number;
+  potentialDuplicatesCount: number;
+  unresolvedLinksCount: number;
+  status: string;
+  message: string;
+}
+
+export interface CollateralQualityFindingDto {
+  fieldName: string;
+  status: 'VALID' | 'MISSING' | 'INVALID' | 'PENDING_VERIFICATION' | 'NOT_APPLICABLE' | string;
+  message: string;
+  severity: 'ERROR' | 'WARNING' | 'INFO' | string;
+  mandatory: boolean;
 }
 
 export interface InsuranceCoverageRule {

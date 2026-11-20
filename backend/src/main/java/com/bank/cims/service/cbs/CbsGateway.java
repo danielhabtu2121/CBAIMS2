@@ -81,4 +81,20 @@ public class CbsGateway {
     public CbsConnectionStatus checkConnectionStatus() {
         return getActiveAdapter().checkConnectionStatus();
     }
+
+    public List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRows() {
+        return getActiveAdapter().fetchCustomerViewRows();
+    }
+
+    public List<com.bank.cims.dto.cbs.CbsFacilityViewRow> fetchFacilityViewRows() {
+        return getActiveAdapter().fetchFacilityViewRows();
+    }
+
+    public List<com.bank.cims.dto.cbs.CbsCollateralViewRow> fetchCollateralViewRows() {
+        return getActiveAdapter().fetchCollateralViewRows();
+    }
+
+    public java.util.Map<String, Object> validateSchema() {
+        return getActiveAdapter().validateSchema();
+    }
 }

@@ -37,5 +37,14 @@ public interface CbsAdapter {
 
     List<CbsAccCollLinkDtls> fetchAllAccountCollateralLinks();
 
+    // Production Oracle 3-View operations
+    List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRows();
+
+    List<com.bank.cims.dto.cbs.CbsFacilityViewRow> fetchFacilityViewRows();
+
+    List<com.bank.cims.dto.cbs.CbsCollateralViewRow> fetchCollateralViewRows();
+
+    java.util.Map<String, Object> validateSchema();
+
     CbsConnectionStatus checkConnectionStatus();
 }

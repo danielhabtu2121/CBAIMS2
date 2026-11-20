@@ -5068,6 +5068,7 @@ public class CimsService {
         CimsException exc = new CimsException();
         exc.setId(excId);
         exc.setExceptionType(request.getExceptionType().trim());
+        exc.setFailedRequirement(request.getFailedRequirement() != null ? request.getFailedRequirement().trim() : null);
         exc.setEntityType(resolvedEntityType);
         exc.setEntityId(resolvedEntityId);
         if (col != null) {

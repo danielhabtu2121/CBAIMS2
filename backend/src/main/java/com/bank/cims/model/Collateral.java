@@ -534,6 +534,30 @@ public class Collateral {
     @Column(name = "land_use_right_cert_ref")
     private String landUseRightCertRef;
 
+    @Column(name = "origin_type", length = 32)
+    private String originType = "CBAIMS_REGISTERED";
+
+    @Column(name = "data_quality_status", length = 64)
+    private String dataQualityStatus = "COMPLETE";
+
+    @Column(name = "assigned_cro", length = 100)
+    private String assignedCro;
+
+    @Column(name = "district", length = 100)
+    private String district;
+
+    @Column(name = "cbs_collateral_ref", length = 100)
+    private String cbsCollateralRef;
+
+    @Column(name = "import_batch_id", length = 64)
+    private String importBatchId;
+
+    @Column(name = "import_date", length = 50)
+    private String importDate;
+
+    @Column(name = "enrichment_status", length = 64)
+    private String enrichmentStatus = "NOT_APPLICABLE";
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "collateral_id")
     private List<CollateralOwner> owners = new ArrayList<>();
@@ -965,6 +989,33 @@ public class Collateral {
     public void setCoffeeSiteLocation(String coffeeSiteLocation) { this.coffeeSiteLocation = coffeeSiteLocation; }
     public String getCoffeeSiteCertRef() { return coffeeSiteCertRef; }
     public void setCoffeeSiteCertRef(String coffeeSiteCertRef) { this.coffeeSiteCertRef = coffeeSiteCertRef; }
+    public String getValuationMethod() { return valuationMethod; }
+    public void setValuationMethod(String valuationMethod) { this.valuationMethod = valuationMethod; }
+
     public String getLandUseRightCertRef() { return landUseRightCertRef; }
     public void setLandUseRightCertRef(String landUseRightCertRef) { this.landUseRightCertRef = landUseRightCertRef; }
+
+    public String getOriginType() { return originType; }
+    public void setOriginType(String originType) { this.originType = originType; }
+
+    public String getDataQualityStatus() { return dataQualityStatus; }
+    public void setDataQualityStatus(String dataQualityStatus) { this.dataQualityStatus = dataQualityStatus; }
+
+    public String getAssignedCro() { return assignedCro; }
+    public void setAssignedCro(String assignedCro) { this.assignedCro = assignedCro; }
+
+    public String getDistrict() { return district; }
+    public void setDistrict(String district) { this.district = district; }
+
+    public String getCbsCollateralRef() { return cbsCollateralRef; }
+    public void setCbsCollateralRef(String cbsCollateralRef) { this.cbsCollateralRef = cbsCollateralRef; }
+
+    public String getImportBatchId() { return importBatchId; }
+    public void setImportBatchId(String importBatchId) { this.importBatchId = importBatchId; }
+
+    public String getImportDate() { return importDate; }
+    public void setImportDate(String importDate) { this.importDate = importDate; }
+
+    public String getEnrichmentStatus() { return enrichmentStatus; }
+    public void setEnrichmentStatus(String enrichmentStatus) { this.enrichmentStatus = enrichmentStatus; }
 }

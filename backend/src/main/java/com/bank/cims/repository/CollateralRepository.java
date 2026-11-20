@@ -32,4 +32,12 @@ public interface CollateralRepository extends JpaRepository<Collateral, String> 
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Collateral c WHERE c.id = :id")
     Optional<Collateral> findByIdForUpdate(@Param("id") String id);
+
+    org.springframework.data.domain.Page<Collateral> findByOriginType(String originType, Pageable pageable);
+    long countByOriginType(String originType);
+    Optional<Collateral> findByCbsCollateralRef(String cbsCollateralRef);
+    long countByOriginTypeAndDataQualityStatus(String originType, String dataQualityStatus);
+    long countByOriginTypeAndEnrichmentStatus(String originType, String enrichmentStatus);
+    List<Collateral> findByOriginType(String originType);
+    List<Collateral> findByOriginTypeAndDataQualityStatus(String originType, String dataQualityStatus);
 }

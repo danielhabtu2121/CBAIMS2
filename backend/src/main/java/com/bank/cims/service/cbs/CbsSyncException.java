@@ -6,6 +6,8 @@ public class CbsSyncException extends RuntimeException {
         SOURCE_TIMEOUT,
         SOURCE_AUTHENTICATION_ERROR,
         SOURCE_VALIDATION_ERROR,
+        SOURCE_QUERY_FAILED,
+        SCHEMA_MISMATCH,
         SOURCE_DATA_ERROR,
         MAPPING_ERROR,
         PERSISTENCE_ERROR,

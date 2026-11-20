@@ -7,7 +7,7 @@ spring:
   application:
     name: cims-backend
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://cims-postgres-db:5432/cims_db_dev}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:5432/cims_db_dev}
     username: cims_user
     password: cims_password
     driver-class-name: org.postgresql.Driver
@@ -21,19 +21,40 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    validate-on-migrate: false
     locations: classpath:db/migration
 
 cims:
   cbs:
-    mode: SIMULATOR
+    mode: ${CIMS_CBS_MODE:SIMULATOR} # Set to REAL for production Oracle 3-view integration
     sync-mode: MANUAL
     scheduled-interval-ms: 3600000
     real:
-      enabled: false
+      enabled: ${CIMS_CBS_REAL_ENABLED:false}
       base-url: ""
       connect-timeout-ms: 5000
       read-timeout-ms: 10000
       authentication-type: "NONE"
+    # =========================================================================
+    # CBS PRODUCTION ORACLE 3-VIEW CONFIGURATION
+    # Deployment Server: 172.22.11.55
+    # CBS Oracle Server: 10.41.31.114:1521 / Service: FCUBUAT
+    # Schema Owner: FCUBSLIVE / User: CBAIMSUSER
+    # Password: Set via environment variable CIMS_CBS_PASSWORD or edit below
+    # =========================================================================
+    oracle:
+      jdbc-url: ${CIMS_CBS_JDBC_URL:jdbc:oracle:thin:@//10.41.31.114:1521/FCUBUAT}
+      username: ${CIMS_CBS_USERNAME:CBAIMSUSER}
+      password: ${CIMS_CBS_PASSWORD:}
+      schema: ${CIMS_CBS_SCHEMA:FCUBSLIVE}
+      customer-view: ${CIMS_CBS_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}
+      facility-view: ${CIMS_CBS_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}
+      collateral-view: ${CIMS_CBS_COLLATERAL_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL}
+      connect-timeout-ms: ${CIMS_CBS_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${CIMS_CBS_READ_TIMEOUT_MS:15000}
+      maximum-pool-size: ${CIMS_CBS_MAX_POOL_SIZE:5}
+      minimum-idle: ${CIMS_CBS_MIN_IDLE:1}
+      fetch-size: ${CIMS_CBS_FETCH_SIZE:500}
 
 logging:
   level:

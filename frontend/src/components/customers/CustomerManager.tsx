@@ -285,7 +285,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
       {/* Customer 360 Modal */}
       {show360Modal && selectedCustomer && (
         <div className="fixed inset-0 bg-[#00205B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-5xl w-full h-[90vh] max-h-[92vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-6xl w-full h-[90vh] max-h-[92vh] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="p-5 bg-gradient-to-r from-[#00205B] to-[#0E284E] text-white flex justify-between items-start shrink-0">
               <div>
@@ -465,19 +465,19 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               {active360Tab === 'collateral' && (
                 <div className="space-y-4">
                   <div className="cims-card overflow-x-auto w-full max-w-full">
-                    <table className="w-full text-left text-xs min-w-[850px]">
+                    <table className="w-full text-left text-xs min-w-[950px]">
                       <thead className="bg-[#EFF5FB] border-b border-[#E2E8F0] text-[#5B6472] font-semibold">
                         <tr>
-                          <th className="p-2.5">Code</th>
+                          <th className="p-2.5 whitespace-nowrap">Code</th>
                           <th className="p-2.5">Description</th>
-                          <th className="p-2.5">Category</th>
-                          <th className="p-2.5 text-right">Market Value</th>
-                          <th className="p-2.5 text-center">Haircut %</th>
-                          <th className="p-2.5 text-right">Net Value</th>
-                          <th className="p-2.5 text-right">Allocated</th>
-                          <th className="p-2.5">Insurance</th>
-                          <th className="p-2.5">Status</th>
-                          <th className="p-2.5 text-right">Action</th>
+                          <th className="p-2.5 whitespace-nowrap">Category</th>
+                          <th className="p-2.5 text-right whitespace-nowrap">Market Value</th>
+                          <th className="p-2.5 text-center whitespace-nowrap">Haircut %</th>
+                          <th className="p-2.5 text-right whitespace-nowrap">Net Value</th>
+                          <th className="p-2.5 text-right whitespace-nowrap">Allocated</th>
+                          <th className="p-2.5 whitespace-nowrap">Insurance</th>
+                          <th className="p-2.5 whitespace-nowrap">Status</th>
+                          <th className="p-2.5 text-right whitespace-nowrap">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E2E8F0]">
@@ -495,7 +495,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                             );
                             return (
                               <tr key={c.id} className="hover:bg-[#EFF5FB] group">
-                                <td className="p-2.5 font-semibold">
+                                <td className="p-2.5 font-semibold whitespace-nowrap">
                                   <button
                                     onClick={() => {
                                       if (onNavigate) {
@@ -510,19 +510,19 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                     <ArrowUpRight className="w-3 h-3 opacity-60 group-hover:opacity-100" />
                                   </button>
                                 </td>
-                                <td className="p-2.5">{c.description}</td>
-                                <td className="p-2.5">{c.category}</td>
-                                <td className="p-2.5 text-right tabular-nums">
+                                <td className="p-2.5 max-w-[220px] truncate" title={c.description}>{c.description}</td>
+                                <td className="p-2.5 whitespace-nowrap">{c.category}</td>
+                                <td className="p-2.5 text-right tabular-nums whitespace-nowrap">
                                   {c.currency || 'ETB'} {c.valuationAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </td>
-                                <td className="p-2.5 text-center font-semibold">{c.haircut || 0}%</td>
-                                <td className="p-2.5 text-right tabular-nums font-semibold text-[#00205B]">
+                                <td className="p-2.5 text-center font-semibold whitespace-nowrap">{c.haircut || 0}%</td>
+                                <td className="p-2.5 text-right tabular-nums font-semibold text-[#00205B] whitespace-nowrap">
                                   {c.currency || 'ETB'} {net.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </td>
-                                <td className="p-2.5 text-right tabular-nums">
+                                <td className="p-2.5 text-right tabular-nums whitespace-nowrap">
                                   {c.currency || 'ETB'} {(c.currentAllocation || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </td>
-                                <td className="p-2.5">
+                                <td className="p-2.5 whitespace-nowrap">
                                   {colPolicy ? (
                                     <button
                                       onClick={() => setSelected360Policy(colPolicy)}
@@ -536,8 +536,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                     <StatusChip label={c.insuranceStatus || 'Uninsured'} />
                                   )}
                                 </td>
-                                <td className="p-2.5"><StatusChip label={c.status} /></td>
-                                <td className="p-2.5 text-right">
+                                <td className="p-2.5 whitespace-nowrap"><StatusChip label={c.status} /></td>
+                                <td className="p-2.5 text-right whitespace-nowrap">
                                   <button
                                     onClick={() => {
                                       if (onNavigate) {
@@ -562,21 +562,21 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                     <div className="cims-card p-4 space-y-2 bg-slate-50 border border-[#E2E8F0]">
                       <h4 className="font-bold text-[#101828] text-xs">Facility-Collateral Allocations</h4>
                       <div className="overflow-x-auto w-full max-w-full">
-                        <table className="w-full text-left text-xs min-w-[700px]">
+                        <table className="w-full text-left text-xs min-w-[750px]">
                           <thead className="text-[#5B6472] font-semibold border-b border-[#E2E8F0] pb-1">
                             <tr>
-                              <th className="p-1.5">Facility Ref / Line</th>
-                              <th className="p-1.5">Collateral</th>
-                              <th className="p-1.5">Linkage Type</th>
-                              <th className="p-1.5 text-right">Allocated Security Amount</th>
-                              <th className="p-1.5">Status</th>
-                              <th className="p-1.5 text-right">Action</th>
+                              <th className="p-1.5 whitespace-nowrap">Facility Ref / Line</th>
+                              <th className="p-1.5 whitespace-nowrap">Collateral</th>
+                              <th className="p-1.5 whitespace-nowrap">Linkage Type</th>
+                              <th className="p-1.5 text-right whitespace-nowrap">Allocated Security Amount</th>
+                              <th className="p-1.5 whitespace-nowrap">Status</th>
+                              <th className="p-1.5 text-right whitespace-nowrap">Action</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#E2E8F0]">
                             {currentLinks.map(lnk => (
                               <tr key={lnk.id} className="hover:bg-white/80 group">
-                                <td className="p-1.5 font-semibold">
+                                <td className="p-1.5 font-semibold whitespace-nowrap">
                                   <button
                                     onClick={() => {
                                       if (onNavigate) {
@@ -591,7 +591,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                     <ArrowUpRight className="w-3 h-3 opacity-60" />
                                   </button>
                                 </td>
-                                <td className="p-1.5">
+                                <td className="p-1.5 whitespace-nowrap">
                                   <button
                                     onClick={() => {
                                       if (onNavigate) {
@@ -606,10 +606,10 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                                     <ArrowUpRight className="w-3 h-3 opacity-60" />
                                   </button>
                                 </td>
-                                <td className="p-1.5">{lnk.linkageType || 'Primary'}</td>
-                                <td className="p-1.5 text-right tabular-nums font-semibold">ETB {(lnk.linkedAmount || lnk.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                <td className="p-1.5"><StatusChip label={lnk.status || 'Active'} /></td>
-                                <td className="p-1.5 text-right">
+                                <td className="p-1.5 whitespace-nowrap">{lnk.linkageType || 'Primary'}</td>
+                                <td className="p-1.5 text-right tabular-nums font-semibold whitespace-nowrap">ETB {(lnk.linkedAmount || lnk.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                <td className="p-1.5 whitespace-nowrap"><StatusChip label={lnk.status || 'Active'} /></td>
+                                <td className="p-1.5 text-right whitespace-nowrap">
                                   <button
                                     onClick={() => {
                                       if (onNavigate) {
