@@ -56,6 +56,21 @@ public class Notification {
     @Column(name = "read_at")
     private String readAt;
 
+    @Column(name = "recipient_user_id")
+    private String recipientUserId;
+
+    @Column(name = "target_role")
+    private String targetRole;
+
+    @Column(name = "target_branch")
+    private String targetBranch;
+
+    @Column(name = "target_segment")
+    private String targetSegment;
+
+    @Column(name = "is_bank_wide")
+    private boolean bankWide = false;
+
     public Notification() {}
 
     public String getId() { return id; }
@@ -92,4 +107,15 @@ public class Notification {
     public void setReadStatus(String readStatus) { this.readStatus = readStatus; }
     public String getReadAt() { return readAt; }
     public void setReadAt(String readAt) { this.readAt = readAt; }
+
+    public String getRecipientUserId() { return recipientUserId; }
+    public void setRecipientUserId(String recipientUserId) { this.recipientUserId = recipientUserId; }
+    public String getTargetRole() { return targetRole; }
+    public void setTargetRole(String targetRole) { this.targetRole = targetRole; }
+    public String getTargetBranch() { return targetBranch; }
+    public void setTargetBranch(String targetBranch) { this.targetBranch = targetBranch; }
+    public String getTargetSegment() { return targetSegment; }
+    public void setTargetSegment(String targetSegment) { this.targetSegment = targetSegment; }
+    public boolean isBankWide() { return bankWide; }
+    public void setBankWide(boolean bankWide) { this.bankWide = bankWide; }
 }

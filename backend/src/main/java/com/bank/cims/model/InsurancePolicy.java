@@ -63,6 +63,12 @@ public class InsurancePolicy {
     @Column(name = "loan_account_id")
     private String loanAccountId;
 
+    @Column(name = "last_reminder_date")
+    private String lastReminderDate;
+
+    @Column(name = "last_reminder_type")
+    private String lastReminderType;
+
     @Column(name = "endorsement_count")
     private int endorsementCount = 0;
 
@@ -170,6 +176,10 @@ public class InsurancePolicy {
     public void setAmendmentReason(String amendmentReason) { this.amendmentReason = amendmentReason; }
     public String getLoanAccountId() { return loanAccountId; }
     public void setLoanAccountId(String loanAccountId) { this.loanAccountId = loanAccountId; }
+    public String getLastReminderDate() { return lastReminderDate; }
+    public void setLastReminderDate(String lastReminderDate) { this.lastReminderDate = lastReminderDate; }
+    public String getLastReminderType() { return lastReminderType; }
+    public void setLastReminderType(String lastReminderType) { this.lastReminderType = lastReminderType; }
     public String getOnceAuth() { return onceAuth; }
     public void setOnceAuth(String onceAuth) { this.onceAuth = onceAuth; }
 

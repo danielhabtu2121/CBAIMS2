@@ -8,6 +8,8 @@ import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.task.api.Task;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -491,6 +493,17 @@ public class CimsService {
         return copy;
     }
 
+    private User resolveCurrentUser() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                String principal = String.valueOf(auth.getPrincipal());
+                return userRepository.findByUsername(principal).or(() -> userRepository.findById(principal)).orElse(null);
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     public Map<String, Object> getFullState() {
         Map<String, Object> state = new HashMap<>();
         state.put("customers", customerRepository.findAll());
@@ -502,7 +515,13 @@ public class CimsService {
         state.put("endorsements", policyEndorsementRepository.findAll());
         state.put("documents", ownershipDocumentRepository.findAll().stream().map(this::stripDocumentContent).toList());
         state.put("templates", notificationTemplateRepository.findAll());
-        state.put("notifications", notificationRepository.findTop500ByOrderBySentAtDesc());
+
+        User currentUser = resolveCurrentUser();
+        if (currentUser != null && notificationService != null) {
+            state.put("notifications", notificationService.getNotificationsForUser(currentUser, null, null, null, null, 200));
+        } else {
+            state.put("notifications", notificationRepository.findTop500ByOrderBySentAtDesc());
+        }
         state.put("auditLogs", auditLogRepository.findTop500ByOrderByTimestampDesc());
         state.put("exceptions", cimsExceptionRepository.findAll());
         state.put("segments", businessSegmentRepository.findAll());
@@ -767,6 +786,10 @@ public class CimsService {
         logAudit(makerId, "MAKER", "SUBMIT_WORKFLOW_TASK", entityType, entityId, "Status", "Draft", "Pending Approval", "Submitted " + actionType + " to Checker (" + task.getCandidateRole() + ", SLA " + sla + "h)");
 
         // Outbound Notifications for Checker
+        Map<String, Object> checkerContext = new HashMap<>();
+        checkerContext.put("targetRole", task.getCandidateRole() != null ? task.getCandidateRole() : "BRMGR");
+        checkerContext.put("Maker ID", makerId);
+
         sendNotification(
             "Email",
             "WORKFLOW_CHECKER_ALERT",
@@ -781,7 +804,8 @@ public class CimsService {
             "• Remarks: " + (remarks != null ? remarks : "N/A") + "\n\n" +
             "Please log in to CIMS Maker-Checker Inbox or Branch Manager Dashboard to review before authorization.",
             entityType,
-            entityId
+            entityId,
+            checkerContext
         );
 
         sendNotification(
@@ -792,7 +816,8 @@ public class CimsService {
             "CIMS Dual-Control Alert",
             "CIMS Alert: Maker " + makerId + " submitted " + actionType + " for " + entityType + " (" + entityId + ") awaiting your authorization.",
             entityType,
-            entityId
+            entityId,
+            checkerContext
         );
 
         return task;
@@ -2721,138 +2746,272 @@ public class CimsService {
 
     // --- Dynamic Expiry Reminders Engine (SysAdmin schedules + business calendar) ---
     public Map<String,Object> runPolicyExpiryReminders(){
-        int evaluated=0, dispatched=0, skippedByThrottle=0;
+        int evaluated = 0, dispatched = 0, skippedByThrottle = 0;
         LocalDate today = LocalDate.now();
         List<InsurancePolicy> policies = insurancePolicyRepository.findAll().stream()
-                .filter(p -> p.getExpiryDate() != null && isEligibleReminderStatus(p.getStatus()))
+                .filter(p -> p.getExpiryDate() != null && isEligibleReminderStatus(p.getStatus()) && !isTerminalPolicyStatus(p.getStatus()))
                 .toList();
-        List<ReminderSchedule> configured=reminderConfigurationService.getAll();
-        int continuation=configurationService.getReminderContinuationIntervalWorkingDays();
-        int maxPerRecipient=configurationService.getMaxReminderNotificationsPerRecipientPerDay();
+        List<ReminderSchedule> configured = reminderConfigurationService.getAll().stream()
+                .filter(ReminderSchedule::isActive)
+                .toList();
+        int maxPerRecipient = configurationService.getMaxReminderNotificationsPerRecipientPerDay();
 
-        Map<String,List<String>> grouped=new LinkedHashMap<>();
-        for(InsurancePolicy policy:policies){
-            try{
-                LocalDate expiry=LocalDate.parse(policy.getExpiryDate().substring(0,10));
+        Map<String, List<String>> grouped = new LinkedHashMap<>();
+
+        for (InsurancePolicy policy : policies) {
+            String scheduleId = "POLICY_EXPIRY_EVALUATION";
+            String dedupeKey = "REMINDER_EVALUATION_" + policy.getId();
+            try {
+                LocalDate expiry = LocalDate.parse(policy.getExpiryDate().substring(0, 10));
                 evaluated++;
-                String colCode=collateralRepository.findById(policy.getCollateralId()).map(Collateral::getCode).orElse(policy.getCollateralId());
+                String colCode = collateralRepository.findById(policy.getCollateralId()).map(Collateral::getCode).orElse(policy.getCollateralId());
 
-                if (expiry.isBefore(today)) {
-                    // Already expired policy follow-up (Clarification §227-235)
-                    long daysOverdue = java.time.temporal.ChronoUnit.DAYS.between(expiry, today);
-                    boolean isStaffCadence = (daysOverdue <= 5) || (daysOverdue > 5 && daysOverdue % 7 == 0);
-                    if (isStaffCadence) {
-                        String line="• "+policy.getPolicyNumber()+" | Collateral: "+colCode+" | Expiry: "+policy.getExpiryDate()+" | EXPIRED ("+daysOverdue+" calendar days overdue)";
-                        List<String> roles = List.of("CRO","BRO","SRM","BRM");
-                        for(String role:roles){
-                            List<User> users=userRepository.findByRoleIgnoreCaseAndActiveTrue(role);
-                            for(User u:users){
-                                 for(String channel:List.of("Email","SMS")){
-                                    String key=(u.getId()==null?u.getUsername():u.getId())+"|"+channel;
-                                    grouped.computeIfAbsent(key,k->new ArrayList<>()).add(line);
+                long workingRemaining = businessCalendarService != null
+                        ? businessCalendarService.workingDaysUntil(today, expiry)
+                        : ChronoUnit.DAYS.between(today, expiry);
+                long calendarRemaining = ChronoUnit.DAYS.between(today, expiry);
+
+                long workingOverdue = businessCalendarService != null
+                        ? businessCalendarService.calculateWorkingDaysBetween(expiry, today)
+                        : ChronoUnit.DAYS.between(expiry, today);
+                long calendarOverdue = ChronoUnit.DAYS.between(expiry, today);
+
+                // Find matching active configured reminder schedule
+                ReminderSchedule matched = null;
+                long triggerOffset = 0;
+                boolean isOverdue = false;
+
+                for (ReminderSchedule s : configured) {
+                    String basis = s.getTriggerBasis() != null ? s.getTriggerBasis() : "Before Expiry";
+                    String dayType = s.getDayType() != null ? s.getDayType() : "Working Day";
+                    int offset = s.getOffsetDays() > 0 ? s.getOffsetDays() : s.getDaysBeforeExpiry();
+                    String recurrence = s.getRecurrence() != null ? s.getRecurrence() : "One-time";
+
+                    if ("Before Expiry".equalsIgnoreCase(basis)) {
+                        if (expiry.isAfter(today)) {
+                            long days = "Working Day".equalsIgnoreCase(dayType) ? workingRemaining : calendarRemaining;
+                            if ("One-time".equalsIgnoreCase(recurrence)) {
+                                if (days == offset) {
+                                    matched = s;
+                                    triggerOffset = days;
+                                    isOverdue = false;
+                                    break;
+                                }
+                            } else {
+                                int interval = extractIntervalDays(recurrence, 15);
+                                if (days <= offset && days > 0 && (offset - days) % interval == 0) {
+                                    matched = s;
+                                    triggerOffset = days;
+                                    isOverdue = false;
+                                    break;
+                                }
+                            }
+                        } else if (expiry.isEqual(today)) {
+                            if (offset == 0) {
+                                matched = s;
+                                triggerOffset = 0;
+                                isOverdue = false;
+                                break;
+                            }
+                        }
+                    } else if ("After Expiry".equalsIgnoreCase(basis)) {
+                        if (expiry.isBefore(today)) {
+                            long days = "Working Day".equalsIgnoreCase(dayType) ? workingOverdue : calendarOverdue;
+                            if ("One-time".equalsIgnoreCase(recurrence)) {
+                                if (days == offset) {
+                                    matched = s;
+                                    triggerOffset = days;
+                                    isOverdue = true;
+                                    break;
+                                }
+                            } else if (recurrence.toLowerCase().contains("repeat") || recurrence.toLowerCase().contains("15")) {
+                                int interval = extractIntervalDays(recurrence, 15);
+                                if (days > offset && (days - offset) % interval == 0) {
+                                    matched = s;
+                                    triggerOffset = days;
+                                    isOverdue = true;
+                                    break;
                                 }
                             }
                         }
                     }
-                } else {
-                    // Approaching expiry or expiring today
-                    int days=businessCalendarService.workingDaysUntil(today,expiry);
-                    boolean trigger=configured.stream().anyMatch(s->s.isActive()&&s.getDaysBeforeExpiry()==days);
-                    if(days<=20 && days>0 && days%continuation==0) trigger=true;
-                    if(days==0) trigger=true; // Expiring today
-                    if(!trigger)continue;
+                }
 
-                    List<String> roles=new ArrayList<>();
-                    configured.stream().filter(s->s.isActive()&&s.getDaysBeforeExpiry()==days).findFirst().ifPresent(s->roles.addAll(parseJsonStringArray(s.getRecipientRolesJson())));
-                    if(roles.isEmpty()) roles.addAll(List.of("CRO","BRO","SRM","BRM"));
-                    List<String> channels=new ArrayList<>();
-                    configured.stream().filter(s->s.isActive()&&s.getDaysBeforeExpiry()==days).findFirst().ifPresent(s->channels.addAll(parseJsonStringArray(s.getChannelsJson())));
-                    if(channels.isEmpty())channels.addAll(List.of("Email","SMS"));
+                // If no exact schedule matched, evaluate standard system reminder triggers
+                if (matched == null) {
+                    if (expiry.isEqual(today)) {
+                        triggerOffset = 0;
+                        isOverdue = false;
+                    } else if (expiry.isBefore(today)) {
+                        if (calendarOverdue <= 5 || (calendarOverdue > 5 && calendarOverdue % 7 == 0)) {
+                            triggerOffset = calendarOverdue;
+                            isOverdue = true;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
 
-                    String line="• "+policy.getPolicyNumber()+" | Collateral: "+colCode+" | Expiry: "+policy.getExpiryDate()+" | "+(days == 0 ? "EXPIRING TODAY" : days+" working days remaining");
-                    for(String role:roles){
-                        List<User> users=userRepository.findByRoleIgnoreCaseAndActiveTrue(role);
-                        for(User u:users){
-                            for(String channel:channels){
-                                String key=(u.getId()==null?u.getUsername():u.getId())+"|"+channel;
-                                grouped.computeIfAbsent(key,k->new ArrayList<>()).add(line);
+                scheduleId = matched != null ? matched.getId() : (isOverdue ? "EXPIRED_FOLLOWUP" : "EXPIRY_REMINDER");
+                dedupeKey = "REMINDER_SENT_" + scheduleId + "_" + policy.getId();
+
+                // Idempotence & deduplication check: avoid duplicate reminders for the same policy & occurrence today
+                if ((today.toString().equals(policy.getLastReminderDate()) && Objects.equals(scheduleId, policy.getLastReminderType()))
+                        || countTodayAudit(dedupeKey, policy.getId()) >= 1) {
+                    continue;
+                }
+
+                List<String> channels = matched != null ? parseJsonStringArray(matched.getChannelsJson()) : List.of("Email", "SMS");
+                if (channels.isEmpty()) channels = List.of("Email", "SMS");
+                String audience = matched != null && matched.getAudience() != null ? matched.getAudience() : "Both";
+
+                // 1. Staff reminder routing
+                if ("Staff".equalsIgnoreCase(audience) || "Both".equalsIgnoreCase(audience)) {
+                    List<String> roles = matched != null ? parseJsonStringArray(matched.getRecipientRolesJson()) : List.of("CRO", "BRO", "SRM", "BRM");
+                    if (roles.isEmpty()) roles = List.of("CRO", "BRO", "SRM", "BRM");
+
+                    String line = isOverdue
+                            ? "• " + policy.getPolicyNumber() + " | Collateral: " + colCode + " | Expiry: " + policy.getExpiryDate() + " | EXPIRED (" + triggerOffset + " days overdue)"
+                            : "• " + policy.getPolicyNumber() + " | Collateral: " + colCode + " | Expiry: " + policy.getExpiryDate() + " | " + (triggerOffset == 0 ? "EXPIRING TODAY" : triggerOffset + " days remaining");
+
+                    for (String role : roles) {
+                        List<User> users = userRepository.findByRoleIgnoreCaseAndActiveTrue(role);
+                        for (User u : users) {
+                            for (String channel : channels) {
+                                String key = (u.getId() == null ? u.getUsername() : u.getId()) + "|" + channel;
+                                grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(line);
                             }
                         }
                     }
                 }
-            }catch(Exception e){logAudit("SYSTEM","SYSADMIN","REMINDER_EVALUATION_ERROR","InsurancePolicy",policy.getId(),"Error","",e.getMessage(),"Reminder evaluation failed");}
+
+                // 2. Customer direct reminder routing
+                if ("Customer".equalsIgnoreCase(audience) || "Both".equalsIgnoreCase(audience)) {
+                    Optional<Customer> cOpt = policy.getCustomerId() == null ? Optional.empty() : customerRepository.findById(policy.getCustomerId());
+                    if (cOpt.isEmpty() && policy.getCustomerId() != null) {
+                        cOpt = customerRepository.findByCif(policy.getCustomerId());
+                    }
+                    if (cOpt.isEmpty() && policy.getCollateralId() != null) {
+                        Collateral col = collateralRepository.findById(policy.getCollateralId()).orElse(null);
+                        if (col != null && col.getCustomerId() != null) {
+                            cOpt = customerRepository.findById(col.getCustomerId())
+                                    .or(() -> customerRepository.findByCif(col.getCustomerId()));
+                        }
+                    }
+
+                    if (cOpt.isPresent()) {
+                        Customer c = cOpt.get();
+                        String custDedupe = "CUSTOMER_REMINDER_SENT_" + scheduleId + "_" + policy.getId();
+                        if (countTodayAudit(custDedupe, c.getId()) == 0) {
+                            Map<String, Object> ctx = new HashMap<>();
+                            ctx.put("Customer Name", c.getName());
+                            ctx.put("Policy Number", policy.getPolicyNumber());
+                            ctx.put("Expiry Date", policy.getExpiryDate());
+                            ctx.put("Collateral ID", colCode);
+                            if (isOverdue) ctx.put("Days Overdue", triggerOffset);
+                            else ctx.put("Days Remaining", triggerOffset);
+
+                            String templateCode = isOverdue ? "CUSTOMER_POLICY_EXPIRY_REMINDER" : "CUSTOMER_POLICY_EXPIRY_REMINDER";
+                            String subject = isOverdue
+                                    ? "URGENT: Insurance Policy Expired - " + policy.getPolicyNumber()
+                                    : "Insurance Policy Renewal Reminder - " + policy.getPolicyNumber();
+                            String defaultBody = isOverdue
+                                    ? "Dear " + c.getName() + ", your insurance policy " + policy.getPolicyNumber() + " expired on " + policy.getExpiryDate() + " (" + triggerOffset + " days overdue). Please renew immediately."
+                                    : "Dear " + c.getName() + ", your insurance policy " + policy.getPolicyNumber() + " expires on " + policy.getExpiryDate() + ". Please renew immediately.";
+
+                            if (channels.contains("Email") && c.getEmail() != null && !c.getEmail().isBlank()) {
+                                sendNotification("Email", templateCode, c.getEmail(), c.getName(), subject, defaultBody, "Insurance Policy", policy.getId(), ctx);
+                                dispatched++;
+                            }
+                            if (channels.contains("SMS") && c.getPhone() != null && !c.getPhone().isBlank()) {
+                                sendNotification("SMS", templateCode, c.getPhone(), c.getName(), subject, defaultBody, "Insurance Policy", policy.getId(), ctx);
+                                dispatched++;
+                            }
+                            logAudit("SYSTEM", "SYSADMIN", custDedupe, "Customer", c.getId(), "Policy", policy.getId(), "Sent", "Customer reminder sent for schedule " + scheduleId);
+                        }
+                    }
+                }
+
+                // Update policy reminder audit and state tracking
+                policy.setLastReminderDate(today.toString());
+                policy.setLastReminderType(scheduleId);
+                insurancePolicyRepository.save(policy);
+                logAudit("SYSTEM", "SYSADMIN", dedupeKey, "InsurancePolicy", policy.getId(), "Schedule", scheduleId, "Dispatched", "Reminder processed for policy " + policy.getPolicyNumber() + " under schedule " + scheduleId);
+
+            } catch (Exception e) {
+                // Prevent infinite loop retry storms on permanent evaluation/template errors
+                policy.setLastReminderDate(today.toString());
+                policy.setLastReminderType(scheduleId);
+                try {
+                    insurancePolicyRepository.save(policy);
+                } catch (Exception ignored) {}
+                logAudit("SYSTEM", "SYSADMIN", dedupeKey, "InsurancePolicy", policy.getId(), "Error", "", e.getMessage(), "Reminder evaluation failed permanently: " + e.getMessage());
+            }
         }
 
-        Map<String,Integer> sentToday=new HashMap<>();
-        for(Map.Entry<String,List<String>> entry:grouped.entrySet()){
-            String[] key=entry.getKey().split("\\|",2); String recipientId=key[0], channel=key.length>1?key[1]:"Email";
-            User user=userRepository.findById(recipientId).orElse(null);
-            if(user==null)continue;
-            String recipient=channel.equalsIgnoreCase("Email")?user.getEmail():user.getPhone();
-            if(recipient==null||recipient.isBlank())continue;
-            int already=sentToday.getOrDefault(user.getId(),(int)countTodayAudit("REMINDER_SENT",user.getId()));
-            if(already>=maxPerRecipient){skippedByThrottle+=entry.getValue().size();continue;}
-            String subject="CIMS Insurance Expiry Reminder ("+entry.getValue().size()+" policy/policies)";
-            String body="The following insurance policies require renewal action:\n\n"+String.join("\n",entry.getValue())+"\n\nPlease initiate renewal and ensure uninterrupted coverage.";
-            sendNotification(channel,"POLICY_EXPIRY_REMINDER",recipient,user.getFullName(),subject,body,"Insurance Policy","PORTFOLIO",Map.of("Days Remaining","Configured reminder stage"));
-            logAudit("SYSTEM","SYSADMIN","REMINDER_SENT","ReminderRecipient",user.getId(),"Channel","",""+channel,"Consolidated expiry reminder sent for "+entry.getValue().size()+" policy/policies.");
-            sentToday.put(user.getId(),already+1);
+        // Dispatch consolidated staff notifications
+        Map<String, Integer> sentToday = new HashMap<>();
+        for (Map.Entry<String, List<String>> entry : grouped.entrySet()) {
+            String[] key = entry.getKey().split("\\|", 2);
+            String recipientId = key[0], channel = key.length > 1 ? key[1] : "Email";
+            User user = userRepository.findById(recipientId).orElse(null);
+            if (user == null) continue;
+            String recipient = channel.equalsIgnoreCase("Email") ? user.getEmail() : user.getPhone();
+            if (recipient == null || recipient.isBlank()) continue;
+            int already = sentToday.getOrDefault(user.getId(), (int) countTodayAudit("REMINDER_SENT", user.getId()));
+            if (already >= maxPerRecipient) {
+                skippedByThrottle += entry.getValue().size();
+                continue;
+            }
+            String subject = "CIMS Insurance Expiry Reminder (" + entry.getValue().size() + " policy/policies)";
+            String body = "The following insurance policies require renewal action:\n\n" + String.join("\n", entry.getValue()) + "\n\nPlease initiate renewal and ensure uninterrupted coverage.";
+
+            Map<String, Object> digestContext = new HashMap<>();
+            digestContext.put("Staff Name", user.getFullName());
+            digestContext.put("staff name", user.getFullName());
+            digestContext.put("Total Policies", entry.getValue().size());
+            digestContext.put("total policies", entry.getValue().size());
+            digestContext.put("Expiring Count", entry.getValue().size());
+            digestContext.put("expiring count", entry.getValue().size());
+            digestContext.put("Policy Details", String.join("\n", entry.getValue()));
+            digestContext.put("policy details", String.join("\n", entry.getValue()));
+            digestContext.put("Summary", String.join("\n", entry.getValue()));
+            digestContext.put("summary", String.join("\n", entry.getValue()));
+            digestContext.put("Branch", user.getBranch() != null ? user.getBranch() : "Head Office");
+            digestContext.put("branch", user.getBranch() != null ? user.getBranch() : "Head Office");
+            digestContext.put("Report Date", today.toString());
+            digestContext.put("report date", today.toString());
+            digestContext.put("Days Remaining", "Configured reminder stage");
+            digestContext.put("days remaining", "Configured reminder stage");
+            digestContext.put("recipientUserId", user.getId());
+
+            sendNotification(channel, "PORTFOLIO_EXPIRY_DIGEST", recipient, user.getFullName(), subject, body, "Portfolio", "PORTFOLIO-" + user.getId(), digestContext);
+            logAudit("SYSTEM", "SYSADMIN", "REMINDER_SENT", "ReminderRecipient", user.getId(), "Channel", "", channel, "Consolidated expiry reminder sent for " + entry.getValue().size() + " policy/policies.");
+            sentToday.put(user.getId(), already + 1);
             dispatched++;
         }
 
-        // Customer notifications: approaching expiry (every customerFreq days) and already expired (every customerFreq days)
-        int customerStart=configurationService.getCustomerNotificationStartDays(), customerFreq=configurationService.getCustomerNotificationFrequencyDays();
-        for(InsurancePolicy policy:policies){
-            try{
-                LocalDate expiry=LocalDate.parse(policy.getExpiryDate().substring(0,10));
-                Optional<Customer> cOpt = policy.getCustomerId() == null ? Optional.empty() : customerRepository.findById(policy.getCustomerId());
-                if (cOpt.isEmpty() && policy.getCustomerId() != null) {
-                    cOpt = customerRepository.findByCif(policy.getCustomerId());
-                }
-                if (cOpt.isEmpty() && policy.getCollateralId() != null) {
-                    Collateral col = collateralRepository.findById(policy.getCollateralId()).orElse(null);
-                    if (col != null && col.getCustomerId() != null) {
-                        cOpt = customerRepository.findById(col.getCustomerId())
-                                .or(() -> customerRepository.findByCif(col.getCustomerId()));
-                    }
-                }
-                if (cOpt.isEmpty()) {
-                    logAudit("SYSTEM", "DATA_QUALITY", "CUSTOMER_RESOLVE_FAILED", "InsurancePolicy", policy.getId(),
-                            "CustomerId", policy.getCustomerId(), "UNRESOLVED",
-                            "Data Quality Warning: Active policy has unresolved customer identifier: " + policy.getCustomerId());
-                    continue;
-                }
-                Customer c = cOpt.get();
-                String recipient=c.getEmail()!=null&&!c.getEmail().isBlank()?c.getEmail():c.getPhone();
-                if(recipient==null||recipient.isBlank())continue;
-                String channel=c.getEmail()!=null&&!c.getEmail().isBlank()?"Email":"SMS";
+        return Map.of(
+                "success", true,
+                "evaluatedCount", evaluated,
+                "dispatchedCount", dispatched,
+                "skippedByThrottle", skippedByThrottle,
+                "scheduleCount", configured.size(),
+                "message", "Evaluated dynamic expiry reminder schedules (working/calendar days) with strict deduplication."
+        );
+    }
 
-                if (expiry.isBefore(today)) {
-                    long daysOverdue = ChronoUnit.DAYS.between(expiry, today);
-                    if (daysOverdue > 0 && daysOverdue % customerFreq == 0) {
-                        String dedupeAction = "CUSTOMER_EXPIRED_REMINDER_SENT_" + policy.getId();
-                        if (countTodayAudit(dedupeAction, c.getId()) >= 1) continue;
-                        sendNotification(channel, "CUSTOMER_POLICY_EXPIRY_REMINDER", recipient, c.getName(),
-                                "URGENT: Insurance Policy Expired",
-                                "Dear " + c.getName() + ", your insurance policy " + policy.getPolicyNumber() + " expired on " + policy.getExpiryDate() + " (" + daysOverdue + " days overdue). Please renew immediately to avoid breach of contract.",
-                                "Insurance Policy", policy.getId(),
-                                Map.of("Customer Name", c.getName(), "Policy Number", policy.getPolicyNumber(), "Expiry Date", policy.getExpiryDate(), "Days Overdue", daysOverdue));
-                        logAudit("SYSTEM", "SYSADMIN", dedupeAction, "Customer", c.getId(), "Policy", policy.getId(), "Sent", "Customer expired policy reminder sent (" + daysOverdue + " days overdue).");
-                        dispatched++;
-                    }
-                } else {
-                    int days=(int)ChronoUnit.DAYS.between(today,expiry);
-                    if(days<=customerStart && days%customerFreq==0){
-                        String dedupeAction = "CUSTOMER_REMINDER_SENT_" + policy.getId();
-                        if(countTodayAudit(dedupeAction,c.getId())>=1)continue;
-                        sendNotification(channel,"CUSTOMER_POLICY_EXPIRY_REMINDER",recipient,c.getName(),"Insurance Policy Renewal Reminder","Dear "+c.getName()+", your insurance policy "+policy.getPolicyNumber()+" expires on "+policy.getExpiryDate()+". Please contact the Bank to arrange renewal.","Insurance Policy",policy.getId(),Map.of("Customer Name",c.getName(),"Policy Number",policy.getPolicyNumber(),"Expiry Date",policy.getExpiryDate(),"Days Remaining",days));
-                        logAudit("SYSTEM","SYSADMIN",dedupeAction,"Customer",c.getId(),"Policy",policy.getId(),"Sent","Customer renewal reminder sent.");
-                        dispatched++;
-                    }
-                }
-            }catch(Exception e){logAudit("SYSTEM","SYSADMIN","CUSTOMER_REMINDER_ERROR","InsurancePolicy",policy.getId(),"Error","",e.getMessage(),"Customer reminder failed");}
+    private int extractIntervalDays(String recurrence, int defaultDays) {
+        if (recurrence == null || recurrence.isBlank()) return defaultDays;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\d+").matcher(recurrence);
+        if (m.find()) {
+            try {
+                return Integer.parseInt(m.group());
+            } catch (NumberFormatException ignored) {}
         }
-        return Map.of("success",true,"evaluatedCount",evaluated,"dispatchedCount",dispatched,"skippedByThrottle",skippedByThrottle,"scheduleCount",configured.size(),"message","Evaluated configured working-day expiry reminders, customer notifications and throttling.");
+        return defaultDays;
     }
 
     private boolean isTerminalPolicyStatus(String status) {

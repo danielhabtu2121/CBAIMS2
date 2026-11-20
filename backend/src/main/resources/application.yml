@@ -7,7 +7,7 @@ spring:
   application:
     name: cims-backend
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://cims-postgres-db:5432/cims_db_dev}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://cims-postgres-db:5432,127.0.0.1:5432/cims_db_dev}
     username: cims_user
     password: cims_password
     driver-class-name: org.postgresql.Driver

@@ -7,6 +7,8 @@ import {
   UserCheck,
   Clock,
   Bell,
+  Mail,
+  Send,
   FileText,
   Sliders,
   Shield,
@@ -305,6 +307,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --- Users State ---
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [showSendEmailModal, setShowSendEmailModal] = useState(false);
+  const [selectedEmailUser, setSelectedEmailUser] = useState<any | null>(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResult, setEmailResult] = useState<any | null>(null);
+  const [emailError, setEmailError] = useState<string>('');
 
   // --- Branches State ---
   const [showBranchModal, setShowBranchModal] = useState(false);
@@ -856,19 +865,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </div>
                   <div className="flex flex-wrap gap-1.5 mb-2 p-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg">
                     {[
+                      '{Customer Name}',
+                      '{Policy Number}',
+                      '{Collateral ID}',
+                      '{Expiry Date}',
+                      '{Insurer Name}',
+                      '{Loan Account Number}',
+                      '{Facility Number}',
+                      '{Branch Name}',
+                      '{Current Date}',
+                      '{Days Remaining}',
+                      '{Days Overdue}',
                       '{CustomerName}',
-                      '{LoanAccountNumber}',
-                      '{CollateralID}',
                       '{PolicyNumber}',
+                      '{CollateralID}',
                       '{ExpiryDate}',
+                      '{LoanAccountNumber}',
                       '{RMName}',
                       '{RMPhone}',
-                      '{DaysOverdue}',
-                      '{InsurerName}',
-                      '{Amount}',
-                      '{MakerID}',
-                      '{Branch}',
-                      '{DaysRemaining}'
                     ].map(ph => (
                       <button
                         key={ph}
@@ -884,7 +898,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <textarea
                     className="input-field w-full font-mono text-xs"
                     rows={6}
-                    placeholder="Dear {CustomerName},\n\nPlease be advised that policy {PolicyNumber} covering collateral {CollateralID} (Loan Ref: {LoanAccountNumber}) will expire in {DaysRemaining} days on {ExpiryDate}. Please contact your Relationship Manager {RMName} ({RMPhone})..."
+                    placeholder="Dear {Customer Name},\n\nYour policy {Policy Number} for collateral {Collateral ID} expires on {Expiry Date}. Please contact {Branch Name} to renew immediately..."
                     value={templateDraft.body}
                     onChange={e => setTemplateDraft({ ...templateDraft, body: e.target.value })}
                   />
@@ -901,19 +915,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       setModalError(null);
                       try {
                         const r = await cimsApi.previewNotificationTemplate(templateDraft.body, {
-                          CustomerName: 'Commercial Borrower Corp',
+                          'Customer Name': 'Selam Alemayehu',
+                          CustomerName: 'Selam Alemayehu',
+                          'Policy Number': 'POL-2026-001',
+                          PolicyNumber: 'POL-2026-001',
+                          'Collateral ID': 'COL-00045',
+                          CollateralID: 'COL-00045',
+                          'Expiry Date': '2026-12-15',
+                          ExpiryDate: '2026-12-15',
+                          'Current Date': '2026-11-18',
+                          CurrentDate: '2026-11-18',
+                          'Insurer Name': 'Ethiopian Insurance Corporation',
+                          InsurerName: 'Ethiopian Insurance Corporation',
+                          'Loan Account Number': 'LN-2026-9901',
                           LoanAccountNumber: 'LN-2026-9901',
-                          PolicyNumber: 'POL-2026-8819',
-                          CollateralID: 'COL-MORT-402',
-                          ExpiryDate: '2026-10-31',
+                          'Facility Number': 'FAC-2026-004',
+                          FacilityNumber: 'FAC-2026-004',
+                          'Branch Name': 'Main Corporate Branch',
+                          Branch: 'Main Corporate Branch',
+                          'Days Remaining': 30,
+                          DaysRemaining: 30,
+                          'Days Overdue': 0,
+                          DaysOverdue: 0,
                           RMName: 'Alemayehu Tadesse',
                           RMPhone: '+251 91 123 4567',
-                          DaysOverdue: 0,
-                          DaysRemaining: 30,
-                          InsurerName: 'Ethiopian Insurance Corporation',
                           Amount: 12500000,
-                          MakerID: 'LOAN_OFFICER_1',
-                          Branch: 'Main Corporate Branch'
+                          MakerID: 'LOAN_OFFICER_1'
                         });
                         setTemplatePreview(r.preview);
                       } catch (e: any) {
@@ -1129,6 +1156,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           className="text-[#00205B] hover:underline font-semibold"
                         >
                           Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedEmailUser(u);
+                            setEmailSubject(`CBAIMS Notification: Test Dispatch to ${u.name || u.fullName || u.username}`);
+                            setEmailBody(`Dear ${u.name || u.fullName || u.username},\n\nThis is an administrative test notification dispatched from the CBAIMS Admin Console to verify your configured email channel connectivity.\n\nAccount: ${u.username}\nRole: ${u.role}\nBranch: ${u.branch}\nSegment: ${u.segment}\n\nThank you,\nCBAIMS System Administration`);
+                            setEmailResult(null);
+                            setEmailError('');
+                            setShowSendEmailModal(true);
+                          }}
+                          className="text-blue-600 hover:underline font-semibold"
+                          title={`Send test email to ${u.email || u.username}`}
+                        >
+                          Send Email
                         </button>
                         <button
                           onClick={async () => {
@@ -2203,6 +2244,187 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 className="btn-primary text-xs"
               >
                 {modalSaving ? 'Saving...' : 'Save User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Send Test Email Modal --- */}
+      {showSendEmailModal && selectedEmailUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3 border-[#E2E8F0]">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-[#00205B]" />
+                <h3 className="text-base font-bold text-[#00205B]">
+                  Send Email — {selectedEmailUser.name || selectedEmailUser.fullName || selectedEmailUser.username}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSendEmailModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Recipient Details Card */}
+            <div className="p-3 bg-[#EFF5FB] rounded-lg border border-[#DCE4EE] space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-[#5B6472] font-semibold">Recipient Name:</span>
+                <span className="font-bold text-[#101828]">{selectedEmailUser.name || selectedEmailUser.fullName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#5B6472] font-semibold">Username:</span>
+                <span className="text-[#101828]">{selectedEmailUser.username}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#5B6472] font-semibold">Configured Email:</span>
+                <span className={`font-mono font-bold ${selectedEmailUser.email ? 'text-blue-700' : 'text-red-600'}`}>
+                  {selectedEmailUser.email || 'None Configured (Delivery Blocked)'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#5B6472] font-semibold">Role / Branch:</span>
+                <span className="text-[#101828]">{selectedEmailUser.role} / {selectedEmailUser.branch}</span>
+              </div>
+            </div>
+
+            {/* Error or Warning Banner */}
+            {(!selectedEmailUser.email || selectedEmailUser.email.trim() === '') && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong>Missing Email Address:</strong> This user does not have a configured email address. Please click 'Edit' to update their email before dispatching.
+                </div>
+              </div>
+            )}
+
+            {emailError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{emailError}</span>
+              </div>
+            )}
+
+            {/* Dispatch Result Feedback */}
+            {emailResult && (
+              <div
+                className={`p-3 rounded-lg border text-xs space-y-1.5 ${
+                  emailResult.success
+                    ? emailResult.isSimulator
+                      ? 'bg-amber-50 border-amber-200 text-amber-900'
+                      : 'bg-green-50 border-green-200 text-green-900'
+                    : 'bg-red-50 border-red-200 text-red-900'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold">
+                  {emailResult.success ? (
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                  )}
+                  <span>
+                    {emailResult.success
+                      ? emailResult.isSimulator
+                        ? 'Simulated Dispatch Completed (Simulator Mode)'
+                        : 'Real Email Dispatched via Office 365 SMTP'
+                      : 'Delivery Failed'}
+                  </span>
+                </div>
+                <div className="text-[11px] space-y-0.5 pl-5">
+                  <div><strong>Provider Mode:</strong> <span className="font-mono">{emailResult.provider || 'OFFICE365_SMTP'}</span></div>
+                  <div><strong>Delivery Status:</strong> <span className="font-semibold">{emailResult.status}</span></div>
+                  {emailResult.deliveryReference && (
+                    <div><strong>Reference:</strong> <span className="font-mono">{emailResult.deliveryReference}</span></div>
+                  )}
+                  {emailResult.errorMessage && (
+                    <div className="text-red-700"><strong>Error:</strong> {emailResult.errorMessage}</div>
+                  )}
+                  <div><strong>Timestamp:</strong> {emailResult.timestamp}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Subject Field */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#101828]">Subject:</label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="Enter email subject"
+                className="w-full text-xs p-2.5 bg-[#EFF5FB] border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3E7AB0]"
+              />
+            </div>
+
+            {/* Message Body Field */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#101828]">Message Body:</label>
+              <textarea
+                rows={5}
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                placeholder="Enter email body"
+                className="w-full text-xs p-2.5 bg-[#EFF5FB] border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3E7AB0] resize-y"
+              />
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
+              <button
+                onClick={() => setShowSendEmailModal(false)}
+                className="btn-secondary text-xs px-3 py-1.5"
+                disabled={emailSending}
+              >
+                Close
+              </button>
+              <button
+                onClick={async () => {
+                  if (!selectedEmailUser.email || selectedEmailUser.email.trim() === '') {
+                    setEmailError('User does not have a configured email address.');
+                    return;
+                  }
+                  if (!emailSubject.trim()) {
+                    setEmailError('Email subject is required.');
+                    return;
+                  }
+                  setEmailSending(true);
+                  setEmailError('');
+                  setEmailResult(null);
+                  try {
+                    const res = await cimsApi.sendAdminTestEmail(
+                      selectedEmailUser.id || selectedEmailUser.userId || selectedEmailUser.username,
+                      emailSubject,
+                      emailBody
+                    );
+                    setEmailResult(res);
+                    if (res?.success) {
+                      showToast(`Test email dispatched successfully (${res.provider || 'SMTP'})`);
+                    } else {
+                      setEmailError(res?.errorMessage || 'Email dispatch failed on provider.');
+                    }
+                  } catch (err: any) {
+                    setEmailError(err.message || 'Failed to dispatch test email.');
+                  } finally {
+                    setEmailSending(false);
+                  }
+                }}
+                disabled={emailSending || !selectedEmailUser.email}
+                className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+              >
+                {emailSending ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 animate-spin" />
+                    <span>Dispatching...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send Email</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -1034,6 +1034,16 @@ export function App() {
     await loadData();
   };
 
+  const handleResendNotification = async (id: string) => {
+    try {
+      const updated = await cimsApi.resendNotification(id, currentUser?.username || 'SYSADMIN');
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, ...updated } : n)));
+      await loadData();
+    } catch (e: any) {
+      console.error('Notification retry failed', e);
+    }
+  };
+
   // Dynamically resolve screen permissions for current page and current user's role
   const activeScreenPermission = useMemo(() => {
     if (!permissions || permissions.length === 0 || !currentUser) return null;
@@ -1523,6 +1533,8 @@ export function App() {
                     notifications={notifications}
                     currentUser={effectiveUserSession}
                     onTriggerScan={handleScanExceptions}
+                    onResend={handleResendNotification}
+                    onRefresh={loadData}
                   />
                 )}
 

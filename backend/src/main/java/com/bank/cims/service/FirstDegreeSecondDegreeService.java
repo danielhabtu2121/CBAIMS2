@@ -847,6 +847,8 @@ public class FirstDegreeSecondDegreeService {
             ));
             notif.setEntityType("Collateral");
             notif.setEntityId(secCol.getId());
+            notif.setTargetRole("MGRCOLLDOC");
+            notif.setTargetBranch(secCol.getBranch());
             notif.setStatus("Sent");
             notif.setSentAt(LocalDateTime.now().toString());
             notificationRepository.save(notif);
@@ -1216,6 +1218,8 @@ public class FirstDegreeSecondDegreeService {
                         notif.setStatus("Pending");
                         notif.setEntityType("Collateral");
                         notif.setEntityId(col.getId());
+                        notif.setTargetRole("CRO");
+                        notif.setTargetBranch(col.getBranch());
                         notificationRepository.save(notif);
                     }
                 }

@@ -16,8 +16,13 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
     List<InsurancePolicy> findByCustomerId(String customerId);
     List<InsurancePolicy> findByCustomerIdAndStatus(String customerId, String status);
     List<InsurancePolicy> findByStatus(String status);
-    Optional<InsurancePolicy> findByPolicyNumber(String policyNumber);
-    Optional<InsurancePolicy> findByPolicyNumberIgnoreCase(String policyNumber);
+    Optional<InsurancePolicy> findFirstByPolicyNumberIgnoreCase(String policyNumber);
+    default Optional<InsurancePolicy> findByPolicyNumber(String policyNumber) {
+        return findFirstByPolicyNumberIgnoreCase(policyNumber);
+    }
+    default Optional<InsurancePolicy> findByPolicyNumberIgnoreCase(String policyNumber) {
+        return findFirstByPolicyNumberIgnoreCase(policyNumber);
+    }
     List<InsurancePolicy> findByReplacesPolicyId(String replacesPolicyId);
     List<InsurancePolicy> findByRenewedFromPolicyId(String renewedFromPolicyId);
     List<InsurancePolicy> findByInsurerId(String insurerId);

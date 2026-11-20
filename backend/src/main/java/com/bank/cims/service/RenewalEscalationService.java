@@ -47,7 +47,7 @@ public class RenewalEscalationService {
                         String recipient = u.getEmail() != null && !u.getEmail().isBlank() ? u.getEmail() : u.getPhone();
                         if (recipient == null || recipient.isBlank()) continue;
                         String channel = u.getEmail() != null && !u.getEmail().isBlank() ? "Email" : "SMS";
-                        cimsService.sendNotification(channel, "RENEWAL_ESCALATION_" + stage.code, recipient, u.getFullName(), "CIMS Renewal Escalation: " + p.getPolicyNumber(), body, "Insurance Policy", p.getId());
+                        cimsService.sendNotification(channel, "RENEWAL_ESCALATION_" + stage.code, recipient, u.getFullName(), "CIMS Renewal Escalation: " + p.getPolicyNumber(), body, "Insurance Policy", p.getId(), Map.of("recipientUserId", u.getId(), "targetRole", stage.role));
                         cimsService.logAudit("SYSTEM", "SYSADMIN", "RENEWAL_ESCALATION_SENT", "InsurancePolicy", p.getId(), "Stage", "", stage.code, "Escalated renewal to " + stage.role + " for " + u.getUsername());
                         escalated++;
                     }
@@ -120,7 +120,7 @@ public class RenewalEscalationService {
                 String recipient = dd.getEmail() != null && !dd.getEmail().isBlank() ? dd.getEmail() : dd.getPhone();
                 if (recipient == null || recipient.isBlank()) continue;
                 String channel = dd.getEmail() != null && !dd.getEmail().isBlank() ? "Email" : "SMS";
-                cimsService.sendNotification(channel, "POST_EXPIRY_ESCALATION_15_CONSOLIDATED", recipient, dd.getFullName(), reportSubject, reportText, "DistrictHierarchy", districtName);
+                cimsService.sendNotification(channel, "POST_EXPIRY_ESCALATION_15_CONSOLIDATED", recipient, dd.getFullName(), reportSubject, reportText, "DistrictHierarchy", districtName, Map.of("recipientUserId", dd.getId(), "targetRole", "DISTDIR"));
             }
 
             cimsService.logAudit("SYSTEM", "SYSADMIN", "DISTRICT_CONSOLIDATED_OVERDUE_REPORT", "DistrictHierarchy",

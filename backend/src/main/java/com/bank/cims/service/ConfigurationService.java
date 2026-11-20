@@ -129,7 +129,30 @@ public class ConfigurationService {
     public String getInsuranceAdequacyFormulaMode(){return getString("insurance_adequacy_formula_mode","TWO_TIER");}
     public double getCollateralReleaseMarginPct(){return getDouble("collateral_release_margin_pct",100.0);}
 
-    public List<SystemParameter> getAllParameters(){ List<SystemParameter> r=systemParameterRepository.findAll(); r.sort(Comparator.comparing(SystemParameter::getParamKey,String.CASE_INSENSITIVE_ORDER)); return r; }
+    public boolean isSensitiveKey(String key, String type) {
+        if ("password".equalsIgnoreCase(type)) return true;
+        if (key == null) return false;
+        String k = key.toLowerCase();
+        if (k.startsWith("password_min_") || k.startsWith("password_expiry_") || k.startsWith("password_history_") || k.startsWith("password_require_")) {
+            return false;
+        }
+        return k.endsWith("_password") || k.equals("password") || k.contains("secret") || k.contains("credential")
+                || k.contains("private_key") || k.contains("api_key");
+    }
+
+    public List<SystemParameter> getAllParameters() {
+        List<SystemParameter> list = systemParameterRepository.findAll();
+        List<SystemParameter> safeList = new ArrayList<>(list.size());
+        for (SystemParameter p : list) {
+            SystemParameter display = new SystemParameter(p.getParamKey(), p.getParamValue(), p.getDescription(), p.getParamType());
+            if (isSensitiveKey(p.getParamKey(), p.getParamType())) {
+                display.setParamValue(p.getParamValue() != null && !p.getParamValue().isBlank() ? "••••••••" : "");
+            }
+            safeList.add(display);
+        }
+        safeList.sort(Comparator.comparing(SystemParameter::getParamKey, String.CASE_INSENSITIVE_ORDER));
+        return safeList;
+    }
 
     @Transactional
     public synchronized SystemParameter saveParameter(SystemParameter incoming,String userId){
@@ -139,21 +162,36 @@ public class ConfigurationService {
             cimsService.assertUserPermission(userId, "Administration", "EDIT");
         }
         String key=normalize(incoming.getParamKey()), value=incoming.getParamValue().trim();
-        validate(key,value);
         Optional<SystemParameter> oldOpt=systemParameterRepository.findById(key);
         String old=oldOpt.map(SystemParameter::getParamValue).orElse(null);
+
+        boolean isMasked = "••••••••".equals(value) || "********".equals(value);
+        if (isMasked && oldOpt.isPresent() && isSensitiveKey(key, incoming.getParamType())) {
+            value = oldOpt.get().getParamValue();
+        } else {
+            validate(key,value);
+        }
+
         SystemParameter target=oldOpt.orElseGet(SystemParameter::new);
         target.setParamKey(key); target.setParamValue(value);
+        if (incoming.getParamType() != null && !incoming.getParamType().isBlank()) {
+            target.setParamType(incoming.getParamType());
+        }
         target.setDescription(incoming.getDescription()!=null&&!incoming.getDescription().isBlank()?incoming.getDescription().trim():defaultDescription(key));
         SystemParameter saved=systemParameterRepository.save(target);
         cache.put(key,value);
-        cimsService.logAudit(userId==null?"SYSADMIN":userId,"SYSADMIN","UPDATE_SYSTEM_PARAMETER","SystemParameter",key,"ParamValue",old==null?"<not configured>":old,value,"Runtime configuration changed; cache refreshed immediately.");
+        boolean sensitive = isSensitiveKey(key, incoming.getParamType());
+        cimsService.logAudit(userId==null?"SYSADMIN":userId,"SYSADMIN","UPDATE_SYSTEM_PARAMETER","SystemParameter",key,"ParamValue",
+                old==null?"<not configured>":(sensitive ? "••••••••" : old),
+                sensitive ? "••••••••" : value,
+                "Runtime configuration changed; cache refreshed immediately.");
         return saved;
     }
 
     public void validate(String key,String value){
         switch(key){
-            case "min_coverage_adequacy_pct","max_insurer_concentration_pct","collateral_release_margin_pct" -> { double v=parseDouble(key,value); if(v<=0||v>200)throw new IllegalArgumentException(key+" must be greater than 0 and no more than 200."); }
+            case "min_coverage_adequacy_pct","max_insurer_concentration_pct" -> { double v=parseDouble(key,value); if(v<=0||v>100)throw new IllegalArgumentException(key+" must be greater than 0 and no more than 100."); }
+            case "collateral_release_margin_pct" -> { double v=parseDouble(key,value); if(v<=0||v>200)throw new IllegalArgumentException(key+" must be greater than 0 and no more than 200."); }
             case "policy_expiry_grace_period_days","minimum_policy_validity_days","session_timeout_minutes","password_min_length","max_login_failed_attempts","password_expiry_days","password_history_count","cbs_sync_interval_minutes","reminder_scheduler_interval_minutes","reminder_continuation_interval_working_days","max_reminder_notifications_per_recipient_per_day","customer_notification_frequency_days","customer_notification_start_days","escalation_first_days_before_expiry","escalation_second_days_before_expiry","escalation_overdue_start_days","escalation_overdue_interval_days","document_expiry_warning_days","policy_expiring_status_days","exception_scan_interval_minutes" -> { if(parseInt(key,value)<=0)throw new IllegalArgumentException(key+" must be greater than zero."); }
             case "password_require_special","dual_control_strict_mode","approved_insurer_required","mandatory_document_rules_enabled","reminder_scheduler_enabled","exception_scan_enabled" -> { if(!value.matches("(?i)(true|false|1|0|yes|no|y|n)"))throw new IllegalArgumentException(key+" must be boolean."); }
             case "cbs_sync_mode" -> { if(!value.equalsIgnoreCase("Manual")&&!value.equalsIgnoreCase("Scheduled"))throw new IllegalArgumentException("CBS sync mode must be Manual or Scheduled."); }

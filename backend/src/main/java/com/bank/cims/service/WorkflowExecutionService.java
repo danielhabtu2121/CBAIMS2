@@ -614,7 +614,8 @@ public class WorkflowExecutionService {
                         "• Decision: Approved\n" +
                         "• Remarks: " + (comments != null ? comments : "Approved"),
                         entityType,
-                        entityId
+                        entityId,
+                        Map.of("recipientUserId", task.getMakerId())
                 );
             } catch (Exception ignored) {}
         }
@@ -778,7 +779,8 @@ public class WorkflowExecutionService {
                         "• Return Reason: " + comments + "\n\n" +
                         "Please update the record and resubmit for authorization.",
                         entityType,
-                        entityId
+                        entityId,
+                        Map.of("recipientUserId", task.getMakerId())
                 );
             } catch (Exception ignored) {}
         }
@@ -990,7 +992,8 @@ public class WorkflowExecutionService {
                         "• Action: " + task.getActionType() + "\n" +
                         "• Rejection Reason: " + comments,
                         entityType,
-                        entityId
+                        entityId,
+                        Map.of("recipientUserId", task.getMakerId())
                 );
             } catch (Exception ignored) {}
         }

@@ -14,6 +14,7 @@ if not errorlevel 1 (
 	exit /b 0
 )
 cd /d "%~dp0backend"
+if "%SPRING_DATASOURCE_URL%"=="" set "SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/cims_db_dev"
 call mvnw.cmd "-Dmaven.test.skip=true" spring-boot:run
 if errorlevel 1 echo Backend startup failed. Check the database connection and Maven output above.
 pause

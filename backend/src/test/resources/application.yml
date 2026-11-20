@@ -22,6 +22,8 @@ flowable:
   async-executor-activate: false
 
 cims:
+  scheduler:
+    enabled: false
   cbs:
     mode: SIMULATOR
     sync-mode: MANUAL

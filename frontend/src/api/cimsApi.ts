@@ -1267,6 +1267,83 @@ export const cimsApi = {
   async runRenewalEscalations(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/escalations/run?userId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
   async scanExceptionsNow(userId = 'SYSADMIN'): Promise<any> { return requestJson<any>(`${API_BASE}/admin/exceptions/scan?userId=${encodeURIComponent(userId)}`, { method: 'POST' }); },
 
+  // --- Outbound Notifications & Integration Gateway APIs ---
+  async fetchNotificationsDirect(channel?: string, status?: string, recipient?: string, query?: string, limit = 100): Promise<NotificationItem[]> {
+    const q = new URLSearchParams();
+    if (channel && channel !== 'ALL') q.set('channel', channel);
+    if (status && status !== 'ALL') q.set('status', status);
+    if (recipient) q.set('recipient', recipient);
+    if (query) q.set('query', query);
+    q.set('limit', String(limit));
+    return requestJson<NotificationItem[]>(`${API_BASE}/notifications?${q.toString()}`);
+  },
+
+  async resendNotification(id: string, operatorId = 'SYSADMIN'): Promise<NotificationItem> {
+    return requestJson<NotificationItem>(`${API_BASE}/notifications/${encodeURIComponent(id)}/resend?operatorId=${encodeURIComponent(operatorId)}`, {
+      method: 'POST',
+    });
+  },
+
+  async getNotificationIntegrationsStatus(): Promise<any> {
+    return requestJson<any>(`${API_BASE}/notifications/integrations/status`);
+  },
+
+  async getNotificationIntegrationsConfig(): Promise<Record<string, string>> {
+    return requestJson<Record<string, string>>(`${API_BASE}/notifications/integrations/config`);
+  },
+
+  async saveNotificationIntegrationsConfig(config: Record<string, string>, updatedBy = 'SYSADMIN'): Promise<Record<string, string>> {
+    return requestJson<Record<string, string>>(`${API_BASE}/notifications/integrations/config?updatedBy=${encodeURIComponent(updatedBy)}`, {
+      method: 'POST',
+      body: JSON.stringify(config),
+    });
+  },
+
+  async testOutlookIntegration(recipient: string, subject?: string, body?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/notifications/integrations/outlook/test`, {
+      method: 'POST',
+      body: JSON.stringify({ recipient, subject, body }),
+    });
+  },
+
+  async testSmsIntegration(phone: string, message?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/notifications/integrations/sms/test`, {
+      method: 'POST',
+      body: JSON.stringify({ phone, message }),
+    });
+  },
+
+  async markNotificationRead(id: string): Promise<NotificationItem> {
+    return requestJson<NotificationItem>(`${API_BASE}/notifications/${encodeURIComponent(id)}/read`, {
+      method: 'POST',
+    });
+  },
+
+  async markAllNotificationsRead(recipient?: string): Promise<{ success: boolean; markedCount: number }> {
+    const q = recipient ? `?recipient=${encodeURIComponent(recipient)}` : '';
+    return requestJson<{ success: boolean; markedCount: number }>(`${API_BASE}/notifications/mark-all-read${q}`, {
+      method: 'POST',
+    });
+  },
+
+  async getNotificationUnreadCount(recipient?: string): Promise<{ unreadCount: number }> {
+    const q = recipient ? `?recipient=${encodeURIComponent(recipient)}` : '';
+    return requestJson<{ unreadCount: number }>(`${API_BASE}/notifications/unread-count${q}`);
+  },
+
+  async deleteNotification(id: string): Promise<{ success: boolean; message: string }> {
+    return requestJson<{ success: boolean; message: string }>(`${API_BASE}/notifications/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async sendAdminTestEmail(userId: string, subject?: string, body?: string): Promise<any> {
+    return requestJson<any>(`${API_BASE}/admin/users/${encodeURIComponent(userId)}/send-email`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, subject, body }),
+    });
+  },
+
   // --- Customer 360 Hub API ---
   async fetchCustomer360(customerId: string): Promise<any> {
     return requestJson<any>(`${API_BASE}/customers/${encodeURIComponent(customerId)}/360`);

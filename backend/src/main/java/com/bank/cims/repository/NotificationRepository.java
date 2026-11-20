@@ -9,6 +9,9 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, String> {
     List<Notification> findByRecipientOrderBySentAtDesc(String recipient);
+    List<Notification> findByRecipientUserIdOrderBySentAtDesc(String recipientUserId);
+    List<Notification> findByTargetRoleOrderBySentAtDesc(String targetRole);
+    List<Notification> findByBankWideTrueOrderBySentAtDesc();
     List<Notification> findAllByOrderBySentAtDesc();
     List<Notification> findTop500ByOrderBySentAtDesc();
     List<Notification> findByChannelOrderBySentAtDesc(String channel);

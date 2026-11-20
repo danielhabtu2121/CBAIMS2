@@ -77,6 +77,9 @@ public class AdminConfigController {
     private BusinessCalendarService businessCalendarService;
 
     @Autowired
+    private com.bank.cims.service.NotificationService notificationService;
+
+    @Autowired
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -260,6 +263,25 @@ public class AdminConfigController {
             cimsService.logAudit(actor, "SYSADMIN", "TOGGLE_USER_STATUS", "User", u.getId(), "Active", String.valueOf(!active), String.valueOf(active), "Toggled user active status");
         });
         return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @PostMapping("/users/{id}/send-email")
+    public ResponseEntity<?> sendUserTestEmail(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, String> bodyMap,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            @RequestParam(required = false) String adminUserId) {
+        String actor = resolveAndVerifyAdminUser(headerUserId, adminUserId);
+        String subject = bodyMap != null ? bodyMap.get("subject") : null;
+        String body = bodyMap != null ? bodyMap.get("body") : null;
+        try {
+            Map<String, Object> res = notificationService.sendAdminTestEmail(actor, id, subject, body);
+            return ResponseEntity.ok(res);
+        } catch (SecurityException se) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "error", se.getMessage()));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", iae.getMessage()));
+        }
     }
 
     // --- Role Permissions ---
