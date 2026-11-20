@@ -109,14 +109,19 @@ public class OutlookIntegrationService {
     }
 
     public boolean isStartTlsRequired() {
-
-        String envTls = System.getenv("CBAIMS_SMTP_STARTTLS");
-        if (envTls != null && !envTls.isBlank()) {
-            return Boolean.parseBoolean(envTls.trim());
-        }
-        String defaultVal = isInternalRelay() ? "false" : "true";
-        return Boolean.parseBoolean(getParam("notification_outlook_smtp_starttls", defaultVal));
+    if (isInternalRelay()) {
+        return false;
     }
+
+    String envTls = System.getenv("CBAIMS_SMTP_STARTTLS");
+    if (envTls != null && !envTls.isBlank()) {
+        return Boolean.parseBoolean(envTls.trim());
+    }
+
+    return Boolean.parseBoolean(
+        getParam("notification_outlook_smtp_starttls", "true")
+    );
+}
 
     public int getConnectionTimeoutMs() {
         try {
