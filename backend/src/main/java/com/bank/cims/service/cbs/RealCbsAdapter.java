@@ -71,7 +71,7 @@ public class RealCbsAdapter implements CbsAdapter {
     @Value("${cims.cbs.oracle.minimum-idle:1}")
     private int minIdle;
 
-    @Value("${cims.cbs.oracle.fetch-size:500}")
+    @Value("${cims.cbs.oracle.fetch-size:100}")
     private int fetchSize;
 
     private HikariDataSource dataSource;
@@ -112,6 +112,16 @@ public class RealCbsAdapter implements CbsAdapter {
                 // Security: Prevent auto-commit and ensure strict read-only
                 config.setAutoCommit(false);
                 config.setConnectionTestQuery("SELECT 1 FROM DUAL");
+
+                // Critical firewall and packet integrity settings to prevent ORA-12592 (TNS:bad packet):
+                // Disable Out-Of-Band (TCP URG) data which stateful firewalls drop or strip
+                System.setProperty("oracle.net.disableOob", "true");
+                config.addDataSourceProperty("oracle.net.disableOob", "true");
+                config.addDataSourceProperty("oracle.net.keepAlive", "true");
+                config.addDataSourceProperty("oracle.net.sdu", "32767");
+                config.addDataSourceProperty("oracle.jdbc.ReadTimeout", String.valueOf(readTimeoutMs > 0 ? readTimeoutMs : 15000));
+                config.addDataSourceProperty("oracle.net.CONNECT_TIMEOUT", String.valueOf(connectTimeoutMs > 0 ? connectTimeoutMs : 5000));
+
                 dataSource = new HikariDataSource(config);
                 log.info("Initialized dedicated read-only Oracle CBS connection pool to {}", redactJdbcUrl(jdbcUrl));
             }
@@ -183,8 +193,15 @@ public class RealCbsAdapter implements CbsAdapter {
 
         try {
             Class.forName("oracle.jdbc.OracleDriver");
+            System.setProperty("oracle.net.disableOob", "true");
             DriverManager.setLoginTimeout(Math.max(1, connectTimeoutMs / 1000));
-            try (Connection conn = DriverManager.getConnection(url, user, pass);
+            Properties props = new Properties();
+            props.put("user", user);
+            props.put("password", pass);
+            props.put("oracle.net.disableOob", "true");
+            props.put("oracle.net.keepAlive", "true");
+            props.put("oracle.net.sdu", "32767");
+            try (Connection conn = DriverManager.getConnection(url, props);
                  Statement stmt = conn.createStatement()) {
                 stmt.setQueryTimeout(Math.max(1, connectTimeoutMs / 1000));
                 try (ResultSet rs = stmt.executeQuery("SELECT 1 FROM DUAL")) {
@@ -265,6 +282,9 @@ public class RealCbsAdapter implements CbsAdapter {
             return new CbsConnectionStatus("REAL", "AUTHENTICATION_FAILED", "Authentication failed for Oracle user: " + username);
         } else if (errorCode == 942) { // ORA-00942: table or view does not exist
             return new CbsConnectionStatus("REAL", "VIEW_ACCESS_DENIED", "One or more required views do not exist or access is denied in schema " + schema);
+        } else if (errorCode == 12592 || msg.contains("ORA-12592") || msg.toLowerCase().contains("bad packet")) {
+            return new CbsConnectionStatus("REAL", "NETWORK_PROTOCOL_ERROR",
+                    "Oracle TNS packet corrupted (ORA-12592: TNS:bad packet). Corporate firewall dropped Out-Of-Band (URG) packets or split TNS frame. Ensure oracle.net.disableOob=true and fetchSize <= 100.");
         } else if (msg.toLowerCase().contains("the network adapter could not establish the connection")
                 || msg.toLowerCase().contains("io error")
                 || msg.toLowerCase().contains("io exception")
@@ -400,9 +420,9 @@ public class RealCbsAdapter implements CbsAdapter {
 
         List<CbsCustomerViewRow> rows = new ArrayList<>();
         try (Connection conn = getReadOnlyConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ps.setQueryTimeout(Math.max(1, readTimeoutMs / 1000));
-            ps.setFetchSize(fetchSize > 0 ? fetchSize : 500);
+            ps.setFetchSize(fetchSize > 0 ? fetchSize : 100);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -442,9 +462,9 @@ public class RealCbsAdapter implements CbsAdapter {
 
         List<CbsFacilityViewRow> rows = new ArrayList<>();
         try (Connection conn = getReadOnlyConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ps.setQueryTimeout(Math.max(1, readTimeoutMs / 1000));
-            ps.setFetchSize(fetchSize > 0 ? fetchSize : 500);
+            ps.setFetchSize(fetchSize > 0 ? fetchSize : 100);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -494,9 +514,9 @@ public class RealCbsAdapter implements CbsAdapter {
 
         List<CbsCollateralViewRow> rows = new ArrayList<>();
         try (Connection conn = getReadOnlyConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ps.setQueryTimeout(Math.max(1, readTimeoutMs / 1000));
-            ps.setFetchSize(fetchSize > 0 ? fetchSize : 500);
+            ps.setFetchSize(fetchSize > 0 ? fetchSize : 100);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

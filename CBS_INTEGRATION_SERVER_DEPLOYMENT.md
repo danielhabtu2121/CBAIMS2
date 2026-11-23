@@ -206,5 +206,6 @@ Imports and establishes canonical records in CBAIMS with immutable source snapsh
 | `NETWORK_UNAVAILABLE` | Port 1521 unreachable or timed out. | Check firewall egress from host. Verify host IP is `172.22.11.55` or connect to Bank VPN. |
 | `AUTHENTICATION_FAILED` (ORA-01017) | Invalid Oracle username or password. | Verify credentials with CBS DBA team; update password in config. |
 | `VIEW_ACCESS_DENIED` (ORA-00942) | Table/view doesn't exist or user lacks `SELECT` grant. | Ask DBA to grant `SELECT` on `FCUBSLIVE.STVWCBS_CBAIMS_*` to `CBAIMSUSER`. |
+| `NETWORK_PROTOCOL_ERROR` (ORA-12592: TNS:bad packet) | Stateful firewall dropped TCP Out-Of-Band (URG) packets or split TNS buffer during multi-row fetch. | Handled automatically via `oracle.net.disableOob=true`, forward-only result sets, and reduced fetch size (100). If it persists, ask network team to disable SQL*Net deep packet inspection on firewall. |
 | `SCHEMA_MISMATCH` | Missing one or more of the 62 required columns. | Check `/api/cbs/schema/validate` response for `missingColumns` list and notify CBS DBA. |
 
