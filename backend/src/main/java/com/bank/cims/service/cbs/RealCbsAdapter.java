@@ -141,6 +141,72 @@ public class RealCbsAdapter implements CbsAdapter {
         return url.replaceAll("(?i):[^/@]+@", ":****@");
     }
 
+    public synchronized void updateConfig(String newJdbcUrl, String newUsername, String newPassword, String newSchema,
+                                         String newCustomerView, String newFacilityView, String newCollateralView) {
+        if (newJdbcUrl != null && !newJdbcUrl.isBlank()) this.jdbcUrl = newJdbcUrl.trim();
+        if (newUsername != null && !newUsername.isBlank()) this.username = newUsername.trim();
+        if (newPassword != null && !newPassword.isBlank()) this.password = newPassword.trim();
+        if (newSchema != null && !newSchema.isBlank()) this.schema = newSchema.trim();
+        if (newCustomerView != null && !newCustomerView.isBlank()) this.customerView = newCustomerView.trim();
+        if (newFacilityView != null && !newFacilityView.isBlank()) this.facilityView = newFacilityView.trim();
+        if (newCollateralView != null && !newCollateralView.isBlank()) this.collateralView = newCollateralView.trim();
+        closePool();
+        log.info("Updated Oracle CBS configuration: url={}, user={}, schema={}", redactJdbcUrl(this.jdbcUrl), this.username, this.schema);
+    }
+
+    public Map<String, Object> getConfigSummary() {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("jdbcUrl", jdbcUrl != null ? redactJdbcUrl(jdbcUrl) : "");
+        summary.put("rawJdbcUrl", jdbcUrl != null ? jdbcUrl : "");
+        summary.put("username", username != null ? username : "");
+        summary.put("hasPassword", password != null && !password.isBlank());
+        summary.put("schema", schema != null ? schema : "");
+        summary.put("customerView", customerView != null ? customerView : "");
+        summary.put("facilityView", facilityView != null ? facilityView : "");
+        summary.put("collateralView", collateralView != null ? collateralView : "");
+        summary.put("isConfigured", isConfigured());
+        return summary;
+    }
+
+    public CbsConnectionStatus testAdhocConnection(String testUrl, String testUser, String testPass) {
+        String url = (testUrl != null && !testUrl.isBlank()) ? testUrl.trim() : this.jdbcUrl;
+        String user = (testUser != null && !testUser.isBlank()) ? testUser.trim() : this.username;
+        String pass = (testPass != null && !testPass.isBlank()) ? testPass.trim() : this.password;
+
+        if (url == null || url.isBlank() || user == null || user.isBlank() || pass == null || pass.isBlank()) {
+            return new CbsConnectionStatus(
+                    "REAL",
+                    "NOT_CONFIGURED",
+                    "Oracle JDBC URL, username, or password is not provided."
+            );
+        }
+
+        try {
+            Class.forName("oracle.jdbc.OracleDriver");
+            DriverManager.setLoginTimeout(Math.max(1, connectTimeoutMs / 1000));
+            try (Connection conn = DriverManager.getConnection(url, user, pass);
+                 Statement stmt = conn.createStatement()) {
+                stmt.setQueryTimeout(Math.max(1, connectTimeoutMs / 1000));
+                try (ResultSet rs = stmt.executeQuery("SELECT 1 FROM DUAL")) {
+                    if (rs.next()) {
+                        return new CbsConnectionStatus(
+                                "REAL",
+                                "AVAILABLE",
+                                "Connected successfully to " + redactJdbcUrl(url) + " as " + user
+                        );
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            return classifySqlException(e);
+        } catch (ClassNotFoundException e) {
+            return new CbsConnectionStatus("REAL", "ERROR", "Oracle JDBC driver class not found: " + e.getMessage());
+        } catch (Exception e) {
+            return new CbsConnectionStatus("REAL", "ERROR", "Connection failed: " + e.getMessage());
+        }
+        return new CbsConnectionStatus("REAL", "QUERY_FAILED", "Unexpected response from Oracle DUAL test");
+    }
+
     // =========================================================================
     // Truthful Connection Status & Health Check
     // =========================================================================

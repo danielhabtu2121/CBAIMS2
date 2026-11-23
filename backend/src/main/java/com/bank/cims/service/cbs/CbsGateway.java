@@ -33,6 +33,13 @@ public class CbsGateway {
         }
     }
 
+    public RealCbsAdapter getRealCbsAdapter() {
+        if (realAdapter instanceof RealCbsAdapter rca) {
+            return rca;
+        }
+        return null;
+    }
+
     public CbsAdapter getActiveAdapter() {
         if ("REAL".equalsIgnoreCase(getMode())) {
             return realAdapter;

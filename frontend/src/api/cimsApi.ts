@@ -2188,6 +2188,59 @@ export const cimsApi = {
   },
 
   // --- Production CBS Oracle 3-View Integration Operations ---
+  async setCbsMode(mode: 'SIMULATOR' | 'REAL'): Promise<{ message: string; mode: string }> {
+    return requestJson<any>(`${API_BASE}/cbs/mode`, {
+      method: 'POST',
+      body: JSON.stringify({ mode }),
+    });
+  },
+
+  async getCbsConfig(): Promise<{
+    mode: string;
+    oracle?: {
+      jdbcUrl: string;
+      rawJdbcUrl: string;
+      username: string;
+      hasPassword: boolean;
+      schema: string;
+      customerView: string;
+      facilityView: string;
+      collateralView: string;
+      isConfigured: boolean;
+    };
+    connectionStatus: string;
+    connectionMessage: string;
+  }> {
+    return requestJson<any>(`${API_BASE}/cbs/config`);
+  },
+
+  async updateCbsConfig(payload: {
+    mode?: string;
+    jdbcUrl?: string;
+    username?: string;
+    password?: string;
+    schema?: string;
+    customerView?: string;
+    facilityView?: string;
+    collateralView?: string;
+  }): Promise<any> {
+    return requestJson<any>(`${API_BASE}/cbs/config`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async testCbsConnection(payload?: {
+    jdbcUrl?: string;
+    username?: string;
+    password?: string;
+  }): Promise<{ mode: string; status: string; message: string; timestamp: string }> {
+    return requestJson<any>(`${API_BASE}/cbs/test-connection`, {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    });
+  },
+
   async getCbsHealth(): Promise<{ mode: string; status: string; message: string; timestamp: string }> {
     return requestJson<any>(`${API_BASE}/cbs/health`);
   },
