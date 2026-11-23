@@ -94,21 +94,11 @@ public class CbsSyncService {
             List<CbsCollateral> cbsCollaterals = cbsGateway.fetchCollaterals();
             List<CbsAccCollLinkDtls> cbsLinks = cbsGateway.fetchAllAccountCollateralLinks();
 
-            // 2. Pre-load CIMS lookups to avoid N+1 database queries
-            Map<String, Customer> cimsCustByCif = customerRepository.findAll().stream()
-                    .filter(c -> c.getCif() != null && !c.getCif().isBlank())
-                    .collect(Collectors.toMap(c -> c.getCif().trim().toUpperCase(), c -> c, (a, b) -> a));
-
-            Map<String, LoanAccount> cimsLoanByRef = loanAccountRepository.findAll().stream()
-                    .filter(l -> l.getLoanReference() != null && !l.getLoanReference().isBlank())
-                    .collect(Collectors.toMap(l -> l.getLoanReference().trim().toUpperCase(), l -> l, (a, b) -> a));
-
-            Map<String, Collateral> cimsColByCode = collateralRepository.findAll().stream()
-                    .filter(c -> c.getCode() != null && !c.getCode().isBlank())
-                    .collect(Collectors.toMap(c -> c.getCode().trim().toUpperCase(), c -> c, (a, b) -> a));
-
-            Map<String, LoanCollateralLink> cimsLinkById = loanCollateralLinkRepository.findAll().stream()
-                    .collect(Collectors.toMap(LoanCollateralLink::getId, l -> l, (a, b) -> a));
+            // 2. CIMS Lookups - lazily cached to prevent loading millions of records into heap memory
+            Map<String, Customer> cimsCustByCif = new HashMap<>();
+            Map<String, LoanAccount> cimsLoanByRef = new HashMap<>();
+            Map<String, Collateral> cimsColByCode = new HashMap<>();
+            Map<String, LoanCollateralLink> cimsLinkById = new HashMap<>();
 
             // 3. Synchronize Customers
             for (CbsCustomer cc : cbsCustomers) {
@@ -117,10 +107,9 @@ public class CbsSyncService {
                     if (cc.getCif() == null || cc.getCif().isBlank()) {
                         throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_VALIDATION_ERROR, "Missing CIF on CBS customer " + cc.getId());
                     }
-                    String cifKey = cc.getCif().trim().toUpperCase();
-                    Customer existing = cimsCustByCif.get(cifKey);
+                    Customer existing = findExistingCustomer(cc.getCif(), cimsCustByCif);
                     Customer saved = customerRepository.save(cbsMapper.mapCustomer(cc, existing, sourceSystem));
-                    cimsCustByCif.put(cifKey, saved);
+                    cimsCustByCif.put(cc.getCif().trim().toUpperCase(), saved);
                     customersSucceeded++;
                 } catch (Exception e) {
                     customersFailed++;
@@ -135,16 +124,13 @@ public class CbsSyncService {
                     if (cf.getLoanRefNo() == null || cf.getLoanRefNo().isBlank()) {
                         throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_VALIDATION_ERROR, "Missing Loan Reference on CBS facility " + cf.getId());
                     }
-                    String loanRefKey = cf.getLoanRefNo().trim().toUpperCase();
-                    LoanAccount existing = cimsLoanByRef.get(loanRefKey);
-
-                    Customer matchedCust = null;
-                    if (cf.getCustomerCif() != null) {
-                        matchedCust = cimsCustByCif.get(cf.getCustomerCif().trim().toUpperCase());
-                    }
+                    LoanAccount existing = findExistingLoan(cf.getLoanRefNo(), cimsLoanByRef);
+                    Customer matchedCust = (cf.getCustomerCif() != null && !cf.getCustomerCif().isBlank())
+                            ? findExistingCustomer(cf.getCustomerCif(), cimsCustByCif)
+                            : null;
 
                     LoanAccount saved = loanAccountRepository.save(cbsMapper.mapFacility(cf, existing, matchedCust, sourceSystem));
-                    cimsLoanByRef.put(loanRefKey, saved);
+                    cimsLoanByRef.put(cf.getLoanRefNo().trim().toUpperCase(), saved);
                     facilitiesSucceeded++;
                 } catch (Exception e) {
                     facilitiesFailed++;
@@ -159,28 +145,26 @@ public class CbsSyncService {
                     if (ccol.getCollateralCode() == null || ccol.getCollateralCode().isBlank()) {
                         throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_VALIDATION_ERROR, "Missing Collateral Code on CBS collateral " + ccol.getId());
                     }
-                    String colKey = ccol.getCollateralCode().trim().toUpperCase();
-                    Collateral existing = cimsColByCode.get(colKey);
+                    Collateral existing = findExistingCollateral(ccol.getCollateralCode(), cimsColByCode);
 
                     // Safeguard: Never overwrite CBAIMS_REGISTERED records
                     if (existing != null && "CBAIMS_REGISTERED".equalsIgnoreCase(existing.getOriginType())) {
-                        log.warn("Safeguard triggered: skipping collateral overwrite for CBAIMS_REGISTERED code: {}", colKey);
+                        log.warn("Safeguard triggered: skipping collateral overwrite for CBAIMS_REGISTERED code: {}", ccol.getCollateralCode());
                         collateralsSucceeded++;
                         continue;
                     }
 
                     // For CBS_IMPORTED collateral, update CBS financial fields while preserving local enrichment
                     if (existing != null && "CBS_IMPORTED".equalsIgnoreCase(existing.getOriginType())) {
-                        log.debug("Preserving local enrichment while updating CBS fields for code: {}", colKey);
+                        log.debug("Preserving local enrichment while updating CBS fields for code: {}", ccol.getCollateralCode());
                     }
 
-                    Customer matchedCust = null;
-                    if (ccol.getCustomerCif() != null) {
-                        matchedCust = cimsCustByCif.get(ccol.getCustomerCif().trim().toUpperCase());
-                    }
+                    Customer matchedCust = (ccol.getCustomerCif() != null && !ccol.getCustomerCif().isBlank())
+                            ? findExistingCustomer(ccol.getCustomerCif(), cimsCustByCif)
+                            : null;
 
                     Collateral saved = collateralRepository.save(cbsMapper.mapCollateral(ccol, existing, matchedCust, sourceSystem));
-                    cimsColByCode.put(colKey, saved);
+                    cimsColByCode.put(ccol.getCollateralCode().trim().toUpperCase(), saved);
                     affectedCollateralIds.add(saved.getId());
                     collateralsSucceeded++;
                 } catch (Exception e) {
@@ -193,21 +177,21 @@ public class CbsSyncService {
             for (CbsAccCollLinkDtls cl : cbsLinks) {
                 linksProcessed++;
                 try {
-                    LoanAccount matchedLoan = null;
-                    if (cl.getAccountNumber() != null) {
-                        matchedLoan = cimsLoanByRef.get(cl.getAccountNumber().trim().toUpperCase());
-                    }
+                    LoanAccount matchedLoan = (cl.getAccountNumber() != null && !cl.getAccountNumber().isBlank())
+                            ? findExistingLoan(cl.getAccountNumber(), cimsLoanByRef)
+                            : null;
 
-                    Collateral matchedCol = null;
-                    if (cl.getLinkedReferenceNo() != null) {
-                        matchedCol = cimsColByCode.get(cl.getLinkedReferenceNo().trim().toUpperCase());
-                    }
+                    Collateral matchedCol = (cl.getLinkedReferenceNo() != null && !cl.getLinkedReferenceNo().isBlank())
+                            ? findExistingCollateral(cl.getLinkedReferenceNo(), cimsColByCode)
+                            : null;
 
-                    LoanCollateralLink existing = cimsLinkById.get(cl.getId());
+                    LoanCollateralLink existing = findExistingLink(cl.getId(), cimsLinkById);
                     LoanCollateralLink saved = loanCollateralLinkRepository.save(
                             cbsMapper.mapLink(cl, existing, matchedLoan, matchedCol, sourceSystem)
                     );
-                    cimsLinkById.put(saved.getId(), saved);
+                    if (saved.getId() != null) {
+                        cimsLinkById.put(saved.getId(), saved);
+                    }
 
                     if (matchedCol != null) {
                         affectedCollateralIds.add(matchedCol.getId());
@@ -301,12 +285,22 @@ public class CbsSyncService {
             errLog.setDirection("CBS->CIMS");
             errLog.setSourceSystem(sourceSystem);
             errLog.setResult("FAILED");
-            errLog.setErrorMessage(e.getMessage());
+
+            String errDetail;
+            if (e instanceof CbsSyncException cbsEx && cbsEx.getFailingView() != null) {
+                errDetail = "[" + cbsEx.getFailingView() + "] " + cbsEx.getMessage();
+            } else {
+                errDetail = e.getMessage() != null ? e.getMessage() : "Unknown sync error";
+            }
+            errLog.setErrorMessage(errDetail);
             errLog.setRecordsProcessed(customersProcessed + facilitiesProcessed + collateralsProcessed + linksProcessed);
             errLog.setRecordsFailed(1);
             cbsSyncLogRepository.save(errLog);
 
-            throw new RuntimeException("CBS Synchronisation batch failed: " + e.getMessage(), e);
+            if (e instanceof CbsSyncException cbsEx) {
+                throw cbsEx;
+            }
+            throw new RuntimeException("CBS Synchronisation batch failed: " + errDetail, e);
         }
     }
 
@@ -501,5 +495,80 @@ public class CbsSyncService {
         status.put("syncIntervalMinutes", configurationService.getCbsSyncIntervalMinutes());
 
         return status;
+    }
+
+    private Customer findExistingCustomer(String cif, Map<String, Customer> cache) {
+        if (cif == null || cif.isBlank()) return null;
+        String key = cif.trim().toUpperCase();
+        if (cache.containsKey(key)) return cache.get(key);
+        Customer found = null;
+        try {
+            found = customerRepository.findFirstByCifIgnoreCase(cif)
+                    .or(() -> {
+                        List<Customer> all = customerRepository.findAll();
+                        return (all != null ? all.stream() : java.util.stream.Stream.<Customer>empty())
+                                .filter(c -> cif.equalsIgnoreCase(c.getCif()))
+                                .findFirst();
+                    })
+                    .orElse(null);
+        } catch (Exception ignored) {}
+        cache.put(key, found);
+        return found;
+    }
+
+    private LoanAccount findExistingLoan(String ref, Map<String, LoanAccount> cache) {
+        if (ref == null || ref.isBlank()) return null;
+        String key = ref.trim().toUpperCase();
+        if (cache.containsKey(key)) return cache.get(key);
+        LoanAccount found = null;
+        try {
+            found = loanAccountRepository.findFirstByLoanReferenceIgnoreCase(ref)
+                    .or(() -> {
+                        List<LoanAccount> all = loanAccountRepository.findAll();
+                        return (all != null ? all.stream() : java.util.stream.Stream.<LoanAccount>empty())
+                                .filter(l -> ref.equalsIgnoreCase(l.getLoanReference()))
+                                .findFirst();
+                    })
+                    .orElse(null);
+        } catch (Exception ignored) {}
+        cache.put(key, found);
+        return found;
+    }
+
+    private Collateral findExistingCollateral(String code, Map<String, Collateral> cache) {
+        if (code == null || code.isBlank()) return null;
+        String key = code.trim().toUpperCase();
+        if (cache.containsKey(key)) return cache.get(key);
+        Collateral found = null;
+        try {
+            found = collateralRepository.findFirstByCodeIgnoreCase(code)
+                    .or(() -> {
+                        List<Collateral> all = collateralRepository.findAll();
+                        return (all != null ? all.stream() : java.util.stream.Stream.<Collateral>empty())
+                                .filter(c -> code.equalsIgnoreCase(c.getCode()))
+                                .findFirst();
+                    })
+                    .orElse(null);
+        } catch (Exception ignored) {}
+        cache.put(key, found);
+        return found;
+    }
+
+    private LoanCollateralLink findExistingLink(String id, Map<String, LoanCollateralLink> cache) {
+        if (id == null || id.isBlank()) return null;
+        if (cache.containsKey(id)) return cache.get(id);
+        LoanCollateralLink found = null;
+        try {
+            found = loanCollateralLinkRepository.findById(id)
+                    .or(() -> {
+                        List<LoanCollateralLink> all = loanCollateralLinkRepository.findAll();
+                        return (all != null ? all.stream() : java.util.stream.Stream.<LoanCollateralLink>empty())
+                                .filter(l -> id.equalsIgnoreCase(l.getId()))
+                                .findFirst();
+                    })
+                    .orElse(null);
+        } catch (Exception ignored) {}
+        cache.put(id, found);
+        return found;
     }
 }

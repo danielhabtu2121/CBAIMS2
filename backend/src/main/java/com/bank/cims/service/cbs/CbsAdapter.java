@@ -44,6 +44,30 @@ public interface CbsAdapter {
 
     List<com.bank.cims.dto.cbs.CbsCollateralViewRow> fetchCollateralViewRows();
 
+    default void streamCustomerViewRows(java.util.function.Consumer<com.bank.cims.dto.cbs.CbsCustomerViewRow> consumer, int maxRows) {
+        List<com.bank.cims.dto.cbs.CbsCustomerViewRow> rows = fetchCustomerViewRows();
+        if (maxRows > 0 && rows.size() > maxRows) {
+            rows = rows.subList(0, maxRows);
+        }
+        rows.forEach(consumer);
+    }
+
+    default void streamFacilityViewRows(java.util.function.Consumer<com.bank.cims.dto.cbs.CbsFacilityViewRow> consumer, int maxRows) {
+        List<com.bank.cims.dto.cbs.CbsFacilityViewRow> rows = fetchFacilityViewRows();
+        if (maxRows > 0 && rows.size() > maxRows) {
+            rows = rows.subList(0, maxRows);
+        }
+        rows.forEach(consumer);
+    }
+
+    default void streamCollateralViewRows(java.util.function.Consumer<com.bank.cims.dto.cbs.CbsCollateralViewRow> consumer, int maxRows) {
+        List<com.bank.cims.dto.cbs.CbsCollateralViewRow> rows = fetchCollateralViewRows();
+        if (maxRows > 0 && rows.size() > maxRows) {
+            rows = rows.subList(0, maxRows);
+        }
+        rows.forEach(consumer);
+    }
+
     java.util.Map<String, Object> validateSchema();
 
     CbsConnectionStatus checkConnectionStatus();

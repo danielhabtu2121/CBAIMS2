@@ -569,20 +569,42 @@ export const cimsApi = {
     return res.json();
   },
 
-  async syncCbsEntity(entityType: string, id: string, userId = 'SYSADMIN'): Promise<{ success: boolean; message: string }> {
+  async syncCbsEntity(entityType: string, id: string, userId = 'SYSADMIN'): Promise<{ success: boolean; message: string; errorCategory?: string; failingView?: string; status?: number }> {
     const res = await authenticatedFetch(`${API_BASE}/cbs-integration/sync/${entityType}/${id}?userId=${userId}`, {
       method: 'POST',
     });
     invalidateStateCache();
-    return res.json();
+    const payload = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = payload?.message || payload?.error || `CBS sync failed with HTTP ${res.status}`;
+      return {
+        success: false,
+        message: msg,
+        errorCategory: payload?.errorCategory,
+        failingView: payload?.failingView,
+        status: res.status,
+      };
+    }
+    return payload || { success: true, message: 'Sync completed' };
   },
 
-  async syncAllPending(userId = 'SYSADMIN'): Promise<{ success: boolean; message: string }> {
+  async syncAllPending(userId = 'SYSADMIN'): Promise<{ success: boolean; message: string; errorCategory?: string; failingView?: string; status?: number }> {
     const res = await authenticatedFetch(`${API_BASE}/cbs-integration/sync-all?userId=${userId}`, {
       method: 'POST',
     });
     invalidateStateCache();
-    return res.json();
+    const payload = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = payload?.message || payload?.error || `CBS sync failed with HTTP ${res.status}`;
+      return {
+        success: false,
+        message: msg,
+        errorCategory: payload?.errorCategory,
+        failingView: payload?.failingView,
+        status: res.status,
+      };
+    }
+    return payload || { success: true, message: 'Sync completed' };
   },
 
   async getCbsSyncLogs(): Promise<CbsSyncLog[]> {

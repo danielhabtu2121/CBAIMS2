@@ -49,11 +49,11 @@ cims:
       customer-view: "${CIMS_CBS_CUSTOMER_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER}"
       facility-view: "${CIMS_CBS_FACILITY_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_FACILITY}"
       collateral-view: "${CIMS_CBS_COLLATERAL_VIEW:FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL}"
-      connect-timeout-ms: ${CIMS_CBS_CONNECT_TIMEOUT_MS:5000}
-      read-timeout-ms: ${CIMS_CBS_READ_TIMEOUT_MS:15000}
+      connect-timeout-ms: ${CIMS_CBS_CONNECT_TIMEOUT_MS:10000}
+      read-timeout-ms: ${CIMS_CBS_READ_TIMEOUT_MS:120000}
       maximum-pool-size: ${CIMS_CBS_MAX_POOL_SIZE:5}
       minimum-idle: ${CIMS_CBS_MIN_IDLE:1}
-      fetch-size: ${CIMS_CBS_FETCH_SIZE:100}
+      fetch-size: ${CIMS_CBS_FETCH_SIZE:500}
 
 logging:
   level:

@@ -207,5 +207,23 @@ Imports and establishes canonical records in CBAIMS with immutable source snapsh
 | `AUTHENTICATION_FAILED` (ORA-01017) | Invalid Oracle username or password. | Verify credentials with CBS DBA team; update password in config. |
 | `VIEW_ACCESS_DENIED` (ORA-00942) | Table/view doesn't exist or user lacks `SELECT` grant. | Ask DBA to grant `SELECT` on `FCUBSLIVE.STVWCBS_CBAIMS_*` to `CBAIMSUSER`. |
 | `NETWORK_PROTOCOL_ERROR` (ORA-12592: TNS:bad packet) | Stateful firewall dropped TCP Out-Of-Band (URG) packets or split TNS buffer during multi-row fetch. | Handled automatically via `oracle.net.disableOob=true`, forward-only result sets, and reduced fetch size (100). If it persists, ask network team to disable SQL*Net deep packet inspection on firewall. |
+| `CBS_QUERY_TIMEOUT` (HTTP 504) | Query on CBS Oracle view timed out reading response bytes (after configured `CIMS_CBS_READ_TIMEOUT_MS`). View execution plan slow or scans entire table without index. | 1. Configure `CIMS_CBS_READ_TIMEOUT_MS=120000` or higher.<br>2. Ensure DBA verifies execution plan and index coverage as detailed below. |
 | `SCHEMA_MISMATCH` | Missing one or more of the 62 required columns. | Check `/api/cbs/schema/validate` response for `missingColumns` list and notify CBS DBA. |
+
+---
+
+## 7. Oracle DBA Verification Requirements
+
+When querying `FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER`, `FCUBSLIVE.STVWCBS_CBAIMS_FACILITY`, and `FCUBSLIVE.STVWCBS_CBAIMS_COLLATERAL`:
+1. **Execution Plan Verification**:
+   - Run `EXPLAIN PLAN FOR SELECT * FROM FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER;`
+   - Check if underlying Flexcube tables (e.g. `STTM_CUSTOMER`, `STTM_CUST_PERSONAL`, `STTM_CUST_CORPORATE`) are performing full table scans.
+2. **Index Coverage**:
+   - Ensure `CUSTOMER_NO`, `RECORD_STAT`, and `AUTH_STAT` columns are indexed on underlying tables.
+   - For facility view: ensure index on `ACCOUNT_NUMBER` and `CUSTOMER_ID`.
+   - For collateral view: ensure index on `COLLATERAL_CODE` and `COLLATERAL_OWNER_CIF`.
+3. **Network & MTU**:
+   - Verify MTU / packet fragmentation between deployment host `172.22.11.55` and Oracle host `10.41.30.114:1521`.
+   - Ensure firewall inspection does not delay or drop long-running SQL*Net TCP streams.
+
 

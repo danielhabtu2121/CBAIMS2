@@ -32,8 +32,8 @@ interface CbsSimulatorProps {
   facilities: CbsFacility[];
   collaterals: CbsCollateral[];
   syncLogs: CbsSyncLog[];
-  onSyncEntity: (type: string, id: string) => Promise<void>;
-  onSyncAll: () => Promise<void>;
+  onSyncEntity: (type: string, id: string) => Promise<any>;
+  onSyncAll: () => Promise<any>;
   onSaveCustomer: (cust: Partial<CbsCustomer>) => Promise<void>;
   onSaveFacility: (fac: Partial<CbsFacility>) => Promise<void>;
   onSaveCollateral: (col: Partial<CbsCollateral>) => Promise<void>;
@@ -67,6 +67,12 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
   const [logResultFilter, setLogResultFilter] = useState<'ALL' | 'SUCCESS' | 'PARTIAL_SUCCESS' | 'FAILED'>('ALL');
   const [logEntityFilter, setLogEntityFilter] = useState<'ALL' | 'Customer' | 'Facility' | 'Collateral' | 'Link'>('ALL');
   const [modalError, setModalError] = useState<string | null>(null);
+  const [syncBanner, setSyncBanner] = useState<{
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+    failingView?: string;
+  } | null>(null);
 
   // Real CBS Configuration & Diagnostics state
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -196,9 +202,28 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
 
   const handleSync = async (type: string, id: string) => {
     setSyncingId(id);
+    setSyncBanner(null);
     try {
-      await onSyncEntity(type, id);
+      const res: any = await onSyncEntity(type, id);
       await loadStatus();
+      if (res && res.success === false) {
+        setSyncBanner({
+          type: 'error',
+          title: res.errorCategory === 'CBS_QUERY_TIMEOUT'
+            ? 'CBS Oracle Query Timeout'
+            : res.errorCategory === 'CBS_UNAVAILABLE'
+            ? 'CBS Server Unreachable'
+            : 'CBS Entity Sync Failed',
+          message: res.message,
+          failingView: res.failingView,
+        });
+      }
+    } catch (err: any) {
+      setSyncBanner({
+        type: 'error',
+        title: 'CBS Entity Sync Failed',
+        message: err?.message || 'Failed to synchronize entity from CBS.',
+      });
     } finally {
       setSyncingId(null);
     }
@@ -206,9 +231,40 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
 
   const handleBatchSync = async () => {
     setBatchSyncing(true);
+    setSyncBanner(null);
     try {
-      await onSyncAll();
+      const res: any = await onSyncAll();
       await loadStatus();
+      if (res && res.success === false) {
+        setSyncBanner({
+          type: 'error',
+          title: res.errorCategory === 'CBS_QUERY_TIMEOUT'
+            ? 'CBS Oracle Query Timeout'
+            : res.errorCategory === 'CBS_UNAVAILABLE'
+            ? 'CBS Database Unreachable'
+            : 'CBS Synchronization Failed',
+          message: res.message,
+          failingView: res.failingView,
+        });
+      } else if (res && (res.status === 'PARTIAL_SUCCESS' || (res.totalErrors && res.totalErrors > 0))) {
+        setSyncBanner({
+          type: 'error',
+          title: 'CBS Partial Synchronization',
+          message: res.errorMessage || 'Some records failed during synchronization. See sync logs below for details.',
+        });
+      } else {
+        setSyncBanner({
+          type: 'success',
+          title: 'CBS Synchronization Successful',
+          message: 'All records successfully synchronized from CBS.',
+        });
+      }
+    } catch (err: any) {
+      setSyncBanner({
+        type: 'error',
+        title: 'CBS Synchronization Failed',
+        message: err?.message || 'Network error communicating with CBAIMS backend.',
+      });
     } finally {
       setBatchSyncing(false);
     }
@@ -547,6 +603,45 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
               <RotateCw className={`w-3.5 h-3.5 ${batchSyncing ? 'animate-spin' : ''}`} />
               {batchSyncing ? 'Syncing...' : 'Sync All Pending'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sync Banner Notification */}
+      {syncBanner && (
+        <div
+          className={`p-4 rounded-lg border flex items-start gap-3 transition-all ${
+            syncBanner.type === 'error'
+              ? 'bg-rose-50 border-rose-300 text-rose-900'
+              : 'bg-emerald-50 border-emerald-300 text-emerald-900'
+          }`}
+        >
+          {syncBanner.type === 'error' ? (
+            <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold uppercase tracking-wide">
+                {syncBanner.title}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setSyncBanner(null)}
+                className="text-xs text-slate-500 hover:text-slate-800 cursor-pointer font-medium"
+              >
+                Dismiss
+              </button>
+            </div>
+            <p className="text-xs mt-1 text-slate-700 leading-relaxed font-medium">
+              {syncBanner.message}
+            </p>
+            {syncBanner.failingView && (
+              <p className="text-[11px] mt-1.5 font-mono text-rose-800 bg-rose-100/70 p-1 rounded inline-block">
+                View: {syncBanner.failingView}
+              </p>
+            )}
           </div>
         </div>
       )}
