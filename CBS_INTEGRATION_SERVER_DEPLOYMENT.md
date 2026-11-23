@@ -154,7 +154,7 @@ Once deployed or connected, verify the live integration using these endpoints:
 
 ### 1. Connection Health Check
 ```bash
-curl -s http://localhost:8080/api/cbs/health | jq .
+curl -s http://localhost:8082/api/cbs/health | jq .
 ```
 *Success Response:*
 ```json
@@ -168,7 +168,7 @@ curl -s http://localhost:8080/api/cbs/health | jq .
 
 ### 2. Full 62-Column Schema Validation
 ```bash
-curl -s http://localhost:8080/api/cbs/schema/validate | jq .
+curl -s http://localhost:8082/api/cbs/schema/validate | jq .
 ```
 *Success Response:*
 ```json
@@ -186,13 +186,13 @@ curl -s http://localhost:8080/api/cbs/schema/validate | jq .
 
 ### 3. Dry-Run Import Preview
 ```bash
-curl -s http://localhost:8080/api/cbs/three-views/preview | jq .
+curl -s http://localhost:8082/api/cbs/three-views/preview | jq .
 ```
 Pre-checks row counts, identifies unmapped branches or segments, and previews sample customer, facility, and collateral records without making any database changes.
 
 ### 4. Execute Live Three-View Import
 ```bash
-curl -s -X POST "http://localhost:8080/api/cbs/three-views/import?batchRef=CBS-PROD-BATCH-001&chunkSize=50" | jq .
+curl -s -X POST "http://localhost:8082/api/cbs/three-views/import?batchRef=CBS-PROD-BATCH-001&chunkSize=50" | jq .
 ```
 Imports and establishes canonical records in CBAIMS with immutable source snapshot preservation.
 
