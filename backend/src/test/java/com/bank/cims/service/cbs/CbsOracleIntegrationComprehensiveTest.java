@@ -389,3 +389,4 @@ public class CbsOracleIntegrationComprehensiveTest {
         verify(mockSim, never()).fetchCustomers();
     }
 }
+
