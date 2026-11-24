@@ -51,6 +51,10 @@ public class CbsGateway {
         return getActiveAdapter().fetchCustomers();
     }
 
+    public List<CbsCustomer> fetchCustomersByCifs(java.util.Collection<String> cifs) {
+        return getActiveAdapter().fetchCustomersByCifs(cifs);
+    }
+
     public Optional<CbsCustomer> fetchCustomerByCif(String cif) {
         return getActiveAdapter().fetchCustomerByCif(cif);
     }
@@ -97,6 +101,10 @@ public class CbsGateway {
 
     public List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRows() {
         return getActiveAdapter().fetchCustomerViewRows();
+    }
+
+    public List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRowsByCifs(java.util.Collection<String> cifs) {
+        return getActiveAdapter().fetchCustomerViewRowsByCifs(cifs);
     }
 
     public List<com.bank.cims.dto.cbs.CbsFacilityViewRow> fetchFacilityViewRows() {

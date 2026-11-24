@@ -50,6 +50,9 @@ public class CbsSyncService {
     @Autowired
     private ConfigurationService configurationService;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     /**
      * Batch synchronization of all master data domains from CBS to CIMS.
      * Implements bulk retrieval, in-memory indexing to prevent N+1 queries,
@@ -145,6 +148,10 @@ public class CbsSyncService {
                     customersFailed++;
                     errorLog.append("[Customer CIF: ").append(cc.getCif()).append(" Error: ").append(e.getMessage()).append("]; ");
                 }
+                if (customersProcessed % 500 == 0 && entityManager != null) {
+                    entityManager.flush();
+                    entityManager.clear();
+                }
             }
 
             // 4. Synchronize Facilities
@@ -165,6 +172,10 @@ public class CbsSyncService {
                 } catch (Exception e) {
                     facilitiesFailed++;
                     errorLog.append("[Facility: ").append(cf.getLoanRefNo()).append(" Error: ").append(e.getMessage()).append("]; ");
+                }
+                if (facilitiesProcessed % 500 == 0 && entityManager != null) {
+                    entityManager.flush();
+                    entityManager.clear();
                 }
             }
 
@@ -201,6 +212,10 @@ public class CbsSyncService {
                     collateralsFailed++;
                     errorLog.append("[Collateral: ").append(ccol.getCollateralCode()).append(" Error: ").append(e.getMessage()).append("]; ");
                 }
+                if (collateralsProcessed % 500 == 0 && entityManager != null) {
+                    entityManager.flush();
+                    entityManager.clear();
+                }
             }
 
             // 6. Synchronize Account-Collateral Linkages
@@ -231,15 +246,23 @@ public class CbsSyncService {
                     linksFailed++;
                     errorLog.append("[Link: ").append(cl.getId()).append(" Error: ").append(e.getMessage()).append("]; ");
                 }
+                if (linksProcessed % 500 == 0 && entityManager != null) {
+                    entityManager.flush();
+                    entityManager.clear();
+                }
             }
 
             // 7. Trigger downstream exposure & adequacy recalculations
-            for (String colId : affectedCollateralIds) {
-                try {
-                    exposureCalculationService.calculateExposureAndAdequacy(colId);
-                } catch (Exception ex) {
-                    log.warn("Downstream exposure calculation skipped for collateral {}: {}", colId, ex.getMessage());
+            if (affectedCollateralIds.size() <= 500) {
+                for (String colId : affectedCollateralIds) {
+                    try {
+                        exposureCalculationService.calculateExposureAndAdequacy(colId);
+                    } catch (Exception ex) {
+                        log.warn("Downstream exposure calculation skipped for collateral {}: {}", colId, ex.getMessage());
+                    }
                 }
+            } else {
+                log.info("Batch sync contains {} collaterals; skipping synchronous exposure recalculation to prevent HTTP timeout.", affectedCollateralIds.size());
             }
 
             String completionTime = LocalDateTime.now().toString();
@@ -540,14 +563,7 @@ public class CbsSyncService {
         if (cache.containsKey(key)) return cache.get(key);
         Customer found = null;
         try {
-            found = customerRepository.findFirstByCifIgnoreCase(cif)
-                    .or(() -> {
-                        List<Customer> all = customerRepository.findAll();
-                        return (all != null ? all.stream() : java.util.stream.Stream.<Customer>empty())
-                                .filter(c -> cif.equalsIgnoreCase(c.getCif()))
-                                .findFirst();
-                    })
-                    .orElse(null);
+            found = customerRepository.findFirstByCifIgnoreCase(cif).orElse(null);
         } catch (Exception ignored) {}
         cache.put(key, found);
         return found;
@@ -559,14 +575,7 @@ public class CbsSyncService {
         if (cache.containsKey(key)) return cache.get(key);
         LoanAccount found = null;
         try {
-            found = loanAccountRepository.findFirstByLoanReferenceIgnoreCase(ref)
-                    .or(() -> {
-                        List<LoanAccount> all = loanAccountRepository.findAll();
-                        return (all != null ? all.stream() : java.util.stream.Stream.<LoanAccount>empty())
-                                .filter(l -> ref.equalsIgnoreCase(l.getLoanReference()))
-                                .findFirst();
-                    })
-                    .orElse(null);
+            found = loanAccountRepository.findFirstByLoanReferenceIgnoreCase(ref).orElse(null);
         } catch (Exception ignored) {}
         cache.put(key, found);
         return found;
@@ -578,14 +587,7 @@ public class CbsSyncService {
         if (cache.containsKey(key)) return cache.get(key);
         Collateral found = null;
         try {
-            found = collateralRepository.findFirstByCodeIgnoreCase(code)
-                    .or(() -> {
-                        List<Collateral> all = collateralRepository.findAll();
-                        return (all != null ? all.stream() : java.util.stream.Stream.<Collateral>empty())
-                                .filter(c -> code.equalsIgnoreCase(c.getCode()))
-                                .findFirst();
-                    })
-                    .orElse(null);
+            found = collateralRepository.findFirstByCodeIgnoreCase(code).orElse(null);
         } catch (Exception ignored) {}
         cache.put(key, found);
         return found;
@@ -596,14 +598,7 @@ public class CbsSyncService {
         if (cache.containsKey(id)) return cache.get(id);
         LoanCollateralLink found = null;
         try {
-            found = loanCollateralLinkRepository.findById(id)
-                    .or(() -> {
-                        List<LoanCollateralLink> all = loanCollateralLinkRepository.findAll();
-                        return (all != null ? all.stream() : java.util.stream.Stream.<LoanCollateralLink>empty())
-                                .filter(l -> id.equalsIgnoreCase(l.getId()))
-                                .findFirst();
-                    })
-                    .orElse(null);
+            found = loanCollateralLinkRepository.findById(id).orElse(null);
         } catch (Exception ignored) {}
         cache.put(id, found);
         return found;

@@ -17,6 +17,14 @@ public interface CbsAdapter {
 
     List<CbsCustomer> fetchCustomers();
 
+    default List<CbsCustomer> fetchCustomersByCifs(java.util.Collection<String> cifs) {
+        if (cifs == null || cifs.isEmpty()) return java.util.Collections.emptyList();
+        java.util.Set<String> set = new java.util.HashSet<>(cifs);
+        return fetchCustomers().stream()
+                .filter(c -> c.getCif() != null && set.contains(c.getCif().trim().toUpperCase()))
+                .toList();
+    }
+
     Optional<CbsCustomer> fetchCustomerByCif(String cif);
 
     List<CbsFacility> fetchFacilities();
@@ -39,6 +47,14 @@ public interface CbsAdapter {
 
     // Production Oracle 3-View operations
     List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRows();
+
+    default List<com.bank.cims.dto.cbs.CbsCustomerViewRow> fetchCustomerViewRowsByCifs(java.util.Collection<String> cifs) {
+        if (cifs == null || cifs.isEmpty()) return java.util.Collections.emptyList();
+        java.util.Set<String> set = new java.util.HashSet<>(cifs);
+        return fetchCustomerViewRows().stream()
+                .filter(r -> r.getCustomerNo() != null && set.contains(r.getCustomerNo().trim().toUpperCase()))
+                .toList();
+    }
 
     List<com.bank.cims.dto.cbs.CbsFacilityViewRow> fetchFacilityViewRows();
 

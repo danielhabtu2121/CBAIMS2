@@ -74,6 +74,9 @@ public class RealCbsAdapter implements CbsAdapter {
     @Value("${cims.cbs.oracle.fetch-size:500}")
     private int fetchSize;
 
+    @Value("${cims.cbs.oracle.customer-filter:}")
+    private String customerFilter;
+
     private HikariDataSource dataSource;
     private final Object poolLock = new Object();
 
@@ -654,9 +657,24 @@ public class RealCbsAdapter implements CbsAdapter {
     public void streamCustomerViewRows(java.util.function.Consumer<CbsCustomerViewRow> consumer, int maxRows) {
         log.info("Querying CBS Customer view: {} (timeout: {}ms, fetchSize: {})", customerView, readTimeoutMs, fetchSize);
         long startMs = System.currentTimeMillis();
+        String filterClause = "";
+        if (customerFilter != null && !customerFilter.isBlank()) {
+            if (!"NONE".equalsIgnoreCase(customerFilter.trim())) {
+                filterClause = " " + customerFilter.trim();
+            }
+        } else {
+            // Intelligent domain scoping: Only query customers associated with credit facilities and collaterals
+            // This prevents scanning 10.9 million retail/deposit accounts with zero collateral.
+            filterClause = " WHERE CUSTOMER_NO IN (" +
+                    "SELECT CUSTOMER_ID FROM " + facilityView + " WHERE CUSTOMER_ID IS NOT NULL " +
+                    "UNION " +
+                    "SELECT COLLATERAL_OWNER_CIF FROM " + collateralView + " WHERE COLLATERAL_OWNER_CIF IS NOT NULL " +
+                    "UNION " +
+                    "SELECT BORROWER_CIF FROM " + collateralView + " WHERE BORROWER_CIF IS NOT NULL)";
+        }
         String sql = "SELECT CUSTOMER_NO, CUSTOMER_NAME1, CUSTOMER_TYPE, P_NATIONAL_ID, PASSPORT_NO, " +
                 "MOBILE_NUMBER, E_MAIL, TAXID_NO, ADDRESS, CUSTOMER_STATUS, BUSINESS_SEGMENT, RM_CODE, " +
-                "BRANCH_CODE, MAKER_DATE, RECORD_STAT, AUTH_STAT FROM " + customerView;
+                "BRANCH_CODE, MAKER_DATE, RECORD_STAT, AUTH_STAT FROM " + customerView + filterClause;
 
         try (Connection conn = getReadOnlyConnection();
              PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
@@ -686,6 +704,66 @@ public class RealCbsAdapter implements CbsAdapter {
         List<CbsCustomerViewRow> rows = new ArrayList<>();
         streamCustomerViewRows(rows::add, -1);
         return rows;
+    }
+
+    @Override
+    public List<CbsCustomerViewRow> fetchCustomerViewRowsByCifs(Collection<String> cifs) {
+        if (cifs == null || cifs.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> cifList = cifs.stream()
+                .filter(c -> c != null && !c.isBlank())
+                .map(String::trim)
+                .distinct()
+                .toList();
+
+        if (cifList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        log.info("Querying {} targeted CBS customer view rows across Oracle customer view: {}...", cifList.size(), customerView);
+        long startMs = System.currentTimeMillis();
+        List<CbsCustomerViewRow> results = new ArrayList<>(cifList.size());
+        int batchSize = 999;
+
+        for (int i = 0; i < cifList.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, cifList.size());
+            List<String> chunk = cifList.subList(i, end);
+            results.addAll(fetchCustomerViewRowChunk(chunk));
+        }
+
+        log.info("Successfully retrieved {} targeted CBS customer view rows in {}ms", results.size(), (System.currentTimeMillis() - startMs));
+        return results;
+    }
+
+    private List<CbsCustomerViewRow> fetchCustomerViewRowChunk(List<String> chunk) {
+        if (chunk.isEmpty()) return Collections.emptyList();
+        String inPlaceholders = String.join(",", Collections.nCopies(chunk.size(), "?"));
+        String sql = "SELECT CUSTOMER_NO, CUSTOMER_NAME1, CUSTOMER_TYPE, P_NATIONAL_ID, PASSPORT_NO, " +
+                "MOBILE_NUMBER, E_MAIL, TAXID_NO, ADDRESS, CUSTOMER_STATUS, BUSINESS_SEGMENT, RM_CODE, " +
+                "BRANCH_CODE, MAKER_DATE, RECORD_STAT, AUTH_STAT FROM " + customerView +
+                " WHERE CUSTOMER_NO IN (" + inPlaceholders + ")";
+
+        List<CbsCustomerViewRow> chunkResults = new ArrayList<>(chunk.size());
+        try (Connection conn = getReadOnlyConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+            ps.setQueryTimeout(Math.max(30, readTimeoutMs / 1000));
+            ps.setFetchSize(chunk.size());
+
+            for (int i = 0; i < chunk.size(); i++) {
+                ps.setString(i + 1, chunk.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    chunkResults.add(mapCustomerRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Failed to query CBS customer view row chunk (size: {}) from view: {}", chunk.size(), customerView, e);
+            throw classifyQueryException(customerView, e);
+        }
+        return chunkResults;
     }
 
     @Override
@@ -785,6 +863,66 @@ public class RealCbsAdapter implements CbsAdapter {
             list.add(mapToCbsCustomer(r));
         }
         return list;
+    }
+
+    @Override
+    public List<CbsCustomer> fetchCustomersByCifs(Collection<String> cifs) {
+        if (cifs == null || cifs.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> cifList = cifs.stream()
+                .filter(c -> c != null && !c.isBlank())
+                .map(String::trim)
+                .distinct()
+                .toList();
+
+        if (cifList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        log.info("Querying {} targeted CBS customer CIFs across Oracle customer view: {}...", cifList.size(), customerView);
+        long startMs = System.currentTimeMillis();
+        List<CbsCustomer> results = new ArrayList<>(cifList.size());
+        int batchSize = 999; // Oracle IN list limit is 1000
+
+        for (int i = 0; i < cifList.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, cifList.size());
+            List<String> chunk = cifList.subList(i, end);
+            results.addAll(fetchCustomerChunk(chunk));
+        }
+
+        log.info("Successfully retrieved {} targeted CBS customers in {}ms", results.size(), (System.currentTimeMillis() - startMs));
+        return results;
+    }
+
+    private List<CbsCustomer> fetchCustomerChunk(List<String> chunk) {
+        if (chunk.isEmpty()) return Collections.emptyList();
+        String inPlaceholders = String.join(",", Collections.nCopies(chunk.size(), "?"));
+        String sql = "SELECT CUSTOMER_NO, CUSTOMER_NAME1, CUSTOMER_TYPE, P_NATIONAL_ID, PASSPORT_NO, " +
+                "MOBILE_NUMBER, E_MAIL, TAXID_NO, ADDRESS, CUSTOMER_STATUS, BUSINESS_SEGMENT, RM_CODE, " +
+                "BRANCH_CODE, MAKER_DATE, RECORD_STAT, AUTH_STAT FROM " + customerView +
+                " WHERE CUSTOMER_NO IN (" + inPlaceholders + ")";
+
+        List<CbsCustomer> chunkResults = new ArrayList<>(chunk.size());
+        try (Connection conn = getReadOnlyConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+            ps.setQueryTimeout(Math.max(30, readTimeoutMs / 1000));
+            ps.setFetchSize(chunk.size());
+
+            for (int i = 0; i < chunk.size(); i++) {
+                ps.setString(i + 1, chunk.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    chunkResults.add(mapToCbsCustomer(mapCustomerRow(rs)));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Failed to query CBS customer chunk (size: {}) from view: {}", chunk.size(), customerView, e);
+            throw classifyQueryException(customerView, e);
+        }
+        return chunkResults;
     }
 
     @Override
