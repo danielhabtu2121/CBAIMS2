@@ -24,8 +24,19 @@ public class CbsMapper {
         }
 
         cust.setCif(cc.getCif() != null ? cc.getCif().trim() : null);
-        cust.setName(cc.getFullName());
-        cust.setCustomerType(cc.getCustomerType() != null ? cc.getCustomerType() : "Individual");
+
+        String fullName = cc.getFullName();
+        if (fullName != null && !fullName.isBlank()) {
+            cust.setName(fullName.trim());
+        } else if (existing != null && existing.getName() != null && !existing.getName().isBlank()) {
+            cust.setName(existing.getName().trim());
+        } else if (cc.getCif() != null && !cc.getCif().isBlank()) {
+            cust.setName("CBS Customer " + cc.getCif().trim());
+        } else {
+            cust.setName("Unnamed Customer");
+        }
+
+        cust.setCustomerType(cc.getCustomerType() != null && !cc.getCustomerType().isBlank() ? cc.getCustomerType() : "Individual");
         cust.setNationalId(cc.getNationalId());
         cust.setBusinessRegNo(cc.getBusinessRegNo());
         cust.setTaxIdNo(cc.getTaxIdNo());
@@ -34,10 +45,19 @@ public class CbsMapper {
         cust.setPhone(cc.getPhone());
         cust.setEmail(cc.getEmail());
         cust.setAddress(cc.getAddress());
-        cust.setSegment(cc.getBusinessSegment());
+
+        String segment = cc.getBusinessSegment();
+        if (segment != null && !segment.isBlank()) {
+            cust.setSegment(segment.trim());
+        } else if (existing != null && existing.getSegment() != null && !existing.getSegment().isBlank()) {
+            cust.setSegment(existing.getSegment().trim());
+        } else {
+            cust.setSegment("General");
+        }
+
         cust.setBranch(cc.getBranch());
-        cust.setRiskRating(cc.getRiskRating() != null ? cc.getRiskRating() : "Medium");
-        cust.setStatus(cc.getCustomerStatus() != null ? cc.getCustomerStatus() : "Active");
+        cust.setRiskRating(cc.getRiskRating() != null && !cc.getRiskRating().isBlank() ? cc.getRiskRating() : "Medium");
+        cust.setStatus(cc.getCustomerStatus() != null && !cc.getCustomerStatus().isBlank() ? cc.getCustomerStatus() : "Active");
 
         // Source metadata
         cust.setSource(sourceSystem != null ? sourceSystem : "CBS_SIM");
@@ -229,15 +249,17 @@ public class CbsMapper {
         cust.setCif(row.getCustomerNo() != null ? row.getCustomerNo().trim() : null);
         cust.setCbsSourceRef(row.getCustomerNo() != null ? row.getCustomerNo().trim() : null);
         cust.setOriginType("CBS_IMPORTED");
-        cust.setName(row.getCustomerName1() != null ? row.getCustomerName1().trim() : "");
-        cust.setCustomerType(row.getCustomerType());
+        cust.setName(row.getCustomerName1() != null && !row.getCustomerName1().isBlank()
+                ? row.getCustomerName1().trim()
+                : (row.getCustomerNo() != null && !row.getCustomerNo().isBlank() ? "CBS Customer " + row.getCustomerNo().trim() : "Unnamed Customer"));
+        cust.setCustomerType(row.getCustomerType() != null && !row.getCustomerType().isBlank() ? row.getCustomerType() : "Individual");
         cust.setNationalId(row.getPNationalId());
         cust.setBusinessRegNo(row.getPassportNo());
         cust.setTaxIdNo(row.getTaxidNo());
         cust.setPhone(row.getMobileNumber());
         cust.setEmail(row.getEmail());
         cust.setAddress(row.getAddress());
-        cust.setSegment(row.getBusinessSegment());
+        cust.setSegment(row.getBusinessSegment() != null && !row.getBusinessSegment().isBlank() ? row.getBusinessSegment().trim() : "General");
         cust.setBranch(row.getBranchCode());
 
         // Status mapping

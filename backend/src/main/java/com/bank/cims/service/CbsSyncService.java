@@ -163,7 +163,14 @@ public class CbsSyncService {
                         throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_VALIDATION_ERROR, "Missing CIF on CBS customer " + cc.getId());
                     }
                     Customer existing = findExistingCustomer(cc.getCif(), cimsCustByCif);
-                    Customer saved = customerRepository.save(cbsMapper.mapCustomer(cc, existing, sourceSystem));
+                    Customer mapped = cbsMapper.mapCustomer(cc, existing, sourceSystem);
+                    if (mapped.getName() == null || mapped.getName().isBlank()) {
+                        mapped.setName("CBS Customer " + cc.getCif().trim());
+                    }
+                    if (mapped.getSegment() == null || mapped.getSegment().isBlank()) {
+                        mapped.setSegment("General");
+                    }
+                    Customer saved = customerRepository.save(mapped);
                     cimsCustByCif.put(cc.getCif().trim().toUpperCase(), saved);
                     customersSucceeded++;
                 } catch (Exception e) {

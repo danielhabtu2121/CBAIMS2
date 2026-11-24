@@ -615,17 +615,23 @@ public class RealCbsAdapter implements CbsAdapter {
         CbsCustomer c = new CbsCustomer();
         c.setId(r.getCustomerNo());
         c.setCif(r.getCustomerNo());
-        c.setFullName(r.getCustomerName1());
-        c.setCustomerType(r.getCustomerType());
+        String name = r.getCustomerName1();
+        if (name == null || name.isBlank()) {
+            name = (r.getCustomerNo() != null && !r.getCustomerNo().isBlank())
+                    ? "CBS Customer " + r.getCustomerNo().trim()
+                    : "Unnamed Customer";
+        }
+        c.setFullName(name.trim());
+        c.setCustomerType(r.getCustomerType() != null && !r.getCustomerType().isBlank() ? r.getCustomerType() : "Individual");
         c.setNationalId(r.getPNationalId());
         c.setBusinessRegNo(r.getPassportNo());
         c.setPhone(r.getMobileNumber() != null ? r.getMobileNumber() : "");
         c.setEmail(r.getEmail());
         c.setAddress(r.getAddress());
         c.setTaxIdNo(r.getTaxidNo());
-        c.setBusinessSegment(r.getBusinessSegment() != null ? r.getBusinessSegment() : "");
+        c.setBusinessSegment(r.getBusinessSegment() != null && !r.getBusinessSegment().isBlank() ? r.getBusinessSegment().trim() : "General");
         c.setBranch(r.getBranchCode() != null ? r.getBranchCode() : "");
-        c.setCustomerStatus(r.getCustomerStatus());
+        c.setCustomerStatus(r.getCustomerStatus() != null && !r.getCustomerStatus().isBlank() ? r.getCustomerStatus() : "Active");
         return c;
     }
 
