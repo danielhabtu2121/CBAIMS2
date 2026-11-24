@@ -79,6 +79,9 @@ public class CbsSyncService {
 
         StringBuilder errorLog = new StringBuilder();
         Set<String> affectedCollateralIds = new HashSet<>();
+        long totalStart = System.currentTimeMillis();
+
+        log.info("Starting CBS batch synchronization: syncId={}, userId={}, mode={}", syncId, userId, cbsGateway.getMode());
 
         try {
             // Verify source availability before proceeding
@@ -91,6 +94,8 @@ public class CbsSyncService {
             }
 
             // 1. Concurrent Bulk Fetch from Source Views to minimize Oracle wait time
+            log.info("Initiating concurrent fetch of CBS Customer, Facility, and Collateral views...");
+            long fetchStart = System.currentTimeMillis();
             CompletableFuture<List<CbsCustomer>> custFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchCustomers());
             CompletableFuture<List<CbsFacility>> facFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchFacilities());
             CompletableFuture<List<CbsCollateral>> colFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchCollaterals());
@@ -104,6 +109,8 @@ public class CbsSyncService {
                 cbsCustomers = custFuture.join();
                 cbsFacilities = facFuture.join();
                 cbsCollaterals = colFuture.join();
+                log.info("Fetched all CBS views concurrently in {}ms: {} customers, {} facilities, {} collaterals",
+                        (System.currentTimeMillis() - fetchStart), cbsCustomers.size(), cbsFacilities.size(), cbsCollaterals.size());
             } catch (CompletionException ce) {
                 Throwable cause = ce.getCause() != null ? ce.getCause() : ce;
                 if (cause instanceof CbsSyncException cbsEx) {
@@ -274,6 +281,13 @@ public class CbsSyncService {
             ));
 
             cbsSyncLogRepository.save(syncLog);
+
+            log.info("CBS batch synchronization completed in {}ms: status={}, customers={}/{}, facilities={}/{}, collaterals={}/{}, links={}/{}",
+                    (System.currentTimeMillis() - totalStart), resultStatus,
+                    customersSucceeded, customersProcessed,
+                    facilitiesSucceeded, facilitiesProcessed,
+                    collateralsSucceeded, collateralsProcessed,
+                    linksSucceeded, linksProcessed);
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("syncId", syncId);

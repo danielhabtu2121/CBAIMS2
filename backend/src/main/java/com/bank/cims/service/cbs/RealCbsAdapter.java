@@ -652,6 +652,8 @@ public class RealCbsAdapter implements CbsAdapter {
 
     @Override
     public void streamCustomerViewRows(java.util.function.Consumer<CbsCustomerViewRow> consumer, int maxRows) {
+        log.info("Querying CBS Customer view: {} (timeout: {}ms, fetchSize: {})", customerView, readTimeoutMs, fetchSize);
+        long startMs = System.currentTimeMillis();
         String sql = "SELECT CUSTOMER_NO, CUSTOMER_NAME1, CUSTOMER_TYPE, P_NATIONAL_ID, PASSPORT_NO, " +
                 "MOBILE_NUMBER, E_MAIL, TAXID_NO, ADDRESS, CUSTOMER_STATUS, BUSINESS_SEGMENT, RM_CODE, " +
                 "BRANCH_CODE, MAKER_DATE, RECORD_STAT, AUTH_STAT FROM " + customerView;
@@ -666,11 +668,15 @@ public class RealCbsAdapter implements CbsAdapter {
                 while (rs.next()) {
                     consumer.accept(mapCustomerRow(rs));
                     count++;
+                    if (count % 1000 == 0) {
+                        log.info("Loaded {} rows from {}...", count, customerView);
+                    }
                     if (maxRows > 0 && count >= maxRows) break;
                 }
+                log.info("Completed query on {} in {}ms (total rows: {})", customerView, (System.currentTimeMillis() - startMs), count);
             }
         } catch (SQLException e) {
-            log.error("Failed to stream CBS Customer view: {}", customerView, e);
+            log.error("Failed to stream CBS Customer view: {} after {}ms", customerView, (System.currentTimeMillis() - startMs), e);
             throw classifyQueryException(customerView, e);
         }
     }
@@ -684,6 +690,8 @@ public class RealCbsAdapter implements CbsAdapter {
 
     @Override
     public void streamFacilityViewRows(java.util.function.Consumer<CbsFacilityViewRow> consumer, int maxRows) {
+        log.info("Querying CBS Facility view: {} (timeout: {}ms, fetchSize: {})", facilityView, readTimeoutMs, fetchSize);
+        long startMs = System.currentTimeMillis();
         String sql = "SELECT ACCOUNT_NUMBER, CUSTOMER_ID, CUSTOMER_TYPE, FACILTY_ID, BRANCH_CODE, " +
                 "PRODUCT_CODE, BUSINESS_SEGMENT, SANCATION_AMOUNT, OUTSTANDING_BALANCE, MATURITY_DATE, " +
                 "ACCOUNT_STATUS, VALUE_DATE, LOAN_STATUS, BOOK_DATE, AUTH_STAT FROM " + facilityView;
@@ -698,11 +706,15 @@ public class RealCbsAdapter implements CbsAdapter {
                 while (rs.next()) {
                     consumer.accept(mapFacilityRow(rs));
                     count++;
+                    if (count % 1000 == 0) {
+                        log.info("Loaded {} rows from {}...", count, facilityView);
+                    }
                     if (maxRows > 0 && count >= maxRows) break;
                 }
+                log.info("Completed query on {} in {}ms (total rows: {})", facilityView, (System.currentTimeMillis() - startMs), count);
             }
         } catch (SQLException e) {
-            log.error("Failed to stream CBS Facility view: {}", facilityView, e);
+            log.error("Failed to stream CBS Facility view: {} after {}ms", facilityView, (System.currentTimeMillis() - startMs), e);
             throw classifyQueryException(facilityView, e);
         }
     }
@@ -716,6 +728,8 @@ public class RealCbsAdapter implements CbsAdapter {
 
     @Override
     public void streamCollateralViewRows(java.util.function.Consumer<CbsCollateralViewRow> consumer, int maxRows) {
+        log.info("Querying CBS Collateral view: {} (timeout: {}ms, fetchSize: {})", collateralView, readTimeoutMs, fetchSize);
+        long startMs = System.currentTimeMillis();
         String sql = "SELECT COLLATERAL_CODE, COLLATERAL_TYPE, COLLATERAL_DESCRIPTION, COLLATERAL_VALUE, " +
                 "VALUATION_DATE, RECORD_STAT, COLLATERAL_OWNER_CIF, COLLATERAL_CATEGORY, COLLATERAL_CURRENCY, " +
                 "START_DATE, END_DATE, REVIEW_DATE, CHARGE_TYPE, SECURED, TANGIBLE, BRANCH_CODE, AUTH_STAT, " +
@@ -733,11 +747,15 @@ public class RealCbsAdapter implements CbsAdapter {
                 while (rs.next()) {
                     consumer.accept(mapCollateralRow(rs));
                     count++;
+                    if (count % 1000 == 0) {
+                        log.info("Loaded {} rows from {}...", count, collateralView);
+                    }
                     if (maxRows > 0 && count >= maxRows) break;
                 }
+                log.info("Completed query on {} in {}ms (total rows: {})", collateralView, (System.currentTimeMillis() - startMs), count);
             }
         } catch (SQLException e) {
-            log.error("Failed to stream CBS Collateral view: {}", collateralView, e);
+            log.error("Failed to stream CBS Collateral view: {} after {}ms", collateralView, (System.currentTimeMillis() - startMs), e);
             throw classifyQueryException(collateralView, e);
         }
     }
