@@ -290,8 +290,8 @@ public class CbsOracleIntegrationComprehensiveTest {
         safeguardCol.setOriginType("CBAIMS_REGISTERED");
         safeguardCol.setValuationAmount(30_000_000.0);
 
-        when(customerRepository.findFirstByCifIgnoreCase("CIF-REPEAT-01")).thenReturn(Optional.of(existingCust));
-        when(collateralRepository.findFirstByCodeIgnoreCase("COL-SAFEGUARD-01")).thenReturn(Optional.of(safeguardCol));
+        when(customerRepository.findAll()).thenReturn(List.of(existingCust));
+        when(collateralRepository.findAll()).thenReturn(List.of(safeguardCol));
 
         when(customerRepository.save(any(Customer.class))).thenAnswer(i -> i.getArgument(0));
 

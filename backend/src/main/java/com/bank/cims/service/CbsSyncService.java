@@ -154,6 +154,10 @@ public class CbsSyncService {
             if (!neededCifs.isEmpty()) {
                 log.info("Targeting {} distinct CIFs from credit facilities/collaterals for customer query...", neededCifs.size());
                 cbsCustomers = cbsGateway.fetchCustomersByCifs(neededCifs);
+                if (cbsCustomers == null || cbsCustomers.isEmpty()) {
+                    log.info("Targeted CIF query returned empty; falling back to full customer query...");
+                    cbsCustomers = cbsGateway.fetchCustomers();
+                }
             } else {
                 log.info("No credit CIFs identified in facilities/collaterals; querying customer view...");
                 cbsCustomers = cbsGateway.fetchCustomers();
@@ -226,8 +230,16 @@ public class CbsSyncService {
                     if (mapped.getSegment() == null || mapped.getSegment().isBlank()) {
                         mapped.setSegment("General");
                     }
-                    Customer saved = customerRepository.save(mapped);
-                    cimsCustByCif.put(cc.getCif().trim().toUpperCase(), saved);
+                    if (entityManager != null) {
+                        if (existing == null) {
+                            entityManager.persist(mapped);
+                        } else {
+                            mapped = entityManager.merge(mapped);
+                        }
+                    } else {
+                        mapped = customerRepository.save(mapped);
+                    }
+                    cimsCustByCif.put(cc.getCif().trim().toUpperCase(), mapped);
                     customersSucceeded++;
                 } catch (Exception e) {
                     customersFailed++;
@@ -255,8 +267,17 @@ public class CbsSyncService {
                             ? findExistingCustomer(cf.getCustomerCif(), cimsCustByCif)
                             : null;
 
-                    LoanAccount saved = loanAccountRepository.save(cbsMapper.mapFacility(cf, existing, matchedCust, sourceSystem));
-                    cimsLoanByRef.put(cf.getLoanRefNo().trim().toUpperCase(), saved);
+                    LoanAccount mapped = cbsMapper.mapFacility(cf, existing, matchedCust, sourceSystem);
+                    if (entityManager != null) {
+                        if (existing == null) {
+                            entityManager.persist(mapped);
+                        } else {
+                            mapped = entityManager.merge(mapped);
+                        }
+                    } else {
+                        mapped = loanAccountRepository.save(mapped);
+                    }
+                    cimsLoanByRef.put(cf.getLoanRefNo().trim().toUpperCase(), mapped);
                     facilitiesSucceeded++;
                 } catch (Exception e) {
                     facilitiesFailed++;
@@ -297,10 +318,19 @@ public class CbsSyncService {
                             ? findExistingCustomer(ccol.getCustomerCif(), cimsCustByCif)
                             : null;
 
-                    Collateral saved = collateralRepository.save(cbsMapper.mapCollateral(ccol, existing, matchedCust, sourceSystem));
-                    cimsColByCode.put(ccol.getCollateralCode().trim().toUpperCase(), saved);
-                    if (saved.getId() != null) {
-                        affectedCollateralIds.add(saved.getId());
+                    Collateral mapped = cbsMapper.mapCollateral(ccol, existing, matchedCust, sourceSystem);
+                    if (entityManager != null) {
+                        if (existing == null) {
+                            entityManager.persist(mapped);
+                        } else {
+                            mapped = entityManager.merge(mapped);
+                        }
+                    } else {
+                        mapped = collateralRepository.save(mapped);
+                    }
+                    cimsColByCode.put(ccol.getCollateralCode().trim().toUpperCase(), mapped);
+                    if (mapped.getId() != null) {
+                        affectedCollateralIds.add(mapped.getId());
                     }
                     collateralsSucceeded++;
                 } catch (Exception e) {
@@ -330,11 +360,18 @@ public class CbsSyncService {
                             : null;
 
                     LoanCollateralLink existing = findExistingLink(cl.getId(), cimsLinkById);
-                    LoanCollateralLink saved = loanCollateralLinkRepository.save(
-                            cbsMapper.mapLink(cl, existing, matchedLoan, matchedCol, sourceSystem)
-                    );
-                    if (saved.getId() != null) {
-                        cimsLinkById.put(saved.getId(), saved);
+                    LoanCollateralLink mapped = cbsMapper.mapLink(cl, existing, matchedLoan, matchedCol, sourceSystem);
+                    if (entityManager != null) {
+                        if (existing == null) {
+                            entityManager.persist(mapped);
+                        } else {
+                            mapped = entityManager.merge(mapped);
+                        }
+                    } else {
+                        mapped = loanCollateralLinkRepository.save(mapped);
+                    }
+                    if (mapped.getId() != null) {
+                        cimsLinkById.put(mapped.getId(), mapped);
                     }
 
                     if (matchedCol != null) {
@@ -668,47 +705,35 @@ public class CbsSyncService {
     private Customer findExistingCustomer(String cif, Map<String, Customer> cache) {
         if (cif == null || cif.isBlank()) return null;
         String key = cif.trim().toUpperCase();
-        if (cache.containsKey(key)) return cache.get(key);
-        Customer found = null;
-        try {
-            found = customerRepository.findFirstByCifIgnoreCase(cif).orElse(null);
-        } catch (Exception ignored) {}
-        cache.put(key, found);
-        return found;
+        if (cache != null) {
+            return cache.get(key);
+        }
+        return customerRepository.findFirstByCifIgnoreCase(cif).orElse(null);
     }
 
     private LoanAccount findExistingLoan(String ref, Map<String, LoanAccount> cache) {
         if (ref == null || ref.isBlank()) return null;
         String key = ref.trim().toUpperCase();
-        if (cache.containsKey(key)) return cache.get(key);
-        LoanAccount found = null;
-        try {
-            found = loanAccountRepository.findFirstByLoanReferenceIgnoreCase(ref).orElse(null);
-        } catch (Exception ignored) {}
-        cache.put(key, found);
-        return found;
+        if (cache != null) {
+            return cache.get(key);
+        }
+        return loanAccountRepository.findFirstByLoanReferenceIgnoreCase(ref).orElse(null);
     }
 
     private Collateral findExistingCollateral(String code, Map<String, Collateral> cache) {
         if (code == null || code.isBlank()) return null;
         String key = code.trim().toUpperCase();
-        if (cache.containsKey(key)) return cache.get(key);
-        Collateral found = null;
-        try {
-            found = collateralRepository.findFirstByCodeIgnoreCase(code).orElse(null);
-        } catch (Exception ignored) {}
-        cache.put(key, found);
-        return found;
+        if (cache != null) {
+            return cache.get(key);
+        }
+        return collateralRepository.findFirstByCodeIgnoreCase(code).orElse(null);
     }
 
     private LoanCollateralLink findExistingLink(String id, Map<String, LoanCollateralLink> cache) {
         if (id == null || id.isBlank()) return null;
-        if (cache.containsKey(id)) return cache.get(id);
-        LoanCollateralLink found = null;
-        try {
-            found = loanCollateralLinkRepository.findById(id).orElse(null);
-        } catch (Exception ignored) {}
-        cache.put(id, found);
-        return found;
+        if (cache != null) {
+            return cache.get(id);
+        }
+        return loanCollateralLinkRepository.findById(id).orElse(null);
     }
 }
