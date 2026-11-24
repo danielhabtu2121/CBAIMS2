@@ -1204,20 +1204,44 @@ public class RealCbsAdapter implements CbsAdapter {
     @Override
     public List<CbsAccCollLinkDtls> fetchAllAccountCollateralLinks() {
         List<CbsCollateralViewRow> rows = fetchCollateralViewRows();
-        List<CbsAccCollLinkDtls> links = new ArrayList<>();
+        Map<String, CbsAccCollLinkDtls> uniqueLinks = new LinkedHashMap<>();
         for (CbsCollateralViewRow r : rows) {
-            if (r.getAccountNumber() != null && !r.getAccountNumber().isBlank()) {
-                CbsAccCollLinkDtls link = new CbsAccCollLinkDtls();
-                link.setId("link-" + UUID.randomUUID().toString().substring(0, 8));
-                link.setAccountNumber(r.getAccountNumber().trim());
-                link.setLinkedReferenceNo(r.getCollateralCode());
-                link.setBranchCode(r.getBranchCode());
-                link.setLinkageType(r.getLinkageType());
-                link.setLinkedAmount(r.getLinkedAmount() != null ? r.getLinkedAmount().doubleValue() : 0.0);
-                link.setLimitAmount(r.getLimitAmount() != null ? r.getLimitAmount().doubleValue() : 0.0);
-                links.add(link);
+            if (r.getAccountNumber() != null && !r.getAccountNumber().isBlank()
+                    && r.getCollateralCode() != null && !r.getCollateralCode().isBlank()) {
+                String accNum = r.getAccountNumber().trim();
+                String colCode = r.getCollateralCode().trim();
+                String dedupeKey = (colCode + ":" + accNum).toUpperCase();
+
+                double linkedAmt = r.getLinkedAmount() != null && r.getLinkedAmount().doubleValue() > 0
+                        ? r.getLinkedAmount().doubleValue()
+                        : (r.getLimitAmount() != null && r.getLimitAmount().doubleValue() > 0
+                                ? r.getLimitAmount().doubleValue()
+                                : (r.getCollateralValue() != null ? r.getCollateralValue().doubleValue() : 0.0));
+                double limitAmt = r.getLimitAmount() != null && r.getLimitAmount().doubleValue() > 0
+                        ? r.getLimitAmount().doubleValue()
+                        : linkedAmt;
+
+                CbsAccCollLinkDtls existing = uniqueLinks.get(dedupeKey);
+                if (existing != null) {
+                    if (linkedAmt > existing.getLinkedAmount()) {
+                        existing.setLinkedAmount(linkedAmt);
+                    }
+                    if (limitAmt > existing.getLimitAmount()) {
+                        existing.setLimitAmount(limitAmt);
+                    }
+                } else {
+                    CbsAccCollLinkDtls link = new CbsAccCollLinkDtls();
+                    link.setId("link-cbs-" + Math.abs(dedupeKey.hashCode()));
+                    link.setAccountNumber(accNum);
+                    link.setLinkedReferenceNo(colCode);
+                    link.setBranchCode(r.getBranchCode());
+                    link.setLinkageType(r.getLinkageType());
+                    link.setLinkedAmount(linkedAmt);
+                    link.setLimitAmount(limitAmt);
+                    uniqueLinks.put(dedupeKey, link);
+                }
             }
         }
-        return links;
+        return new ArrayList<>(uniqueLinks.values());
     }
 }

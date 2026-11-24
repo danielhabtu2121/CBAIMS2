@@ -276,13 +276,20 @@ public class CbsMapper {
         link.setCollateralCategory(cl.getCollateralCategory());
         link.setHaircut(cl.getHaircut());
         link.setLimitAmount(cl.getLimitAmount());
-        link.setAllocatedAmount(cl.getLinkedAmount());
-        link.setLinkedAmount(cl.getLinkedAmount());
-        link.setLinkedPercent(cl.getLinkedPercentNumber());
+
+        double effectiveLinkedAmt = cl.getLinkedAmount() > 0 ? cl.getLinkedAmount()
+                : (cl.getLimitAmount() > 0 ? cl.getLimitAmount()
+                        : (existing != null && existing.getLinkedAmount() > 0 ? existing.getLinkedAmount()
+                                : (matchedCollateral != null ? matchedCollateral.getValuationAmount() : 0.0)));
+
+        link.setAllocatedAmount(effectiveLinkedAmt);
+        link.setLinkedAmount(effectiveLinkedAmt);
+        link.setLinkedPercent(cl.getLinkedPercentNumber() > 0 ? cl.getLinkedPercentNumber()
+                : (existing != null && existing.getLinkedPercent() > 0 ? existing.getLinkedPercent() : 100.0));
         link.setUtilOrder(cl.getUtilOrder());
         link.setReinstateOrder(cl.getReinstateOrder());
         link.setUtilAmount(cl.getUtilAmount());
-        link.setStatus(cl.getStatus() != null ? cl.getStatus() : "Active");
+        link.setStatus("Active");
         link.setTakenOver(cl.getTakenOver() != null ? cl.getTakenOver() : "N");
 
         // Source metadata

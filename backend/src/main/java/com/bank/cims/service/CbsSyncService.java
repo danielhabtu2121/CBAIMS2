@@ -212,17 +212,24 @@ public class CbsSyncService {
             }
 
             Map<String, LoanCollateralLink> cimsLinkById = new HashMap<>();
+            Map<String, LoanCollateralLink> cimsLinkByPair = new HashMap<>();
             try {
                 for (LoanCollateralLink lnk : loanCollateralLinkRepository.findAll()) {
                     if (lnk.getId() != null && !lnk.getId().isBlank()) {
                         cimsLinkById.put(lnk.getId().trim().toUpperCase(), lnk);
                     }
+                    if (lnk.getCollateralId() != null && !lnk.getCollateralId().isBlank()
+                            && lnk.getLoanAccountId() != null && !lnk.getLoanAccountId().isBlank()
+                            && "Active".equalsIgnoreCase(lnk.getStatus())) {
+                        String pairKey = (lnk.getCollateralId().trim() + ":" + lnk.getLoanAccountId().trim()).toUpperCase();
+                        cimsLinkByPair.put(pairKey, lnk);
+                    }
                 }
             } catch (Exception ex) {
                 log.warn("Could not pre-load linkages: {}", ex.getMessage());
             }
-            log.info("Pre-loaded existing entities: {} customers, {} loans, {} collaterals, {} links",
-                    cimsCustByCif.size(), cimsLoanByRef.size(), cimsColByCode.size(), cimsLinkById.size());
+            log.info("Pre-loaded existing entities: {} customers, {} loans, {} collaterals, {} links ({} active pairs)",
+                    cimsCustByCif.size(), cimsLoanByRef.size(), cimsColByCode.size(), cimsLinkById.size(), cimsLinkByPair.size());
 
             // 3. Synchronize Customers
             for (CbsCustomer cc : cbsCustomers) {
@@ -436,7 +443,12 @@ public class CbsSyncService {
                         continue;
                     }
 
-                    LoanCollateralLink existing = findExistingLink(cl.getId(), cimsLinkById);
+                    String pairKey = (matchedCol.getId().trim() + ":" + matchedLoan.getId().trim()).toUpperCase();
+                    LoanCollateralLink existing = cimsLinkByPair.get(pairKey);
+                    if (existing == null && cl.getId() != null) {
+                        existing = findExistingLink(cl.getId(), cimsLinkById);
+                    }
+
                     LoanCollateralLink mapped = cbsMapper.mapLink(cl, existing, matchedLoan, matchedCol, sourceSystem);
                     if (entityManager != null) {
                         if (existing == null) {
@@ -448,8 +460,9 @@ public class CbsSyncService {
                         mapped = loanCollateralLinkRepository.save(mapped);
                     }
                     if (mapped.getId() != null) {
-                        cimsLinkById.put(mapped.getId(), mapped);
+                        cimsLinkById.put(mapped.getId().trim().toUpperCase(), mapped);
                     }
+                    cimsLinkByPair.put(pairKey, mapped);
 
                     affectedCollateralIds.add(matchedCol.getId());
                     linksSucceeded++;
@@ -458,16 +471,25 @@ public class CbsSyncService {
                     errorLog.append("[Link: ").append(cl.getId()).append(" Error: ").append(e.getMessage()).append("]; ");
                 }
                 if (linksProcessed % 500 == 0 && entityManager != null) {
-                    entityManager.flush();
-                    entityManager.clear();
+                    try {
+                        entityManager.flush();
+                        entityManager.clear();
+                    } catch (Exception flushEx) {
+                        log.warn("Batch flush encountered issue around linkage {}: {}", linksProcessed, flushEx.getMessage());
+                        entityManager.clear();
+                    }
                 }
                 if (linksProcessed % 10000 == 0) {
                     log.info("Synchronized {}/{} linkages...", linksProcessed, cbsLinks.size());
                 }
             }
             if (entityManager != null) {
-                entityManager.flush();
-                entityManager.clear();
+                try {
+                    entityManager.flush();
+                    entityManager.clear();
+                } catch (Exception flushEx) {
+                    log.warn("Final linkage batch flush encountered issue: {}", flushEx.getMessage());
+                }
             }
             log.info("Completed linkage synchronization: {}/{} succeeded in {}ms", linksSucceeded, cbsLinks.size(), (System.currentTimeMillis() - totalStart));
 
