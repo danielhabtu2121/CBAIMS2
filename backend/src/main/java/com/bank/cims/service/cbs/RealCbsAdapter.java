@@ -1231,7 +1231,7 @@ public class RealCbsAdapter implements CbsAdapter {
                     }
                 } else {
                     CbsAccCollLinkDtls link = new CbsAccCollLinkDtls();
-                    link.setId("link-cbs-" + Math.abs(dedupeKey.hashCode()));
+                    link.setId("link-" + UUID.nameUUIDFromBytes(dedupeKey.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                     link.setAccountNumber(accNum);
                     link.setLinkedReferenceNo(colCode);
                     link.setBranchCode(r.getBranchCode());
