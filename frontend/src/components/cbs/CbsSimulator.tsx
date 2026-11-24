@@ -519,7 +519,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
             </div>
             <p style={{ fontSize: '12px', color: '#334155', margin: '2px 0 0 0' }}>
               Connected to CBS Oracle at <code>10.41.30.114:1521/FCUBUAT</code> (Schema: <code>FCUBSLIVE</code>).
-              Permitted Source Egress: Server <code>172.22.11.55</code>. Strict read-only 3-view ingestion. Zero write-back to CBS.
+              Permitted Source Egress: Server <code>172.22.10.55</code>. Strict read-only 3-view ingestion. Zero write-back to CBS.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1967,7 +1967,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   <p className="font-semibold text-slate-800">Bank Security &amp; Architectural Safeguards</p>
                   <p className="mt-0.5 leading-relaxed text-slate-600">
                     CBAIMS connects with strict <strong>read-only</strong> access (autoCommit=false) to CBS Oracle 3-views (<code>STVWCBS_CBAIMS_*</code>). Zero write-back is executed on CBS.
-                    Permitted deployment server egress: <code>172.22.11.55</code>.
+                    Permitted deployment server egress: <code>172.22.10.55</code>.
                   </p>
                 </div>
               </div>
@@ -2151,7 +2151,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
                   {testResult.status === 'NETWORK_UNAVAILABLE' && (
                     <p className="text-[10px] mt-1.5 text-slate-600 bg-white/70 p-2 rounded border border-rose-100">
                       💡 <strong>Bank DMZ Requirement:</strong> The Oracle host (<code>10.41.30.114:1521</code>) is protected behind the bank core banking firewall.
-                      Egress is authorized from server <code>172.22.11.55</code>. Connect via the bank VPN or deploy this service onto the authorized server.
+                      Egress is authorized from server <code>172.22.10.55</code>. Connect via the bank VPN or deploy this service onto the authorized server.
                     </p>
                   )}
                 </div>

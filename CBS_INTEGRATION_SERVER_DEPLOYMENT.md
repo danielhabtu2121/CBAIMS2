@@ -24,7 +24,7 @@ CBAIMS implements a **Zero-Write, Read-Only Source Integration** architecture wi
               (31 Columns with Embedded Linkages)
                                │
             ┌──────────────────┴──────────────────┐
-            │   Authorized Egress: 172.22.11.55   │
+            │   Authorized Egress: 172.22.10.55   │
             │   (or Bank Core Banking VPN Tunnel) │
             └──────────────────┬──────────────────┘
                                │
@@ -67,19 +67,19 @@ CBAIMS implements a **Zero-Write, Read-Only Source Integration** architecture wi
 Because the CBS database resides in the bank's internal database DMZ, connection attempts from external workstations or unauthorized developer laptops will return `NETWORK_UNAVAILABLE` (connection timed out).
 
 ### Permitted Access Paths:
-1. **Authorized Server Deployment (`172.22.11.55`)**:
-   The bank's internal firewall is configured to allow egress traffic on port `1521` originating from `172.22.11.55` to `10.41.30.114`.
+1. **Authorized Server Deployment (`172.22.10.55`)**:
+   The bank's internal firewall is configured to allow egress traffic on port `1521` originating from `172.22.10.55` to `10.41.30.114`.
 2. **Bank Core Banking VPN**:
    If developing locally, connect your machine to the internal bank VPN that routes subnet `10.41.30.0/24`.
 3. **SSH Port Forwarding (Local Tunnel)**:
-   If you have SSH access to `172.22.11.55`, you can create a local tunnel to test from your development workstation:
+   If you have SSH access to `172.22.10.55`, you can create a local tunnel to test from your development workstation:
    ```bash
-   ssh -L 1521:10.41.30.114:1521 user@172.22.11.55
+   ssh -L 1521:10.41.30.114:1521 user@172.22.10.55
    ```
    Then set JDBC URL to: `jdbc:oracle:thin:@//127.0.0.1:1521/FCUBUAT`
 
 ### Connectivity Verification:
-Run on the deployment host (`172.22.11.55`):
+Run on the deployment host (`172.22.10.55`):
 ```bash
 # Using netcat
 nc -zv 10.41.30.114 1521
@@ -104,7 +104,7 @@ telnet 10.41.30.114 1521
    - Click **Save & Apply**: CBAIMS closes any existing pool and connects directly using the new credentials.
 
 ### Option 2: Server Environment Variables (Recommended for Production)
-On server `172.22.11.55`, configure the environment variables in your `systemd` service file (e.g. `/etc/systemd/system/cbaims-backend.service`):
+On server `172.22.10.55`, configure the environment variables in your `systemd` service file (e.g. `/etc/systemd/system/cbaims-backend.service`):
 
 ```ini
 [Unit]
@@ -203,7 +203,7 @@ Imports and establishes canonical records in CBAIMS with immutable source snapsh
 | Diagnostic Status | Root Cause | Resolution |
 |---|---|---|
 | `NOT_CONFIGURED` | Missing JDBC URL, Username, or Password. | Set `CIMS_CBS_PASSWORD` in `application.yml` / env vars, or configure via UI modal. |
-| `NETWORK_UNAVAILABLE` | Port 1521 unreachable or timed out. | Check firewall egress from host. Verify host IP is `172.22.11.55` or connect to Bank VPN. |
+| `NETWORK_UNAVAILABLE` | Port 1521 unreachable or timed out. | Check firewall egress from host. Verify host IP is `172.22.10.55` or connect to Bank VPN. |
 | `AUTHENTICATION_FAILED` (ORA-01017) | Invalid Oracle username or password. | Verify credentials with CBS DBA team; update password in config. |
 | `VIEW_ACCESS_DENIED` (ORA-00942) | Table/view doesn't exist or user lacks `SELECT` grant. | Ask DBA to grant `SELECT` on `FCUBSLIVE.STVWCBS_CBAIMS_*` to `CBAIMSUSER`. |
 | `NETWORK_PROTOCOL_ERROR` (ORA-12592: TNS:bad packet) | Stateful firewall dropped TCP Out-Of-Band (URG) packets or split TNS buffer during multi-row fetch. | Handled automatically via `oracle.net.disableOob=true`, forward-only result sets, and reduced fetch size (100). If it persists, ask network team to disable SQL*Net deep packet inspection on firewall. |
@@ -224,7 +224,7 @@ When querying `FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER`, `FCUBSLIVE.STVWCBS_CBAIMS_FAC
    - For facility view: ensure index on `ACCOUNT_NUMBER` and `CUSTOMER_ID`.
    - For collateral view: ensure index on `COLLATERAL_CODE` and `COLLATERAL_OWNER_CIF`.
 3. **Network & MTU**:
-   - Verify MTU / packet fragmentation between deployment host `172.22.11.55` and Oracle host `10.41.30.114:1521`.
+   - Verify MTU / packet fragmentation between deployment host `172.22.10.55` and Oracle host `10.41.30.114:1521`.
    - Ensure firewall inspection does not delay or drop long-running SQL*Net TCP streams.
 
 

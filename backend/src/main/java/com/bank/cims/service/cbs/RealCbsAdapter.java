@@ -21,7 +21,7 @@ import java.util.*;
  * Production Oracle Three-View CBS Source Adapter (OracleThreeViewCbsAdapter).
  * Connects directly to CBS Oracle database via JDBC:
  * Target Host: 10.41.30.114:1521 / Service: FCUBUAT / Schema: FCUBSLIVE
- * Permitted Source Egress: CBAIMS Deployment Server 172.22.11.55
+ * Permitted Source Egress: CBAIMS Deployment Server 172.22.10.55
  * 
  * Implements strict read-only access to the three CBS Oracle views:
  * 1. FCUBSLIVE.STVWCBS_CBAIMS_CUSTOMER (16 columns)

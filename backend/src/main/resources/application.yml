@@ -36,7 +36,7 @@ cims:
       authentication-type: "NONE"
     # =========================================================================
     # CBS PRODUCTION ORACLE 3-VIEW CONFIGURATION
-    # Deployment Server: 172.22.11.55
+    # Deployment Server: 172.22.10.55
     # CBS Oracle Server: 10.41.30.114:1521 / Service: FCUBUAT
     # Schema Owner: FCUBSLIVE / User: CBAIMSUSER
     # Password: Set via environment variable CIMS_CBS_PASSWORD (never hardcode)
