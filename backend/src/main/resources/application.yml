@@ -18,6 +18,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+        order_updates: true
   flyway:
     enabled: true
     baseline-on-migrate: true

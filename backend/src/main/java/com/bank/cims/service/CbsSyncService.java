@@ -53,6 +53,9 @@ public class CbsSyncService {
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
+    private final java.util.concurrent.atomic.AtomicBoolean isSyncInProgress = new java.util.concurrent.atomic.AtomicBoolean(false);
+    private volatile String currentRunningSyncId = null;
+
     /**
      * Batch synchronization of all master data domains from CBS to CIMS.
      * Implements bulk retrieval, in-memory indexing to prevent N+1 queries,
@@ -63,6 +66,17 @@ public class CbsSyncService {
         String syncId = "sync-" + UUID.randomUUID().toString().substring(0, 8);
         String startTime = LocalDateTime.now().toString();
         String sourceSystem = "REAL".equalsIgnoreCase(cbsGateway.getMode()) ? "REAL_CBS" : "CBS_SIM";
+
+        if (!isSyncInProgress.compareAndSet(false, true)) {
+            log.warn("CBS batch synchronization requested but already in progress (activeSyncId={})", currentRunningSyncId);
+            Map<String, Object> busyResp = new LinkedHashMap<>();
+            busyResp.put("status", "IN_PROGRESS");
+            busyResp.put("message", "A CBS batch synchronization is already running in background (syncId: " + currentRunningSyncId + "). Please wait for it to complete.");
+            busyResp.put("syncId", currentRunningSyncId);
+            busyResp.put("success", true);
+            return busyResp;
+        }
+        currentRunningSyncId = syncId;
 
         int customersProcessed = 0;
         int customersSucceeded = 0;
@@ -149,11 +163,53 @@ public class CbsSyncService {
 
             List<CbsAccCollLinkDtls> cbsLinks = cbsGateway.fetchAllAccountCollateralLinks();
 
-            // 2. CIMS Lookups - lazily cached to prevent loading millions of records into heap memory
+            // 2. Pre-populate CIMS Lookups in bulk to eliminate 380,000+ individual SQL queries
+            log.info("Pre-loading existing CIMS records into memory for fast zero-query matching...");
             Map<String, Customer> cimsCustByCif = new HashMap<>();
+            try {
+                for (Customer c : customerRepository.findAll()) {
+                    if (c.getCif() != null && !c.getCif().isBlank()) {
+                        cimsCustByCif.put(c.getCif().trim().toUpperCase(), c);
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Could not pre-load customers: {}", ex.getMessage());
+            }
+
             Map<String, LoanAccount> cimsLoanByRef = new HashMap<>();
+            try {
+                for (LoanAccount la : loanAccountRepository.findAll()) {
+                    if (la.getLoanReference() != null && !la.getLoanReference().isBlank()) {
+                        cimsLoanByRef.put(la.getLoanReference().trim().toUpperCase(), la);
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Could not pre-load loan accounts: {}", ex.getMessage());
+            }
+
             Map<String, Collateral> cimsColByCode = new HashMap<>();
+            try {
+                for (Collateral col : collateralRepository.findAll()) {
+                    if (col.getCode() != null && !col.getCode().isBlank()) {
+                        cimsColByCode.put(col.getCode().trim().toUpperCase(), col);
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Could not pre-load collaterals: {}", ex.getMessage());
+            }
+
             Map<String, LoanCollateralLink> cimsLinkById = new HashMap<>();
+            try {
+                for (LoanCollateralLink lnk : loanCollateralLinkRepository.findAll()) {
+                    if (lnk.getId() != null && !lnk.getId().isBlank()) {
+                        cimsLinkById.put(lnk.getId().trim().toUpperCase(), lnk);
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Could not pre-load linkages: {}", ex.getMessage());
+            }
+            log.info("Pre-loaded existing entities: {} customers, {} loans, {} collaterals, {} links",
+                    cimsCustByCif.size(), cimsLoanByRef.size(), cimsColByCode.size(), cimsLinkById.size());
 
             // 3. Synchronize Customers
             for (CbsCustomer cc : cbsCustomers) {
@@ -408,6 +464,9 @@ public class CbsSyncService {
                 throw cbsEx;
             }
             throw new RuntimeException("CBS Synchronisation batch failed: " + errDetail, e);
+        } finally {
+            isSyncInProgress.set(false);
+            currentRunningSyncId = null;
         }
     }
 
@@ -581,6 +640,8 @@ public class CbsSyncService {
         status.put("connectionStatus", connStatus.getStatus());
         status.put("connectionMessage", connStatus.getMessage());
         status.put("cbsConnected", "AVAILABLE".equalsIgnoreCase(connStatus.getStatus()));
+        status.put("isSyncInProgress", isSyncInProgress.get());
+        status.put("currentRunningSyncId", currentRunningSyncId);
 
         // Fetch stored sync history for truthful timestamps
         Optional<CbsSyncLog> lastLog = cbsSyncLogRepository.findFirstByOrderByTimestampDesc();

@@ -246,6 +246,12 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
           message: res.message,
           failingView: res.failingView,
         });
+      } else if (res && res.status === 'IN_PROGRESS') {
+        setSyncBanner({
+          type: 'info',
+          title: 'CBS Synchronization In Progress',
+          message: res.message || 'Synchronization is currently processing in the background.',
+        });
       } else if (res && (res.status === 'PARTIAL_SUCCESS' || (res.totalErrors && res.totalErrors > 0))) {
         setSyncBanner({
           type: 'error',
