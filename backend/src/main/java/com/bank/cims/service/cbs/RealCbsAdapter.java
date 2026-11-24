@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -66,10 +67,10 @@ public class RealCbsAdapter implements CbsAdapter {
     @Value("${cims.cbs.oracle.read-timeout-ms:120000}")
     private int readTimeoutMs;
 
-    @Value("${cims.cbs.oracle.maximum-pool-size:5}")
+    @Value("${cims.cbs.oracle.maximum-pool-size:10}")
     private int maxPoolSize;
 
-    @Value("${cims.cbs.oracle.minimum-idle:1}")
+    @Value("${cims.cbs.oracle.minimum-idle:2}")
     private int minIdle;
 
     @Value("${cims.cbs.oracle.fetch-size:500}")
@@ -110,10 +111,10 @@ public class RealCbsAdapter implements CbsAdapter {
                 config.setUsername(username.trim());
                 config.setPassword(password.trim());
                 config.setDriverClassName("oracle.jdbc.OracleDriver");
-                config.setMaximumPoolSize(maxPoolSize > 0 ? maxPoolSize : 5);
-                config.setMinimumIdle(minIdle >= 0 ? minIdle : 1);
-                config.setConnectionTimeout(connectTimeoutMs > 0 ? connectTimeoutMs : 10000);
-                config.setValidationTimeout(Math.min(connectTimeoutMs > 0 ? connectTimeoutMs : 10000, 5000));
+                config.setMaximumPoolSize(maxPoolSize > 0 ? maxPoolSize : 10);
+                config.setMinimumIdle(minIdle >= 0 ? minIdle : 2);
+                config.setConnectionTimeout(60000);
+                config.setValidationTimeout(5000);
                 config.setIdleTimeout(30000);
                 config.setMaxLifetime(60000);
                 config.setReadOnly(true);
@@ -323,6 +324,16 @@ public class RealCbsAdapter implements CbsAdapter {
             return new CbsSyncException(
                     CbsSyncException.ErrorCode.SOURCE_TIMEOUT,
                     "CBS Oracle view query timed out reading from " + viewName + " after configured read timeout (" + readTimeoutMs + "ms).",
+                    viewName,
+                    e
+            );
+        }
+
+        if (msgLower.contains("connection is not available") || msgLower.contains("request timed out")) {
+            log.error("Oracle CBS connection pool busy or timed out on view {}: {}", viewName, msg);
+            return new CbsSyncException(
+                    CbsSyncException.ErrorCode.SOURCE_TIMEOUT,
+                    "CBS Oracle connection pool timed out waiting for connection on view " + viewName + ": " + msg,
                     viewName,
                     e
             );
@@ -731,9 +742,29 @@ public class RealCbsAdapter implements CbsAdapter {
             chunks.add(cifList.subList(i, end));
         }
 
-        List<CbsCustomerViewRow> results = chunks.parallelStream()
-                .flatMap(chunk -> fetchCustomerViewRowChunk(chunk).stream())
-                .collect(Collectors.toList());
+        int workers = Math.min(4, Math.max(1, (maxPoolSize > 0 ? maxPoolSize : 10) - 2));
+        ExecutorService executor = Executors.newFixedThreadPool(workers);
+        List<CbsCustomerViewRow> results = new ArrayList<>();
+        try {
+            List<Future<List<CbsCustomerViewRow>>> futures = new ArrayList<>(chunks.size());
+            for (List<String> chunk : chunks) {
+                futures.add(executor.submit(() -> fetchCustomerViewRowChunk(chunk)));
+            }
+            for (Future<List<CbsCustomerViewRow>> f : futures) {
+                results.addAll(f.get());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_TIMEOUT, "Interrupted while fetching customer view rows", customerView, e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof CbsSyncException cbsEx) {
+                throw cbsEx;
+            }
+            throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_QUERY_FAILED, "Failed fetching customer view rows: " + cause.getMessage(), customerView, cause);
+        } finally {
+            executor.shutdown();
+        }
 
         log.info("Successfully retrieved {} targeted CBS customer view rows in {}ms", results.size(), (System.currentTimeMillis() - startMs));
         return results;
@@ -892,9 +923,29 @@ public class RealCbsAdapter implements CbsAdapter {
             chunks.add(cifList.subList(i, end));
         }
 
-        List<CbsCustomer> results = chunks.parallelStream()
-                .flatMap(chunk -> fetchCustomerChunk(chunk).stream())
-                .collect(Collectors.toList());
+        int workers = Math.min(4, Math.max(1, (maxPoolSize > 0 ? maxPoolSize : 10) - 2));
+        ExecutorService executor = Executors.newFixedThreadPool(workers);
+        List<CbsCustomer> results = new ArrayList<>();
+        try {
+            List<Future<List<CbsCustomer>>> futures = new ArrayList<>(chunks.size());
+            for (List<String> chunk : chunks) {
+                futures.add(executor.submit(() -> fetchCustomerChunk(chunk)));
+            }
+            for (Future<List<CbsCustomer>> f : futures) {
+                results.addAll(f.get());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_TIMEOUT, "Interrupted while fetching customers", customerView, e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof CbsSyncException cbsEx) {
+                throw cbsEx;
+            }
+            throw new CbsSyncException(CbsSyncException.ErrorCode.SOURCE_QUERY_FAILED, "Failed fetching customers: " + cause.getMessage(), customerView, cause);
+        } finally {
+            executor.shutdown();
+        }
 
         log.info("Successfully retrieved {} targeted CBS customers in {}ms", results.size(), (System.currentTimeMillis() - startMs));
         return results;
