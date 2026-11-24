@@ -186,6 +186,12 @@ public class CbsSyncService {
                     if (la.getLoanReference() != null && !la.getLoanReference().isBlank()) {
                         cimsLoanByRef.put(la.getLoanReference().trim().toUpperCase(), la);
                     }
+                    if (la.getId() != null && !la.getId().isBlank()) {
+                        cimsLoanByRef.put(la.getId().trim().toUpperCase(), la);
+                    }
+                    if (la.getLineCode() != null && !la.getLineCode().isBlank()) {
+                        cimsLoanByRef.put(la.getLineCode().trim().toUpperCase(), la);
+                    }
                 }
             } catch (Exception ex) {
                 log.warn("Could not pre-load loan accounts: {}", ex.getMessage());
@@ -196,6 +202,9 @@ public class CbsSyncService {
                 for (Collateral col : collateralRepository.findAll()) {
                     if (col.getCode() != null && !col.getCode().isBlank()) {
                         cimsColByCode.put(col.getCode().trim().toUpperCase(), col);
+                    }
+                    if (col.getId() != null && !col.getId().isBlank()) {
+                        cimsColByCode.put(col.getId().trim().toUpperCase(), col);
                     }
                 }
             } catch (Exception ex) {
@@ -293,7 +302,15 @@ public class CbsSyncService {
                     } else {
                         mapped = loanAccountRepository.save(mapped);
                     }
-                    cimsLoanByRef.put(cf.getLoanRefNo().trim().toUpperCase(), mapped);
+                    if (mapped.getLoanReference() != null) {
+                        cimsLoanByRef.put(mapped.getLoanReference().trim().toUpperCase(), mapped);
+                    }
+                    if (mapped.getId() != null) {
+                        cimsLoanByRef.put(mapped.getId().trim().toUpperCase(), mapped);
+                    }
+                    if (mapped.getLineCode() != null) {
+                        cimsLoanByRef.put(mapped.getLineCode().trim().toUpperCase(), mapped);
+                    }
                     facilitiesSucceeded++;
                 } catch (Exception e) {
                     facilitiesFailed++;
@@ -306,6 +323,10 @@ public class CbsSyncService {
                 if (facilitiesProcessed % 10000 == 0) {
                     log.info("Synchronized {}/{} facilities...", facilitiesProcessed, cbsFacilities.size());
                 }
+            }
+            if (entityManager != null) {
+                entityManager.flush();
+                entityManager.clear();
             }
             log.info("Completed facility synchronization: {}/{} succeeded in {}ms", facilitiesSucceeded, cbsFacilities.size(), (System.currentTimeMillis() - totalStart));
 
@@ -363,7 +384,12 @@ public class CbsSyncService {
                     } else {
                         mapped = collateralRepository.save(mapped);
                     }
-                    cimsColByCode.put(ccol.getCollateralCode().trim().toUpperCase(), mapped);
+                    if (mapped.getCode() != null) {
+                        cimsColByCode.put(mapped.getCode().trim().toUpperCase(), mapped);
+                    }
+                    if (mapped.getId() != null) {
+                        cimsColByCode.put(mapped.getId().trim().toUpperCase(), mapped);
+                    }
                     if (mapped.getId() != null) {
                         affectedCollateralIds.add(mapped.getId());
                     }
@@ -380,6 +406,10 @@ public class CbsSyncService {
                     log.info("Synchronized {}/{} collaterals...", collateralsProcessed, cbsCollaterals.size());
                 }
             }
+            if (entityManager != null) {
+                entityManager.flush();
+                entityManager.clear();
+            }
             log.info("Completed collateral synchronization: {}/{} succeeded in {}ms", collateralsSucceeded, cbsCollaterals.size(), (System.currentTimeMillis() - totalStart));
 
             // 6. Synchronize Account-Collateral Linkages
@@ -393,6 +423,18 @@ public class CbsSyncService {
                     Collateral matchedCol = (cl.getLinkedReferenceNo() != null && !cl.getLinkedReferenceNo().isBlank())
                             ? findExistingCollateral(cl.getLinkedReferenceNo(), cimsColByCode)
                             : null;
+
+                    // Enforce foreign key validity: skip orphan linkages where loan or collateral does not exist in CIMS
+                    if (matchedLoan == null) {
+                        log.debug("Skipping linkage {} because loan account '{}' is not present in CIMS facilities", cl.getId(), cl.getAccountNumber());
+                        linksFailed++;
+                        continue;
+                    }
+                    if (matchedCol == null) {
+                        log.debug("Skipping linkage {} because collateral code '{}' is not present in CIMS collaterals", cl.getId(), cl.getLinkedReferenceNo());
+                        linksFailed++;
+                        continue;
+                    }
 
                     LoanCollateralLink existing = findExistingLink(cl.getId(), cimsLinkById);
                     LoanCollateralLink mapped = cbsMapper.mapLink(cl, existing, matchedLoan, matchedCol, sourceSystem);
@@ -409,9 +451,7 @@ public class CbsSyncService {
                         cimsLinkById.put(mapped.getId(), mapped);
                     }
 
-                    if (matchedCol != null) {
-                        affectedCollateralIds.add(matchedCol.getId());
-                    }
+                    affectedCollateralIds.add(matchedCol.getId());
                     linksSucceeded++;
                 } catch (Exception e) {
                     linksFailed++;
@@ -424,6 +464,10 @@ public class CbsSyncService {
                 if (linksProcessed % 10000 == 0) {
                     log.info("Synchronized {}/{} linkages...", linksProcessed, cbsLinks.size());
                 }
+            }
+            if (entityManager != null) {
+                entityManager.flush();
+                entityManager.clear();
             }
             log.info("Completed linkage synchronization: {}/{} succeeded in {}ms", linksSucceeded, cbsLinks.size(), (System.currentTimeMillis() - totalStart));
 
