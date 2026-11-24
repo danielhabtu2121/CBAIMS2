@@ -97,23 +97,21 @@ public class CbsSyncService {
             }
 
             // 1. Concurrent Bulk Fetch from Source Views to minimize Oracle wait time
-            log.info("Initiating concurrent fetch of CBS Customer, Facility, and Collateral views...");
+            // Facilities and Collaterals are fetched concurrently first to isolate required CIFs
+            log.info("Initiating concurrent fetch of CBS Facility and Collateral views...");
             long fetchStart = System.currentTimeMillis();
-            CompletableFuture<List<CbsCustomer>> custFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchCustomers());
             CompletableFuture<List<CbsFacility>> facFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchFacilities());
             CompletableFuture<List<CbsCollateral>> colFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchCollaterals());
 
-            List<CbsCustomer> cbsCustomers;
             List<CbsFacility> cbsFacilities;
             List<CbsCollateral> cbsCollaterals;
 
             try {
-                CompletableFuture.allOf(custFuture, facFuture, colFuture).join();
-                cbsCustomers = custFuture.join();
+                CompletableFuture.allOf(facFuture, colFuture).join();
                 cbsFacilities = facFuture.join();
                 cbsCollaterals = colFuture.join();
-                log.info("Fetched all CBS views concurrently in {}ms: {} customers, {} facilities, {} collaterals",
-                        (System.currentTimeMillis() - fetchStart), cbsCustomers.size(), cbsFacilities.size(), cbsCollaterals.size());
+                log.info("Fetched CBS Facility ({}) and Collateral ({}) views in {}ms",
+                        cbsFacilities.size(), cbsCollaterals.size(), (System.currentTimeMillis() - fetchStart));
             } catch (CompletionException ce) {
                 Throwable cause = ce.getCause() != null ? ce.getCause() : ce;
                 if (cause instanceof CbsSyncException cbsEx) {
@@ -124,6 +122,30 @@ public class CbsSyncService {
                     throw new RuntimeException(cause.getMessage(), cause);
                 }
             }
+
+            // Extract all distinct CIFs required by facilities and collaterals
+            Set<String> neededCifs = new HashSet<>();
+            for (CbsFacility f : cbsFacilities) {
+                if (f.getCustomerCif() != null && !f.getCustomerCif().isBlank()) {
+                    neededCifs.add(f.getCustomerCif().trim());
+                }
+            }
+            for (CbsCollateral c : cbsCollaterals) {
+                if (c.getCustomerCif() != null && !c.getCustomerCif().isBlank()) {
+                    neededCifs.add(c.getCustomerCif().trim());
+                }
+            }
+
+            List<CbsCustomer> cbsCustomers;
+            if (!neededCifs.isEmpty()) {
+                log.info("Targeting {} distinct CIFs from credit facilities/collaterals for customer query...", neededCifs.size());
+                cbsCustomers = cbsGateway.fetchCustomersByCifs(neededCifs);
+            } else {
+                log.info("No credit CIFs identified in facilities/collaterals; querying customer view...");
+                cbsCustomers = cbsGateway.fetchCustomers();
+            }
+            log.info("Completed CBS data fetch: {} customers, {} facilities, {} collaterals in {}ms",
+                    cbsCustomers.size(), cbsFacilities.size(), cbsCollaterals.size(), (System.currentTimeMillis() - fetchStart));
 
             List<CbsAccCollLinkDtls> cbsLinks = cbsGateway.fetchAllAccountCollateralLinks();
 
