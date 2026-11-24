@@ -174,7 +174,11 @@ public class CbsSyncService {
                     entityManager.flush();
                     entityManager.clear();
                 }
+                if (customersProcessed % 10000 == 0) {
+                    log.info("Synchronized {}/{} customers...", customersProcessed, cbsCustomers.size());
+                }
             }
+            log.info("Completed customer synchronization: {}/{} succeeded in {}ms", customersSucceeded, cbsCustomers.size(), (System.currentTimeMillis() - totalStart));
 
             // 4. Synchronize Facilities
             for (CbsFacility cf : cbsFacilities) {
@@ -199,7 +203,11 @@ public class CbsSyncService {
                     entityManager.flush();
                     entityManager.clear();
                 }
+                if (facilitiesProcessed % 10000 == 0) {
+                    log.info("Synchronized {}/{} facilities...", facilitiesProcessed, cbsFacilities.size());
+                }
             }
+            log.info("Completed facility synchronization: {}/{} succeeded in {}ms", facilitiesSucceeded, cbsFacilities.size(), (System.currentTimeMillis() - totalStart));
 
             // 5. Synchronize Collaterals
             for (CbsCollateral ccol : cbsCollaterals) {
@@ -228,7 +236,9 @@ public class CbsSyncService {
 
                     Collateral saved = collateralRepository.save(cbsMapper.mapCollateral(ccol, existing, matchedCust, sourceSystem));
                     cimsColByCode.put(ccol.getCollateralCode().trim().toUpperCase(), saved);
-                    affectedCollateralIds.add(saved.getId());
+                    if (saved.getId() != null) {
+                        affectedCollateralIds.add(saved.getId());
+                    }
                     collateralsSucceeded++;
                 } catch (Exception e) {
                     collateralsFailed++;
@@ -238,7 +248,11 @@ public class CbsSyncService {
                     entityManager.flush();
                     entityManager.clear();
                 }
+                if (collateralsProcessed % 10000 == 0) {
+                    log.info("Synchronized {}/{} collaterals...", collateralsProcessed, cbsCollaterals.size());
+                }
             }
+            log.info("Completed collateral synchronization: {}/{} succeeded in {}ms", collateralsSucceeded, cbsCollaterals.size(), (System.currentTimeMillis() - totalStart));
 
             // 6. Synchronize Account-Collateral Linkages
             for (CbsAccCollLinkDtls cl : cbsLinks) {
@@ -272,7 +286,11 @@ public class CbsSyncService {
                     entityManager.flush();
                     entityManager.clear();
                 }
+                if (linksProcessed % 10000 == 0) {
+                    log.info("Synchronized {}/{} linkages...", linksProcessed, cbsLinks.size());
+                }
             }
+            log.info("Completed linkage synchronization: {}/{} succeeded in {}ms", linksSucceeded, cbsLinks.size(), (System.currentTimeMillis() - totalStart));
 
             // 7. Trigger downstream exposure & adequacy recalculations
             if (affectedCollateralIds.size() <= 500) {

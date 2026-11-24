@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Production Oracle Three-View CBS Source Adapter (OracleThreeViewCbsAdapter).
@@ -723,14 +724,16 @@ public class RealCbsAdapter implements CbsAdapter {
 
         log.info("Querying {} targeted CBS customer view rows across Oracle customer view: {}...", cifList.size(), customerView);
         long startMs = System.currentTimeMillis();
-        List<CbsCustomerViewRow> results = new ArrayList<>(cifList.size());
         int batchSize = 999;
-
+        List<List<String>> chunks = new ArrayList<>();
         for (int i = 0; i < cifList.size(); i += batchSize) {
             int end = Math.min(i + batchSize, cifList.size());
-            List<String> chunk = cifList.subList(i, end);
-            results.addAll(fetchCustomerViewRowChunk(chunk));
+            chunks.add(cifList.subList(i, end));
         }
+
+        List<CbsCustomerViewRow> results = chunks.parallelStream()
+                .flatMap(chunk -> fetchCustomerViewRowChunk(chunk).stream())
+                .collect(Collectors.toList());
 
         log.info("Successfully retrieved {} targeted CBS customer view rows in {}ms", results.size(), (System.currentTimeMillis() - startMs));
         return results;
@@ -841,7 +844,7 @@ public class RealCbsAdapter implements CbsAdapter {
     @Override
     public List<CbsCollateralViewRow> fetchCollateralViewRows() {
         long now = System.currentTimeMillis();
-        if (cachedCollateralRows != null && (now - cachedCollateralRowsTime) < 15000) {
+        if (cachedCollateralRows != null && (now - cachedCollateralRowsTime) < 900000) {
             return cachedCollateralRows;
         }
         List<CbsCollateralViewRow> rows = new ArrayList<>();
@@ -882,14 +885,16 @@ public class RealCbsAdapter implements CbsAdapter {
 
         log.info("Querying {} targeted CBS customer CIFs across Oracle customer view: {}...", cifList.size(), customerView);
         long startMs = System.currentTimeMillis();
-        List<CbsCustomer> results = new ArrayList<>(cifList.size());
         int batchSize = 999; // Oracle IN list limit is 1000
-
+        List<List<String>> chunks = new ArrayList<>();
         for (int i = 0; i < cifList.size(); i += batchSize) {
             int end = Math.min(i + batchSize, cifList.size());
-            List<String> chunk = cifList.subList(i, end);
-            results.addAll(fetchCustomerChunk(chunk));
+            chunks.add(cifList.subList(i, end));
         }
+
+        List<CbsCustomer> results = chunks.parallelStream()
+                .flatMap(chunk -> fetchCustomerChunk(chunk).stream())
+                .collect(Collectors.toList());
 
         log.info("Successfully retrieved {} targeted CBS customers in {}ms", results.size(), (System.currentTimeMillis() - startMs));
         return results;

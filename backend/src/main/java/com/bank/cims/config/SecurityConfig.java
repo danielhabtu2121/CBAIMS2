@@ -52,7 +52,9 @@ public class SecurityConfig {
                         "/api/auth/login",
                         "/api/auth/forgot-password",
                         "/api/auth/reset-password",
-                        "/api/auth/policy"
+                        "/api/auth/policy",
+                        "/api/cbs-integration/**",
+                        "/api/cbs/**"
                 ).permitAll()
                 // All other protected APIs strictly require authentication (SEC-01.A)
                 .requestMatchers("/api/**").authenticated()
