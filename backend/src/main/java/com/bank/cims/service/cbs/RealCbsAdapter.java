@@ -162,9 +162,13 @@ public class RealCbsAdapter implements CbsAdapter {
 
     public synchronized void updateConfig(String newJdbcUrl, String newUsername, String newPassword, String newSchema,
                                          String newCustomerView, String newFacilityView, String newCollateralView) {
-        if (newJdbcUrl != null && !newJdbcUrl.isBlank()) this.jdbcUrl = newJdbcUrl.trim();
+        if (newJdbcUrl != null && !newJdbcUrl.isBlank() && !newJdbcUrl.contains("****")) {
+            this.jdbcUrl = newJdbcUrl.trim();
+        }
         if (newUsername != null && !newUsername.isBlank()) this.username = newUsername.trim();
-        if (newPassword != null && !newPassword.isBlank()) this.password = newPassword.trim();
+        if (newPassword != null && !newPassword.isBlank() && !newPassword.trim().matches("^[*•]+$")) {
+            this.password = newPassword.trim();
+        }
         if (newSchema != null && !newSchema.isBlank()) this.schema = newSchema.trim();
         if (newCustomerView != null && !newCustomerView.isBlank()) this.customerView = newCustomerView.trim();
         if (newFacilityView != null && !newFacilityView.isBlank()) this.facilityView = newFacilityView.trim();
