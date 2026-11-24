@@ -64,7 +64,7 @@ public class RealCbsAdapter implements CbsAdapter {
     @Value("${cims.cbs.oracle.connect-timeout-ms:10000}")
     private int connectTimeoutMs;
 
-    @Value("${cims.cbs.oracle.read-timeout-ms:120000}")
+    @Value("${cims.cbs.oracle.read-timeout-ms:300000}")
     private int readTimeoutMs;
 
     @Value("${cims.cbs.oracle.maximum-pool-size:10}")
@@ -73,7 +73,7 @@ public class RealCbsAdapter implements CbsAdapter {
     @Value("${cims.cbs.oracle.minimum-idle:2}")
     private int minIdle;
 
-    @Value("${cims.cbs.oracle.fetch-size:500}")
+    @Value("${cims.cbs.oracle.fetch-size:2000}")
     private int fetchSize;
 
     @Value("${cims.cbs.oracle.customer-filter:}")
@@ -128,7 +128,7 @@ public class RealCbsAdapter implements CbsAdapter {
                 config.addDataSourceProperty("oracle.net.disableOob", "true");
                 config.addDataSourceProperty("oracle.net.keepAlive", "true");
                 config.addDataSourceProperty("oracle.net.sdu", "32767");
-                config.addDataSourceProperty("oracle.jdbc.ReadTimeout", String.valueOf(readTimeoutMs > 0 ? readTimeoutMs : 120000));
+                config.addDataSourceProperty("oracle.jdbc.ReadTimeout", String.valueOf(readTimeoutMs > 0 ? readTimeoutMs : 300000));
                 config.addDataSourceProperty("oracle.net.CONNECT_TIMEOUT", String.valueOf(connectTimeoutMs > 0 ? connectTimeoutMs : 10000));
 
                 dataSource = new HikariDataSource(config);
@@ -817,14 +817,14 @@ public class RealCbsAdapter implements CbsAdapter {
         try (Connection conn = getReadOnlyConnection();
              PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ps.setQueryTimeout(Math.max(30, readTimeoutMs / 1000));
-            ps.setFetchSize(fetchSize > 0 ? fetchSize : 500);
+            ps.setFetchSize(fetchSize > 0 ? fetchSize : 2000);
 
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;
                 while (rs.next()) {
                     consumer.accept(mapFacilityRow(rs));
                     count++;
-                    if (count % 1000 == 0) {
+                    if (count % 25000 == 0) {
                         log.info("Loaded {} rows from {}...", count, facilityView);
                     }
                     if (maxRows > 0 && count >= maxRows) break;
@@ -858,14 +858,14 @@ public class RealCbsAdapter implements CbsAdapter {
         try (Connection conn = getReadOnlyConnection();
              PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ps.setQueryTimeout(Math.max(30, readTimeoutMs / 1000));
-            ps.setFetchSize(fetchSize > 0 ? fetchSize : 500);
+            ps.setFetchSize(fetchSize > 0 ? fetchSize : 2000);
 
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;
                 while (rs.next()) {
                     consumer.accept(mapCollateralRow(rs));
                     count++;
-                    if (count % 1000 == 0) {
+                    if (count % 50000 == 0) {
                         log.info("Loaded {} rows from {}...", count, collateralView);
                     }
                     if (maxRows > 0 && count >= maxRows) break;
