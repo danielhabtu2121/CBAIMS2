@@ -97,8 +97,36 @@ public class CbsMapper {
         la.setAvailableAmount(cf.getAvailableAmount());
         la.setCollateralContribution(cf.getCollateralContribution());
         la.setCollateralPct(cf.getCollateralPct());
-        la.setSegment(cf.getBusinessSegment());
-        la.setBranch(cf.getBranch());
+        String segment = cf.getBusinessSegment();
+        if (segment != null && !segment.isBlank()) {
+            la.setSegment(segment.trim());
+        } else if (existing != null && existing.getSegment() != null && !existing.getSegment().isBlank()) {
+            la.setSegment(existing.getSegment().trim());
+        } else if (matchedCustomer != null && matchedCustomer.getSegment() != null && !matchedCustomer.getSegment().isBlank()) {
+            la.setSegment(matchedCustomer.getSegment().trim());
+        } else {
+            la.setSegment("Corporate Banking");
+        }
+
+        String branch = cf.getBranch();
+        if (branch != null && !branch.isBlank()) {
+            la.setBranch(branch.trim());
+        } else if (existing != null && existing.getBranch() != null && !existing.getBranch().isBlank()) {
+            la.setBranch(existing.getBranch().trim());
+        } else if (matchedCustomer != null && matchedCustomer.getBranch() != null && !matchedCustomer.getBranch().isBlank()) {
+            la.setBranch(matchedCustomer.getBranch().trim());
+        } else {
+            la.setBranch("Head Office");
+        }
+
+        String facType = cf.getFacilityType();
+        if (facType != null && !facType.isBlank()) {
+            la.setFacilityType(facType.trim());
+        } else if (existing != null && existing.getFacilityType() != null && !existing.getFacilityType().isBlank()) {
+            la.setFacilityType(existing.getFacilityType().trim());
+        } else {
+            la.setFacilityType("Term Loan");
+        }
         la.setRmUserId(cf.getRelationshipManager());
         la.setNextReviewDueDate(cf.getNextReviewDate());
 
@@ -161,8 +189,38 @@ public class CbsMapper {
         col.setStartDate(ccol.getStartDate());
         col.setReviewDate(ccol.getReviewDate());
         col.setTangible(ccol.isTangible());
-        col.setOwningSegment(ccol.getBusinessSegment());
-        col.setBranch(ccol.getBranch());
+
+        // Safe non-null fallback for PostgreSQL NOT NULL constraint on owning_segment
+        String colSegment = ccol.getBusinessSegment();
+        if (colSegment != null && !colSegment.isBlank()) {
+            col.setOwningSegment(colSegment.trim());
+        } else if (existing != null && existing.getOwningSegment() != null && !existing.getOwningSegment().isBlank()) {
+            col.setOwningSegment(existing.getOwningSegment().trim());
+        } else if (matchedCustomer != null && matchedCustomer.getSegment() != null && !matchedCustomer.getSegment().isBlank()) {
+            col.setOwningSegment(matchedCustomer.getSegment().trim());
+        } else {
+            col.setOwningSegment("Corporate Banking");
+        }
+
+        // Safe non-null fallback for PostgreSQL NOT NULL constraint on branch
+        String colBranch = ccol.getBranch();
+        if (colBranch != null && !colBranch.isBlank()) {
+            col.setBranch(colBranch.trim());
+        } else if (existing != null && existing.getBranch() != null && !existing.getBranch().isBlank()) {
+            col.setBranch(existing.getBranch().trim());
+        } else if (matchedCustomer != null && matchedCustomer.getBranch() != null && !matchedCustomer.getBranch().isBlank()) {
+            col.setBranch(matchedCustomer.getBranch().trim());
+        } else {
+            col.setBranch("Head Office");
+        }
+
+        // Safe non-null fallback for status
+        if (existing != null && existing.getStatus() != null && !existing.getStatus().isBlank()) {
+            col.setStatus(existing.getStatus().trim());
+        } else {
+            col.setStatus("Active");
+        }
+
         col.setZipCode(ccol.getZipCode());
 
         // Source metadata

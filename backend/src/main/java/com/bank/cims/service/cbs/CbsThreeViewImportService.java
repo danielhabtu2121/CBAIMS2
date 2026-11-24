@@ -915,8 +915,10 @@ public class CbsThreeViewImportService {
         if (linkedSegments.size() == 1) {
             col.setOwningSegment(linkedSegments.iterator().next());
         } else if (linkedSegments.size() > 1) {
-            // Cross-segment collateral: leave owningSegment null and hold in mapping queue
+            col.setOwningSegment("Cross-Segment");
             recordUnresolvedOrg("COLLATERAL", col.getCode(), "Cross-segment security across multiple segments: " + linkedSegments, batchId);
+        } else if (col.getOwningSegment() == null || col.getOwningSegment().isBlank()) {
+            col.setOwningSegment("Corporate Banking");
         }
 
         // 3. CRO Assignment

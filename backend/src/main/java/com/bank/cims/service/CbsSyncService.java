@@ -268,6 +268,22 @@ public class CbsSyncService {
                             : null;
 
                     LoanAccount mapped = cbsMapper.mapFacility(cf, existing, matchedCust, sourceSystem);
+                    if (mapped.getSegment() == null || mapped.getSegment().isBlank()) {
+                        mapped.setSegment(matchedCust != null && matchedCust.getSegment() != null && !matchedCust.getSegment().isBlank()
+                                ? matchedCust.getSegment()
+                                : "Corporate Banking");
+                    }
+                    if (mapped.getBranch() == null || mapped.getBranch().isBlank()) {
+                        mapped.setBranch(matchedCust != null && matchedCust.getBranch() != null && !matchedCust.getBranch().isBlank()
+                                ? matchedCust.getBranch()
+                                : "Head Office");
+                    }
+                    if (mapped.getFacilityType() == null || mapped.getFacilityType().isBlank()) {
+                        mapped.setFacilityType("Term Loan");
+                    }
+                    if (mapped.getStatus() == null || mapped.getStatus().isBlank()) {
+                        mapped.setStatus("Active");
+                    }
                     if (entityManager != null) {
                         if (existing == null) {
                             entityManager.persist(mapped);
@@ -319,6 +335,25 @@ public class CbsSyncService {
                             : null;
 
                     Collateral mapped = cbsMapper.mapCollateral(ccol, existing, matchedCust, sourceSystem);
+                    if (mapped.getOwningSegment() == null || mapped.getOwningSegment().isBlank()) {
+                        mapped.setOwningSegment(matchedCust != null && matchedCust.getSegment() != null && !matchedCust.getSegment().isBlank()
+                                ? matchedCust.getSegment()
+                                : "Corporate Banking");
+                    }
+                    if (mapped.getBranch() == null || mapped.getBranch().isBlank()) {
+                        mapped.setBranch(matchedCust != null && matchedCust.getBranch() != null && !matchedCust.getBranch().isBlank()
+                                ? matchedCust.getBranch()
+                                : "Head Office");
+                    }
+                    if (mapped.getStatus() == null || mapped.getStatus().isBlank()) {
+                        mapped.setStatus("Active");
+                    }
+                    if (mapped.getOwnerType() == null || mapped.getOwnerType().isBlank()) {
+                        mapped.setOwnerType("Borrower-owned");
+                    }
+                    if (mapped.getType() == null || mapped.getType().isBlank()) {
+                        mapped.setType("Commercial Property");
+                    }
                     if (entityManager != null) {
                         if (existing == null) {
                             entityManager.persist(mapped);
