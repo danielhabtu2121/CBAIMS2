@@ -208,6 +208,7 @@ Imports and establishes canonical records in CBAIMS with immutable source snapsh
 | `VIEW_ACCESS_DENIED` (ORA-00942) | Table/view doesn't exist or user lacks `SELECT` grant. | Ask DBA to grant `SELECT` on `FCUBSLIVE.STVWCBS_CBAIMS_*` to `CBAIMSUSER`. |
 | `NETWORK_PROTOCOL_ERROR` (ORA-12592: TNS:bad packet) | Stateful firewall dropped TCP Out-Of-Band (URG) packets or split TNS buffer during multi-row fetch. | Handled automatically via `oracle.net.disableOob=true`, forward-only result sets, and reduced fetch size (100). If it persists, ask network team to disable SQL*Net deep packet inspection on firewall. |
 | `CBS_QUERY_TIMEOUT` (HTTP 504) | Query on CBS Oracle view timed out reading response bytes (after configured `CIMS_CBS_READ_TIMEOUT_MS`). View execution plan slow or scans entire table without index. | 1. Configure `CIMS_CBS_READ_TIMEOUT_MS=120000` or higher.<br>2. Ensure DBA verifies execution plan and index coverage as detailed below. |
+| `NGINX_GATEWAY_TIMEOUT` (HTTP 504 nginx) | Nginx reverse proxy timed out waiting for backend during batch synchronization. | Ensure `frontend/nginx.conf` has `proxy_read_timeout 300s;` and `proxy_connect_timeout 300s;`. Rebuild frontend container: `docker compose build cbaims-frontend && docker compose up -d cbaims-frontend`. |
 | `SCHEMA_MISMATCH` | Missing one or more of the 62 required columns. | Check `/api/cbs/schema/validate` response for `missingColumns` list and notify CBS DBA. |
 
 ---

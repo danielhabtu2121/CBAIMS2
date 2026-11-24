@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 @Service
@@ -88,10 +90,31 @@ public class CbsSyncService {
                 );
             }
 
-            // 1. Bulk Fetch from Source
-            List<CbsCustomer> cbsCustomers = cbsGateway.fetchCustomers();
-            List<CbsFacility> cbsFacilities = cbsGateway.fetchFacilities();
-            List<CbsCollateral> cbsCollaterals = cbsGateway.fetchCollaterals();
+            // 1. Concurrent Bulk Fetch from Source Views to minimize Oracle wait time
+            CompletableFuture<List<CbsCustomer>> custFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchCustomers());
+            CompletableFuture<List<CbsFacility>> facFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchFacilities());
+            CompletableFuture<List<CbsCollateral>> colFuture = CompletableFuture.supplyAsync(() -> cbsGateway.fetchCollaterals());
+
+            List<CbsCustomer> cbsCustomers;
+            List<CbsFacility> cbsFacilities;
+            List<CbsCollateral> cbsCollaterals;
+
+            try {
+                CompletableFuture.allOf(custFuture, facFuture, colFuture).join();
+                cbsCustomers = custFuture.join();
+                cbsFacilities = facFuture.join();
+                cbsCollaterals = colFuture.join();
+            } catch (CompletionException ce) {
+                Throwable cause = ce.getCause() != null ? ce.getCause() : ce;
+                if (cause instanceof CbsSyncException cbsEx) {
+                    throw cbsEx;
+                } else if (cause instanceof RuntimeException re) {
+                    throw re;
+                } else {
+                    throw new RuntimeException(cause.getMessage(), cause);
+                }
+            }
+
             List<CbsAccCollLinkDtls> cbsLinks = cbsGateway.fetchAllAccountCollateralLinks();
 
             // 2. CIMS Lookups - lazily cached to prevent loading millions of records into heap memory
