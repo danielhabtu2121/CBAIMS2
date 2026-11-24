@@ -68,7 +68,7 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
   const [logEntityFilter, setLogEntityFilter] = useState<'ALL' | 'Customer' | 'Facility' | 'Collateral' | 'Link'>('ALL');
   const [modalError, setModalError] = useState<string | null>(null);
   const [syncBanner, setSyncBanner] = useState<{
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'info';
     title: string;
     message: string;
     failingView?: string;
@@ -619,11 +619,15 @@ export const CbsSimulator: React.FC<CbsSimulatorProps> = ({
           className={`p-4 rounded-lg border flex items-start gap-3 transition-all ${
             syncBanner.type === 'error'
               ? 'bg-rose-50 border-rose-300 text-rose-900'
+              : syncBanner.type === 'info'
+              ? 'bg-blue-50 border-blue-300 text-blue-900'
               : 'bg-emerald-50 border-emerald-300 text-emerald-900'
           }`}
         >
           {syncBanner.type === 'error' ? (
             <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+          ) : syncBanner.type === 'info' ? (
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           ) : (
             <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
           )}
