@@ -404,6 +404,11 @@ public class CbsModule1IntegrationTest {
         assertEquals("Advance on LC", CbsMapper.resolveFacilityType("6"));
         assertEquals("ECG loans", CbsMapper.resolveFacilityType("7"));
         assertEquals("Others (USAID and others)", CbsMapper.resolveFacilityType("8"));
+        assertEquals("Diminishing Musharaka Agriculture", CbsMapper.resolveFacilityType("DMAG"));
+        assertEquals("Ijara Realestate", CbsMapper.resolveFacilityType("ijrs"));
+        assertEquals("Mining TermLoan", CbsMapper.resolveFacilityType("MNGL"));
+        assertEquals("Student Loan", CbsMapper.resolveFacilityType("EDFI"));
+        assertEquals("DBE SME- ADELE", CbsMapper.resolveFacilityType("SMAD"));
 
         assertEquals("Corporate Banking", CbsMapper.resolveBusinessSegment("0"));
         assertEquals("MSME Banking", CbsMapper.resolveBusinessSegment("1"));

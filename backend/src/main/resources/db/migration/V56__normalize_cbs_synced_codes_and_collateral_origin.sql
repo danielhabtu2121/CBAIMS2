@@ -117,3 +117,4 @@ WHERE b.name IS NOT NULL AND b.name <> ''
       OR (TRIM(col.branch) ~ '^\d{1,3}$' AND LPAD(TRIM(col.branch), 3, '0') = TRIM(b.cbs_branch_code))
   )
   AND col.branch <> b.name;
+

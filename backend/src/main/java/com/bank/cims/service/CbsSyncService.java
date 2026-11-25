@@ -508,6 +508,20 @@ public class CbsSyncService {
                         log.warn("Downstream exposure calculation skipped for collateral {}: {}", colId, ex.getMessage());
                     }
                 }
+            } else if (entityManager != null) {
+                log.info("Batch sync contains {} collaterals; updating current_allocation via bulk SQL aggregation.", affectedCollateralIds.size());
+                int updatedAllocations = entityManager.createNativeQuery(
+                        "UPDATE cims_collaterals col " +
+                        "SET current_allocation = COALESCE(agg.total_alloc, 0.0) " +
+                        "FROM (" +
+                        "  SELECT collateral_id, SUM(COALESCE(NULLIF(allocated_amount, 0), linked_amount, 0)) AS total_alloc " +
+                        "  FROM cims_loan_collateral_links " +
+                        "  WHERE status IS NULL OR UPPER(status) <> 'RELEASED' " +
+                        "  GROUP BY collateral_id" +
+                        ") agg " +
+                        "WHERE col.id = agg.collateral_id"
+                ).executeUpdate();
+                log.info("Bulk updated current_allocation for {} collaterals.", updatedAllocations);
             } else {
                 log.info("Batch sync contains {} collaterals; skipping synchronous exposure recalculation to prevent HTTP timeout.", affectedCollateralIds.size());
             }
