@@ -50,6 +50,9 @@ public class CbsSyncService {
     @Autowired
     private ConfigurationService configurationService;
 
+    @Autowired(required = false)
+    private BranchRepository branchRepository;
+
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
@@ -77,6 +80,9 @@ public class CbsSyncService {
             return busyResp;
         }
         currentRunningSyncId = syncId;
+        if (branchRepository != null) {
+            cbsMapper.refreshBranchCache(branchRepository.findAll());
+        }
 
         int customersProcessed = 0;
         int customersSucceeded = 0;

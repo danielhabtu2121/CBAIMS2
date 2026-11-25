@@ -126,6 +126,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
       header: 'Customer',
       cell: (r) => {
         const cust = customers.find((c) => c.id === r.customerId || c.cif === r.customerId);
+        const displayName = cust ? cust.name : ((r as any).customerName || r.customerId);
         return (
           <button
             type="button"
@@ -133,7 +134,7 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
             className="text-left font-medium text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
             title="Open Customer 360"
           >
-            <span>{cust ? cust.name : r.customerId}</span>
+            <span>{displayName}</span>
             <ArrowUpRight className="w-3 h-3 opacity-60 inline" />
           </button>
         );
@@ -161,7 +162,9 @@ export const FacilityManager: React.FC<FacilityManagerProps> = ({
           l.loanAccountId === r.lineCode || l.facilityId === r.lineCode ||
           l.loanAccountId === r.loanReference || l.facilityId === r.loanReference
         );
-        const colCount = facLinks.length;
+        const colCount = typeof (r as any).linkedAssetCount === 'number'
+          ? (r as any).linkedAssetCount
+          : facLinks.length;
         return (
           <button
             onClick={(e) => {

@@ -372,4 +372,65 @@ public class CbsModule1IntegrationTest {
         // Both linkage rows should update the same existing link (cims-active-link-001) rather than creating duplicates
         verify(loanCollateralLinkRepository, times(2)).save(argThat(l -> "cims-active-link-001".equals(l.getId())));
     }
+
+    @Test
+    @DisplayName("CbsMapper: Resolves numeric facility types, segments, branch codes, and marks CBS collaterals for enrichment")
+    void testCbsCodeResolutionAndCollateralEnrichmentReadiness() {
+        Branch branch10 = new Branch();
+        branch10.setId("brn-cbs-010");
+        branch10.setCode("CBS-010");
+        branch10.setCbsBranchCode("010");
+        branch10.setName("Bole Branch");
+
+        cbsMapper.refreshBranchCache(List.of(branch10));
+
+        CbsCustomer cc = new CbsCustomer();
+        cc.setCif("CIF-MAP-01");
+        cc.setFullName("Mapper Test Customer");
+        cc.setBranch("10");
+        cc.setBusinessSegment("0");
+
+        Customer mappedCust = cbsMapper.mapCustomer(cc, null, "REAL_CBS");
+        assertEquals("CBS_IMPORTED", mappedCust.getOriginType());
+        assertEquals("Bole Branch", mappedCust.getBranch());
+        assertEquals("Corporate Banking", mappedCust.getSegment());
+
+        assertEquals("Short Term Loan", CbsMapper.resolveFacilityType("0"));
+        assertEquals("Medium-term Loan", CbsMapper.resolveFacilityType("1"));
+        assertEquals("Long-term Loan", CbsMapper.resolveFacilityType("2"));
+        assertEquals("Pre-shipment loans", CbsMapper.resolveFacilityType("3"));
+        assertEquals("Post shipment loans", CbsMapper.resolveFacilityType("4"));
+        assertEquals("Merchandise loans", CbsMapper.resolveFacilityType("5"));
+        assertEquals("Advance on LC", CbsMapper.resolveFacilityType("6"));
+        assertEquals("ECG loans", CbsMapper.resolveFacilityType("7"));
+        assertEquals("Others (USAID and others)", CbsMapper.resolveFacilityType("8"));
+
+        assertEquals("Corporate Banking", CbsMapper.resolveBusinessSegment("0"));
+        assertEquals("MSME Banking", CbsMapper.resolveBusinessSegment("1"));
+        assertEquals("Retail Banking", CbsMapper.resolveBusinessSegment("2"));
+
+        CbsFacility cf = new CbsFacility();
+        cf.setId("LN-MAP-01");
+        cf.setLoanRefNo("LN-MAP-01");
+        cf.setFacilityType("5");
+        cf.setBusinessSegment("1");
+        cf.setBranch("010");
+        LoanAccount mappedLoan = cbsMapper.mapFacility(cf, null, mappedCust, "REAL_CBS");
+        assertEquals("CBS_IMPORTED", mappedLoan.getOriginType());
+        assertEquals("Merchandise loans", mappedLoan.getFacilityType());
+        assertEquals("MSME Banking", mappedLoan.getSegment());
+        assertEquals("Bole Branch", mappedLoan.getBranch());
+
+        CbsCollateral ccol = new CbsCollateral();
+        ccol.setCollateralCode("COL-MAP-01");
+        ccol.setBranch("CBS-010");
+        ccol.setBusinessSegment("2");
+        ccol.setCollateralValue(1_000_000.0);
+        Collateral mappedCol = cbsMapper.mapCollateral(ccol, null, mappedCust, "REAL_CBS");
+        assertEquals("CBS_IMPORTED", mappedCol.getOriginType());
+        assertEquals("PENDING_ENRICHMENT", mappedCol.getEnrichmentStatus());
+        assertEquals("INCOMPLETE", mappedCol.getDataQualityStatus());
+        assertEquals("Retail Banking", mappedCol.getOwningSegment());
+        assertEquals("Bole Branch", mappedCol.getBranch());
+    }
 }

@@ -84,7 +84,34 @@ public class CimsController {
         String seg = (segment != null && !"ALL".equalsIgnoreCase(segment)) ? segment.trim() : null;
         String q = (search != null && !search.isBlank()) ? search.trim() : null;
         int safeSize = Math.min(Math.max(size, 1), 200);
-        return ResponseEntity.ok(loanAccountRepository.findPaged(q, seg, PageRequest.of(Math.max(page, 0), safeSize)));
+        Page<LoanAccount> result = loanAccountRepository.findPaged(q, seg, PageRequest.of(Math.max(page, 0), safeSize));
+        List<LoanAccount> items = result.getContent();
+        if (!items.isEmpty()) {
+            List<String> loanIds = items.stream().map(LoanAccount::getId).toList();
+            Map<String, Integer> countByLoanId = new java.util.HashMap<>();
+            for (Object[] row : loanCollateralLinkRepository.countActiveCollateralsByLoanAccountIds(loanIds)) {
+                if (row[0] != null && row[1] != null) {
+                    countByLoanId.put(row[0].toString(), ((Number) row[1]).intValue());
+                }
+            }
+            java.util.Set<String> custIds = items.stream()
+                    .map(LoanAccount::getCustomerId)
+                    .filter(id -> id != null && !id.isBlank())
+                    .collect(java.util.stream.Collectors.toSet());
+            Map<String, String> custNameById = new java.util.HashMap<>();
+            if (!custIds.isEmpty()) {
+                for (Customer c : customerRepository.findAllById(custIds)) {
+                    custNameById.put(c.getId(), c.getName());
+                }
+            }
+            for (LoanAccount la : items) {
+                la.setLinkedAssetCount(countByLoanId.getOrDefault(la.getId(), 0));
+                if (la.getCustomerId() != null && custNameById.containsKey(la.getCustomerId())) {
+                    la.setCustomerName(custNameById.get(la.getCustomerId()));
+                }
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/collaterals/paged")
