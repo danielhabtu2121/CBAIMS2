@@ -641,9 +641,17 @@ public class RealCbsAdapter implements CbsAdapter {
 
     private CbsFacility mapToCbsFacility(CbsFacilityViewRow r) {
         CbsFacility f = new CbsFacility();
-        f.setId(r.getAccountNumber());
-        f.setLoanRefNo(r.getAccountNumber());
-        f.setLineCode(r.getFaciltyId() != null ? r.getFaciltyId().toPlainString() : r.getAccountNumber());
+        String loanRef = (r.getAccountNumber() != null && !r.getAccountNumber().isBlank())
+                ? r.getAccountNumber().trim()
+                : (r.getFaciltyId() != null ? "FAC-" + r.getFaciltyId().toPlainString() : null);
+        if (loanRef == null && r.getCustomerId() != null && !r.getCustomerId().isBlank()) {
+            String prod = r.getProductCode() != null && !r.getProductCode().isBlank() ? r.getProductCode().trim() : "LN";
+            String br = r.getBranchCode() != null && !r.getBranchCode().isBlank() ? r.getBranchCode().trim() : "000";
+            loanRef = "LINE-" + br + "-" + r.getCustomerId().trim() + "-" + prod;
+        }
+        f.setId(loanRef);
+        f.setLoanRefNo(loanRef);
+        f.setLineCode(r.getFaciltyId() != null ? r.getFaciltyId().toPlainString() : loanRef);
         f.setCustomerCif(r.getCustomerId());
         f.setFacilityType(r.getProductCode() != null ? r.getProductCode() : "Term Loan");
         f.setBranch(r.getBranchCode() != null ? r.getBranchCode() : "");

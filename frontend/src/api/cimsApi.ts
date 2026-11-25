@@ -332,6 +332,28 @@ export const cimsApi = {
     return state.links || [];
   },
 
+  async getPagedCustomers(page = 0, size = 25, search = '', segment = ''): Promise<{ content: Customer[]; totalElements: number; totalPages: number; number: number; size: number }> {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (search.trim()) params.set('search', search.trim());
+    if (segment && segment !== 'ALL') params.set('segment', segment);
+    return requestJson(`${API_BASE}/customers/paged?${params.toString()}`);
+  },
+
+  async getPagedFacilities(page = 0, size = 25, search = '', segment = ''): Promise<{ content: LoanAccount[]; totalElements: number; totalPages: number; number: number; size: number }> {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (search.trim()) params.set('search', search.trim());
+    if (segment && segment !== 'ALL') params.set('segment', segment);
+    return requestJson(`${API_BASE}/facilities/paged?${params.toString()}`);
+  },
+
+  async getPagedCollaterals(page = 0, size = 25, search = '', segment = '', origin = ''): Promise<{ content: Collateral[]; totalElements: number; totalPages: number; number: number; size: number }> {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (search.trim()) params.set('search', search.trim());
+    if (segment && segment !== 'ALL') params.set('segment', segment);
+    if (origin && origin !== 'ALL') params.set('origin', origin);
+    return requestJson(`${API_BASE}/collaterals/paged?${params.toString()}`);
+  },
+
   async getPolicies(): Promise<InsurancePolicy[]> {
     const state = await this.fetchFullState();
     return state.policies || [];
